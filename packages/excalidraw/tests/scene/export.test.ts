@@ -192,6 +192,40 @@ describe("exportToSvg", () => {
     );
     expect(svgElement.innerHTML).toMatchSnapshot();
   });
+
+  it("exports markdown hyperlinks in text elements as SVG anchors", async () => {
+    const textElement = API.createElement({
+      type: "text",
+      text: "[Docs](https://example.com)",
+    });
+
+    const svgElement = await exportUtils.exportToSvg(
+      [textElement],
+      DEFAULT_OPTIONS,
+      null,
+    );
+
+    const anchor = svgElement.querySelector('a[href="https://example.com/"]');
+
+    expect(anchor).not.toBeNull();
+    expect(anchor?.querySelector("text")?.textContent).toBe("Docs");
+  });
+
+  it("does not export blocked markdown hyperlinks as SVG anchors", async () => {
+    const textElement = API.createElement({
+      type: "text",
+      text: "[x](javascript:alert(1))",
+    });
+
+    const svgElement = await exportUtils.exportToSvg(
+      [textElement],
+      DEFAULT_OPTIONS,
+      null,
+    );
+
+    expect(svgElement.querySelector('a[href^="javascript:"]')).toBeNull();
+    expect(svgElement.querySelector("text")?.textContent).toBe("x");
+  });
 });
 
 describe("exporting frames", () => {

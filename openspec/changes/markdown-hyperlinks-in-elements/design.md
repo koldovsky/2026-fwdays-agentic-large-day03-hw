@@ -33,7 +33,7 @@ Excalidraw stores text on `ExcalidrawTextElement` as a single string and renders
    *Alternatives:* HTML overlay for all text — rejected due to sync cost with zoom/pan and RTL; *optional* targeted overlay only for link hit regions could be a follow-up if measurement complexity is high.
 
 4. **Click vs. edit**  
-   Use a modifier or short delay pattern only if required by UX research; default per issue: primary click opens link when not in text-edit mode; in edit mode, caret placement takes precedence (consistent with many editors). Exact rule should match product choice: e.g., Cmd/Ctrl+click to open while editing if plain click must place caret.
+   Primary click opens link when not in text-edit mode. While the WYSIWYG text editor is active, markdown stays literal in the textarea and caret placement always takes precedence, so inline links are not followed from the editor surface in v1.
 
 5. **SVG export**  
    Emit `<a xlink:href="...">` (or HTML5-style `href` in SVG2) wrapping `<text>` tspan groups for link segments when URL is allowed; otherwise render as styled text without `href`.
@@ -53,8 +53,8 @@ Excalidraw stores text on `ExcalidrawTextElement` as a single string and renders
 - **Rollback:** Guard behind feature flag only if product requires it; otherwise revert commit.
 - **Data:** No mandatory migration if links remain serialized as plain text strings containing markdown syntax.
 
-## Open Questions
+## Resolved Questions
 
-- Should bound text on shapes (labels) and standalone text elements share one implementation immediately, or ship standalone text first?
-- Final UX for “open link” while the text editor is focused: plain click vs. modifier key (needs quick product decision).
-- Whether `mailto:` and relative URLs are in v1 allowlist.
+- Bound text on shapes and standalone text share the same parsing, layout, render, and hit-testing helpers in v1.
+- While the text editor is focused, plain click places the caret and does not open links; link activation only happens outside edit mode.
+- The v1 allowlist is restricted to normalized `http:` and `https:` URLs. `mailto:` and relative URLs are not interactive in this change.

@@ -5,9 +5,7 @@ import {
   THEME,
   DARK_THEME_FILTER,
   getFontFamilyString,
-  isRTL,
   isTestEnv,
-  getVerticalOffset,
   applyDarkModeFilter,
   MIME_TYPES,
 } from "@excalidraw/common";
@@ -20,7 +18,11 @@ import {
 } from "@excalidraw/element";
 import { LinearElementEditor } from "@excalidraw/element";
 import { getBoundTextElement, getContainerElement } from "@excalidraw/element";
-import { getLineHeightInPx } from "@excalidraw/element";
+import {
+  getTextHyperlinkLayout,
+  TEXT_HYPERLINK_DARK_COLOR,
+  TEXT_HYPERLINK_LIGHT_COLOR,
+} from "@excalidraw/element";
 import {
   isArrowElement,
   isIframeLikeElement,
@@ -115,12 +117,18 @@ const renderElementToSvg = (
     }
   }
   const degree = (180 * element.angle) / Math.PI;
+  const textHyperlinkLayout = isTextElement(element)
+    ? getTextHyperlinkLayout(element)
+    : null;
+  const hasInlineTextLinks = !!textHyperlinkLayout?.lines.some((line) =>
+    line.segments.some((segment) => segment.type === "link" && segment.href),
+  );
 
   // element to append node to, most of the time svgRoot
   let root = svgRoot;
 
   // if the element has a link, create an anchor tag and make that the new root
-  if (element.link) {
+  if (element.link && !hasInlineTextLinks) {
     const anchorTag = svgRoot.ownerDocument.createElementNS(SVG_NS, "a");
     anchorTag.setAttribute("href", normalizeLink(element.link));
     root.appendChild(anchorTag);
@@ -645,47 +653,48 @@ const renderElementToSvg = (
             offsetY || 0
           }) rotate(${degree} ${cx} ${cy})`,
         );
-        const lines = element.text.replace(/\r\n?/g, "\n").split("\n");
-        const lineHeightPx = getLineHeightInPx(
-          element.fontSize,
-          element.lineHeight,
-        );
-        const horizontalOffset =
-          element.textAlign === "center"
-            ? element.width / 2
-            : element.textAlign === "right"
-            ? element.width
-            : 0;
-        const verticalOffset = getVerticalOffset(
-          element.fontFamily,
-          element.fontSize,
-          lineHeightPx,
-        );
-        const direction = isRTL(element.text) ? "rtl" : "ltr";
-        const textAnchor =
-          element.textAlign === "center"
-            ? "middle"
-            : element.textAlign === "right" || direction === "rtl"
-            ? "end"
-            : "start";
-        for (let i = 0; i < lines.length; i++) {
-          const text = svgRoot.ownerDocument.createElementNS(SVG_NS, "text");
-          text.textContent = lines[i];
-          text.setAttribute("x", `${horizontalOffset}`);
-          text.setAttribute("y", `${i * lineHeightPx + verticalOffset}`);
-          text.setAttribute("font-family", getFontFamilyString(element));
-          text.setAttribute("font-size", `${element.fontSize}px`);
-          text.setAttribute(
-            "fill",
-            renderConfig.theme === THEME.DARK
-              ? applyDarkModeFilter(element.strokeColor)
-              : element.strokeColor,
-          );
-          text.setAttribute("text-anchor", textAnchor);
-          text.setAttribute("style", "white-space: pre;");
-          text.setAttribute("direction", direction);
-          text.setAttribute("dominant-baseline", "alphabetic");
-          node.appendChild(text);
+        const linkColor =
+          renderConfig.theme === THEME.DARK
+            ? TEXT_HYPERLINK_DARK_COLOR
+            : TEXT_HYPERLINK_LIGHT_COLOR;
+        const textColor =
+          renderConfig.theme === THEME.DARK
+            ? applyDarkModeFilter(element.strokeColor)
+            : element.strokeColor;
+        const layout = textHyperlinkLayout || getTextHyperlinkLayout(element);
+
+        for (const line of layout.lines) {
+          for (const segment of line.segments) {
+            const text = svgRoot.ownerDocument.createElementNS(SVG_NS, "text");
+            text.textContent = segment.text;
+            text.setAttribute("x", `${segment.x}`);
+            text.setAttribute("y", `${segment.baselineY}`);
+            text.setAttribute("font-family", getFontFamilyString(element));
+            text.setAttribute("font-size", `${element.fontSize}px`);
+            text.setAttribute(
+              "fill",
+              segment.type === "link" && segment.href ? linkColor : textColor,
+            );
+            text.setAttribute("text-anchor", "start");
+            text.setAttribute("style", "white-space: pre;");
+            text.setAttribute("direction", line.direction);
+            text.setAttribute("dominant-baseline", "alphabetic");
+
+            if (segment.type === "link" && segment.href) {
+              text.setAttribute("text-decoration", "underline");
+              const anchorTag = svgRoot.ownerDocument.createElementNS(
+                SVG_NS,
+                "a",
+              );
+              anchorTag.setAttribute("href", segment.href);
+              anchorTag.setAttribute("target", "_blank");
+              anchorTag.setAttribute("rel", "noopener noreferrer");
+              anchorTag.appendChild(text);
+              node.appendChild(anchorTag);
+            } else {
+              node.appendChild(text);
+            }
+          }
         }
 
         const g = maybeWrapNodesInFrameClipPath(

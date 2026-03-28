@@ -20,7 +20,6 @@ import {
   distance,
   getFontString,
   isRTL,
-  getVerticalOffset,
   invariant,
   applyDarkModeFilter,
   isSafari,
@@ -52,7 +51,6 @@ import {
   getBoundTextMaxHeight,
   getBoundTextMaxWidth,
 } from "./textElement";
-import { getLineHeightInPx } from "./textMeasurements";
 import {
   isTextElement,
   isLinearElement,
@@ -64,6 +62,11 @@ import {
   isImageElement,
 } from "./typeChecks";
 import { getContainingFrame } from "./frame";
+import {
+  getTextHyperlinkLayout,
+  TEXT_HYPERLINK_DARK_COLOR,
+  TEXT_HYPERLINK_LIGHT_COLOR,
+} from "./textHyperlinks";
 import { getCornerRadius } from "./utils";
 
 import { ShapeCache } from "./shape";
@@ -545,7 +548,11 @@ const drawElementOnCanvas = (
     }
     default: {
       if (isTextElement(element)) {
-        const rtl = isRTL(element.text);
+        const hyperlinkLayout = getTextHyperlinkLayout(element);
+        const hasRTLLine = hyperlinkLayout.lines.some(
+          (line) => line.direction === "rtl",
+        );
+        const rtl = hasRTLLine || isRTL(element.text);
         const shouldTemporarilyAttach = rtl && !context.canvas.isConnected;
         if (shouldTemporarilyAttach) {
           // to correctly render RTL text mixed with LTR, we have to append it
@@ -555,39 +562,39 @@ const drawElementOnCanvas = (
         context.canvas.setAttribute("dir", rtl ? "rtl" : "ltr");
         context.save();
         context.font = getFontString(element);
-        context.fillStyle =
+        context.textAlign = "left";
+
+        const textColor =
           renderConfig.theme === THEME.DARK
             ? applyDarkModeFilter(element.strokeColor)
             : element.strokeColor;
-        context.textAlign = element.textAlign as CanvasTextAlign;
+        const linkColor =
+          renderConfig.theme === THEME.DARK
+            ? TEXT_HYPERLINK_DARK_COLOR
+            : TEXT_HYPERLINK_LIGHT_COLOR;
 
-        // Canvas does not support multiline text by default
-        const lines = element.text.replace(/\r\n?/g, "\n").split("\n");
+        for (const line of hyperlinkLayout.lines) {
+          context.canvas.setAttribute("dir", line.direction);
 
-        const horizontalOffset =
-          element.textAlign === "center"
-            ? element.width / 2
-            : element.textAlign === "right"
-            ? element.width
-            : 0;
+          for (const segment of line.segments) {
+            context.fillStyle =
+              segment.type === "link" && segment.href ? linkColor : textColor;
+            context.fillText(segment.text, segment.x, segment.baselineY);
 
-        const lineHeightPx = getLineHeightInPx(
-          element.fontSize,
-          element.lineHeight,
-        );
-
-        const verticalOffset = getVerticalOffset(
-          element.fontFamily,
-          element.fontSize,
-          lineHeightPx,
-        );
-
-        for (let index = 0; index < lines.length; index++) {
-          context.fillText(
-            lines[index],
-            horizontalOffset,
-            index * lineHeightPx + verticalOffset,
-          );
+            if (segment.type === "link" && segment.href) {
+              context.save();
+              context.beginPath();
+              context.strokeStyle = linkColor;
+              context.lineWidth = Math.max(1, element.fontSize * 0.06);
+              context.moveTo(segment.x, segment.underlineY);
+              context.lineTo(
+                segment.x + segment.width,
+                segment.underlineY,
+              );
+              context.stroke();
+              context.restore();
+            }
+          }
         }
         context.restore();
         if (shouldTemporarilyAttach) {
