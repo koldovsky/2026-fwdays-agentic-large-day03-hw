@@ -2,6 +2,7 @@ import {
   applyDarkModeFilter,
   COLOR_PALETTE,
   rgbToHex,
+  validateHexColorFieldInput,
 } from "@excalidraw/common";
 
 describe("COLOR_PALETTE", () => {
@@ -281,6 +282,75 @@ describe("rgbToHex", () => {
     it("pads alpha with leading zero when needed", () => {
       // 0.05 * 255 = 12.75 -> rounds to 13 = 0x0d
       expect(rgbToHex(255, 0, 0, 0.05)).toBe("#ff00000d");
+    });
+  });
+});
+
+describe("validateHexColorFieldInput", () => {
+  it("treats empty and whitespace as empty", () => {
+    expect(validateHexColorFieldInput("")).toEqual({ status: "empty" });
+    expect(validateHexColorFieldInput("   ")).toEqual({ status: "empty" });
+    expect(validateHexColorFieldInput("#")).toEqual({ status: "empty" });
+  });
+
+  it("accepts valid hex lengths 3, 4, 6, 8", () => {
+    expect(validateHexColorFieldInput("abc")).toEqual({
+      status: "valid",
+      normalized: "#abc",
+    });
+    expect(validateHexColorFieldInput("abcd")).toEqual({
+      status: "valid",
+      normalized: "#abcd",
+    });
+    expect(validateHexColorFieldInput("abcdef")).toEqual({
+      status: "valid",
+      normalized: "#abcdef",
+    });
+    expect(validateHexColorFieldInput("abcdef12")).toEqual({
+      status: "valid",
+      normalized: "#abcdef12",
+    });
+    expect(validateHexColorFieldInput("#ff0000")).toEqual({
+      status: "valid",
+      normalized: "#ff0000",
+    });
+  });
+
+  it("rejects wrong lengths when digits are hex", () => {
+    expect(validateHexColorFieldInput("1")).toEqual({
+      status: "invalid",
+      reason: "length",
+    });
+    expect(validateHexColorFieldInput("12")).toEqual({
+      status: "invalid",
+      reason: "length",
+    });
+    expect(validateHexColorFieldInput("12345")).toEqual({
+      status: "invalid",
+      reason: "length",
+    });
+    expect(validateHexColorFieldInput("1234567")).toEqual({
+      status: "invalid",
+      reason: "length",
+    });
+    expect(validateHexColorFieldInput("123456789")).toEqual({
+      status: "invalid",
+      reason: "length",
+    });
+  });
+
+  it("rejects non-hex characters", () => {
+    expect(validateHexColorFieldInput("zzzzzz")).toEqual({
+      status: "invalid",
+      reason: "chars",
+    });
+    expect(validateHexColorFieldInput("blue")).toEqual({
+      status: "invalid",
+      reason: "chars",
+    });
+    expect(validateHexColorFieldInput("gggggg")).toEqual({
+      status: "invalid",
+      reason: "chars",
     });
   });
 });

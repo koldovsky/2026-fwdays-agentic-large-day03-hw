@@ -353,3 +353,42 @@ export const normalizeInputColor = (color: string): string | null => {
 
   return null;
 };
+
+// -----------------------------------------------------------------------------
+// hex color field (color picker) validation
+// -----------------------------------------------------------------------------
+
+const HEX_DIGITS_ONLY = /^[0-9a-fA-F]+$/;
+
+export type HexColorFieldValidation =
+  | { status: "empty" }
+  | { status: "valid"; normalized: string }
+  | { status: "invalid"; reason: "length" | "chars" };
+
+/**
+ * Validates input for the dedicated hex code field in the color picker.
+ * Only hexadecimal forms with lengths 3, 4, 6, or 8 (excluding optional `#`) are accepted.
+ * Empty / whitespace-only input is treated as empty (no error, no commit).
+ */
+export const validateHexColorFieldInput = (
+  input: string,
+): HexColorFieldValidation => {
+  const trimmed = input.trim();
+  const body = trimmed.replace(/^#/, "");
+  if (body.length === 0) {
+    return { status: "empty" };
+  }
+  if (!HEX_DIGITS_ONLY.test(body)) {
+    return { status: "invalid", reason: "chars" };
+  }
+  const len = body.length;
+  if (len !== 3 && len !== 4 && len !== 6 && len !== 8) {
+    return { status: "invalid", reason: "length" };
+  }
+  const withHash = `#${body}`;
+  const normalized = normalizeInputColor(withHash);
+  if (!normalized) {
+    return { status: "invalid", reason: "chars" };
+  }
+  return { status: "valid", normalized };
+};
