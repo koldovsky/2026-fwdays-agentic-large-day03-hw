@@ -31,7 +31,6 @@ import { isPathALoop } from "./utils";
 import {
   doBoundsIntersect,
   elementCenterPoint,
-  getCenterForBounds,
   getCubicBezierCurveBound,
   getDiamondPoints,
   getElementBounds,
@@ -158,7 +157,7 @@ export const hitElementItself = ({
     pointFrom(bounds[0] - threshold, bounds[1] - threshold),
     pointRotateRads(
       point,
-      getCenterForBounds(bounds),
+      elementCenterPoint(element, elementsMap),
       -element.angle as Radians,
     ),
     pointFrom(bounds[2] + threshold, bounds[3] + threshold),
