@@ -23,6 +23,7 @@ describe("appState", () => {
         initialData={{
           appState: {
             exportBackground,
+            canvasBackgroundPattern: "squared-paper",
             viewBackgroundColor: "#F00",
           },
         }}
@@ -32,6 +33,7 @@ describe("appState", () => {
 
     await waitFor(() => {
       expect(h.state.exportBackground).toBe(exportBackground);
+      expect(h.state.canvasBackgroundPattern).toBe("squared-paper");
       expect(h.state.viewBackgroundColor).toBe("#F00");
     });
 
@@ -43,6 +45,7 @@ describe("appState", () => {
             JSON.stringify({
               type: EXPORT_DATA_TYPES.excalidraw,
               appState: {
+                canvasBackgroundPattern: "none",
                 viewBackgroundColor: "#000",
               },
               elements: [API.createElement({ type: "rectangle", id: "A" })],
@@ -57,6 +60,8 @@ describe("appState", () => {
       expect(h.elements).toEqual([expect.objectContaining({ id: "A" })]);
       // non-imported prop → retain
       expect(h.state.exportBackground).toBe(exportBackground);
+      // imported prop → overwrite
+      expect(h.state.canvasBackgroundPattern).toBe("none");
       // imported prop → overwrite
       expect(h.state.viewBackgroundColor).toBe("#000");
     });

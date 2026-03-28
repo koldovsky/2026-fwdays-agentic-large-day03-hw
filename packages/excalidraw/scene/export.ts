@@ -181,6 +181,7 @@ export const exportToCanvas = async (
   }: {
     exportBackground: boolean;
     exportPadding?: number;
+    canvasBackgroundPattern?: AppState["canvasBackgroundPattern"];
     viewBackgroundColor: string;
     exportingFrame?: ExcalidrawFrameLikeElement | null;
   },
@@ -282,12 +283,75 @@ const createHTMLComment = (text: string) => {
   return document.createComment(` ${text} `);
 };
 
+const SquaredPaperLineColor = {
+  [THEME.LIGHT]: {
+    bold: "#bfd3f2",
+    regular: "#d9e5f8",
+  },
+  [THEME.DARK]: {
+    bold: applyDarkModeFilter("#bfd3f2"),
+    regular: applyDarkModeFilter("#d9e5f8"),
+  },
+} as const;
+
+const appendSquaredPaperPattern = ({
+  svgRoot,
+  defsElement,
+  gridSize,
+  gridStep,
+  theme,
+}: {
+  svgRoot: SVGSVGElement;
+  defsElement: SVGDefsElement;
+  gridSize: number;
+  gridStep: number;
+  theme: AppState["theme"];
+}) => {
+  const pattern = svgRoot.ownerDocument.createElementNS(SVG_NS, "pattern");
+  pattern.setAttribute("id", "canvas-background-pattern-squared-paper");
+  pattern.setAttribute("patternUnits", "userSpaceOnUse");
+  pattern.setAttribute("width", `${gridSize * gridStep}`);
+  pattern.setAttribute("height", `${gridSize * gridStep}`);
+
+  for (let index = 0; index <= gridStep; index++) {
+    const position = index * gridSize;
+    const isBold = index === 0 || index === gridStep;
+    const stroke = isBold
+      ? SquaredPaperLineColor[theme].bold
+      : SquaredPaperLineColor[theme].regular;
+    const strokeWidth = isBold ? 1.5 : 1;
+
+    const vertical = svgRoot.ownerDocument.createElementNS(SVG_NS, "line");
+    vertical.setAttribute("x1", `${position}`);
+    vertical.setAttribute("y1", "0");
+    vertical.setAttribute("x2", `${position}`);
+    vertical.setAttribute("y2", `${gridSize * gridStep}`);
+    vertical.setAttribute("stroke", stroke);
+    vertical.setAttribute("stroke-width", `${strokeWidth}`);
+    pattern.appendChild(vertical);
+
+    const horizontal = svgRoot.ownerDocument.createElementNS(SVG_NS, "line");
+    horizontal.setAttribute("x1", "0");
+    horizontal.setAttribute("y1", `${position}`);
+    horizontal.setAttribute("x2", `${gridSize * gridStep}`);
+    horizontal.setAttribute("y2", `${position}`);
+    horizontal.setAttribute("stroke", stroke);
+    horizontal.setAttribute("stroke-width", `${strokeWidth}`);
+    pattern.appendChild(horizontal);
+  }
+
+  defsElement.appendChild(pattern);
+};
+
 export const exportToSvg = async (
   elements: readonly NonDeletedExcalidrawElement[],
   appState: {
+    canvasBackgroundPattern?: AppState["canvasBackgroundPattern"];
     exportBackground: boolean;
     exportPadding?: number;
     exportScale?: number;
+    gridSize?: AppState["gridSize"];
+    gridStep?: AppState["gridStep"];
     viewBackgroundColor: string;
     exportWithDarkMode?: boolean;
     exportEmbedScene?: boolean;
@@ -448,6 +512,34 @@ export const exportToSvg = async (
 
   // render background rect
   if (appState.exportBackground && viewBackgroundColor) {
+    const patternGridSize = appState.gridSize ?? getDefaultAppState().gridSize;
+    const patternGridStep = appState.gridStep ?? getDefaultAppState().gridStep;
+
+    if (appState.canvasBackgroundPattern === "squared-paper") {
+      appendSquaredPaperPattern({
+        svgRoot,
+        defsElement,
+        gridSize: patternGridSize,
+        gridStep: patternGridStep,
+        theme: exportWithDarkMode ? THEME.DARK : THEME.LIGHT,
+      });
+    }
+
+    if (appState.canvasBackgroundPattern === "squared-paper") {
+      const baseRect = svgRoot.ownerDocument.createElementNS(SVG_NS, "rect");
+      baseRect.setAttribute("x", "0");
+      baseRect.setAttribute("y", "0");
+      baseRect.setAttribute("width", `${width}`);
+      baseRect.setAttribute("height", `${height}`);
+      baseRect.setAttribute(
+        "fill",
+        exportWithDarkMode
+          ? applyDarkModeFilter(viewBackgroundColor)
+          : viewBackgroundColor,
+      );
+      svgRoot.appendChild(baseRect);
+    }
+
     const rect = svgRoot.ownerDocument.createElementNS(SVG_NS, "rect");
     rect.setAttribute("x", "0");
     rect.setAttribute("y", "0");
@@ -455,7 +547,9 @@ export const exportToSvg = async (
     rect.setAttribute("height", `${height}`);
     rect.setAttribute(
       "fill",
-      exportWithDarkMode
+      appState.canvasBackgroundPattern === "squared-paper"
+        ? "url(#canvas-background-pattern-squared-paper)"
+        : exportWithDarkMode
         ? applyDarkModeFilter(viewBackgroundColor)
         : viewBackgroundColor,
     );

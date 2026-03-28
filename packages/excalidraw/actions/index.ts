@@ -22,6 +22,7 @@ export {
 } from "./actionProperties";
 
 export {
+  actionChangeCanvasBackgroundPattern,
   actionChangeViewBackgroundColor,
   actionClearCanvas,
   actionZoomIn,

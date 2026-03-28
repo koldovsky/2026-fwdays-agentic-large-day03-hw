@@ -30,6 +30,8 @@ import type { ImportedDataState } from "../data/types";
 
 export { cleanup as unmountComponent };
 
+const APP_RENDER_WAIT_TIMEOUT = 5000;
+
 const customQueries = {
   ...queries,
   ...toolQueries,
@@ -95,7 +97,7 @@ const renderApp: TestRenderFn = async (ui, options) => {
     if (window.h.state.isLoading) {
       throw new Error("still loading");
     }
-  });
+  }, { timeout: APP_RENDER_WAIT_TIMEOUT });
 
   return renderResult;
 };

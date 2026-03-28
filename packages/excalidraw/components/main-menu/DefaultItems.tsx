@@ -5,6 +5,7 @@ import { THEME } from "@excalidraw/common";
 import type { Theme } from "@excalidraw/element/types";
 
 import {
+  actionChangeCanvasBackgroundPattern,
   actionClearCanvas,
   actionLoadScene,
   actionSaveToActiveFile,
@@ -329,6 +330,53 @@ export const ChangeCanvasBackground = () => {
       </div>
       <div style={{ padding: "0 0.625rem" }}>
         {actionManager.renderAction("changeViewBackgroundColor")}
+      </div>
+      <div style={{ padding: "0.5rem 0.625rem 0" }}>
+        <label
+          htmlFor="canvas-background-pattern"
+          style={{
+            display: "block",
+            fontSize: "0.75rem",
+            marginBottom: "0.25rem",
+            marginLeft: "0.125rem",
+          }}
+        >
+          {t("labels.canvasBackgroundPattern")}
+        </label>
+        <select
+          id="canvas-background-pattern"
+          data-testid="canvas-background-pattern"
+          value={appState.canvasBackgroundPattern}
+          onChange={(event) => {
+            const value: Parameters<
+              typeof actionChangeCanvasBackgroundPattern.perform
+            >[2] = {
+              canvasBackgroundPattern:
+                event.currentTarget
+                  .value as typeof appState.canvasBackgroundPattern,
+            };
+
+            actionManager.executeAction(
+              actionChangeCanvasBackgroundPattern,
+              "ui",
+              value,
+            );
+          }}
+          style={{
+            width: "100%",
+            borderRadius: "var(--border-radius-md)",
+            border: "1px solid var(--default-border-color)",
+            background: "var(--input-bg-color)",
+            color: "inherit",
+            font: "inherit",
+            padding: "0.5rem 0.625rem",
+          }}
+        >
+          <option value="none">{t("labels.arrowhead_none")}</option>
+          <option value="squared-paper">
+            {t("labels.canvasBackgroundPatternSquaredPaper")}
+          </option>
+        </select>
       </div>
     </div>
   );

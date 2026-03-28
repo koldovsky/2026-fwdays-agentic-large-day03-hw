@@ -342,6 +342,7 @@ describe("AppStateDelta", () => {
       };
 
       const commonAppState = {
+        canvasBackgroundPattern: "none" as const,
         viewBackgroundColor: "#ffffff",
         selectedElementIds: {},
         selectedGroupIds: {},
@@ -386,6 +387,7 @@ describe("AppStateDelta", () => {
     it("should maintain stable order for selectedElementIds", () => {
       const commonAppState = {
         name: "",
+        canvasBackgroundPattern: "none" as const,
         viewBackgroundColor: "#ffffff",
         selectedGroupIds: {},
         editingGroupId: null,
@@ -432,6 +434,7 @@ describe("AppStateDelta", () => {
     it("should maintain stable order for selectedGroupIds", () => {
       const commonAppState = {
         name: "",
+        canvasBackgroundPattern: "none" as const,
         viewBackgroundColor: "#ffffff",
         selectedElementIds: {},
         editingGroupId: null,

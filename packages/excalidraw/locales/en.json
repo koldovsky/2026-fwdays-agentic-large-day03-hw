@@ -92,6 +92,8 @@
     "colorPicker": "Color picker",
     "canvasColors": "Used on canvas",
     "canvasBackground": "Canvas background",
+    "canvasBackgroundPattern": "Background pattern",
+    "canvasBackgroundPatternSquaredPaper": "Squared paper",
     "drawingCanvas": "Drawing canvas",
     "clearCanvas": "Clear canvas",
     "layers": "Layers",

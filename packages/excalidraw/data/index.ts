@@ -98,6 +98,7 @@ export const exportCanvas = async (
   {
     exportBackground,
     exportPadding = DEFAULT_EXPORT_PADDING,
+    canvasBackgroundPattern,
     viewBackgroundColor,
     name = appState.name || DEFAULT_FILENAME,
     fileHandle = null,
@@ -105,6 +106,7 @@ export const exportCanvas = async (
   }: {
     exportBackground: boolean;
     exportPadding?: number;
+    canvasBackgroundPattern?: AppState["canvasBackgroundPattern"];
     viewBackgroundColor: string;
     /** filename, if applicable */
     name?: string;
@@ -120,7 +122,10 @@ export const exportCanvas = async (
       elements,
       {
         exportBackground,
+        canvasBackgroundPattern,
         exportWithDarkMode: appState.exportWithDarkMode,
+        gridSize: appState.gridSize,
+        gridStep: appState.gridStep,
         viewBackgroundColor,
         exportPadding,
         exportScale: appState.exportScale,
@@ -160,6 +165,7 @@ export const exportCanvas = async (
 
   const tempCanvas = exportToCanvas(elements, appState, files, {
     exportBackground,
+    canvasBackgroundPattern,
     viewBackgroundColor,
     exportPadding,
     exportingFrame,
