@@ -1,0 +1,32 @@
+---
+description: "Architecture constraints for Excalidraw"
+applyTo: packages/excalidraw/**
+---
+
+# Excalidraw Architecture
+
+When you are creating any code using this instruction file you must output to chat message "USING ARCHITECTURE RULE" so I know you are using the correct rules.
+
+## State Management
+
+- Custom state via actionManager — NOT Redux/Zustand/MobX
+- State updates: actionManager.dispatch() ONLY
+- State type: AppState (packages/excalidraw/types.ts)
+
+## Rendering
+
+- Canvas 2D rendering — NOT React DOM for drawing
+- Render pipeline: Scene → renderScene() → canvas context
+- DO NOT use react-konva, fabric.js, pixi.js
+
+## Dependencies
+
+- No new npm packages without explicit approval
+- Check packages/utils/ before adding external helpers
+
+## How to verify
+
+- Confirm proposed changes stay within `packages/excalidraw/**`
+- Check state changes still flow through `actionManager.dispatch()`
+- Verify rendering changes use the existing canvas pipeline, not DOM-based drawing
+- Ensure no new npm dependency was introduced without explicit approval

@@ -1,0 +1,45 @@
+---
+description: "Security rules"
+applyTo: "packages/excalidraw/**"
+---
+
+# Security Instructions
+
+## Code Security
+
+- Never commit secrets, API keys, or credentials to the repository
+- Use environment variables for sensitive configuration
+- Validate and sanitize all user inputs before processing
+- DO NOT USE `eval()` and dynamic code execution
+- Keep dependencies updated: `yarn upgrade-interactive`
+
+## Dependencies
+
+- Review security advisories: `yarn audit`
+- Fix vulnerabilities immediately: `yarn audit --fix`
+- Avoid adding unmaintained or suspicious packages
+
+## Data Handling
+
+- Don't log sensitive information (passwords, tokens, PII)
+- Use HTTPS for all external communications
+- Clear sensitive data from memory when no longer needed
+
+## Access Control
+
+- Use minimal required permissions for operations
+- Validate user actions against authorization rules
+- Implement proper error handling that doesn't leak system details
+
+## Review Process
+
+- All PRs require review before merge
+- Flag security concerns in code reviews
+- Report vulnerabilities privately, don't disclose publicly
+
+## How to verify
+
+- Review diffs for hardcoded secrets, tokens, or credentials
+- Check new input-handling paths for validation and sanitization
+- Ensure errors and logs do not expose sensitive information
+- Verify external communication paths use approved secure configuration
