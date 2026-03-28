@@ -110,6 +110,7 @@ import {
   setDesktopUIMode,
   isSelectionLikeTool,
   oneOf,
+  sanitizeMermaidElementText,
 } from "@excalidraw/common";
 
 import {
@@ -3753,6 +3754,8 @@ class App extends React.Component<AppProps, AppState> {
       try {
         const { elements: skeletonElements, files = {} } =
           await api.parseMermaidToExcalidraw(data.text);
+
+        sanitizeMermaidElementText(skeletonElements);
 
         const elements = convertToExcalidrawElements(skeletonElements, {
           regenerateIds: true,

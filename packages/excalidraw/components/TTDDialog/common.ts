@@ -1,6 +1,7 @@
 import {
   DEFAULT_EXPORT_PADDING,
   EDITOR_LS_KEYS,
+  sanitizeMermaidElementText,
   THEME,
 } from "@excalidraw/common";
 
@@ -96,6 +97,8 @@ export const convertMermaidToExcalidraw = async ({
 
     const { elements, files = {} } = ret;
     setError(null);
+
+    sanitizeMermaidElementText(elements);
 
     data.current = {
       elements: convertToExcalidrawElements(elements, {
