@@ -252,40 +252,18 @@ reviews:
           FAIL if no approach mentioned or no justification provided.
 
       - mode: "warning"
-        name: "Specification artifacts present"
+        name: "Spec artifacts + implementation in packages/"
         instructions: >
-          Check that at least ONE of the following specification formats
-          is present and non-empty in the PR:
+          (1) Specification: at least ONE non-empty format in the PR —
+          Option A: docs/specs/*.md with Goal, Context, Component/Module,
+          Changes Required, Non-goals (2+), Acceptance Criteria (3+).
+          Option B: OpenSpec openspec/changes/<name>/ with proposal.md,
+          specs/**/*.md (SHALL/MUST + GIVEN/WHEN/THEN), tasks.md.
+          Option C: BMAD _bmad-output/planning-artifacts/PRD.md (+ optional
+          architecture, epics). FAIL if missing or placeholder-only.
 
-          Option A — Simple Markdown:
-          - At least one file in docs/specs/ with sections:
-            Goal, Context, Component/Module, Changes Required,
-            Non-goals (2+ items), Acceptance Criteria (3+ items)
-
-          Option B — OpenSpec:
-          - openspec/changes/<name>/proposal.md (with Why, What, Impact)
-          - openspec/changes/<name>/specs/<capability>/spec.md
-            (with ADDED/MODIFIED Requirements using SHALL/MUST
-            and Scenarios using GIVEN/WHEN/THEN)
-          - openspec/changes/<name>/tasks.md (implementation checklist)
-
-          Option C — BMAD:
-          - _bmad-output/planning-artifacts/PRD.md
-            (with User Stories, Acceptance Criteria, Out of Scope)
-          - Optionally: architecture.md, epics/
-
-          PASS if at least one option is fully present with substantive content.
-          FAIL if no specification artifacts exist, or they are empty/placeholder.
-
-      - mode: "warning"
-        name: "Implementation code present"
-        instructions: >
-          Check that the PR includes actual code changes in the packages/
-          directory (or excalidraw-app/ for app-level changes).
-          Changes should be implementation of the specification —
-          not just documentation or config changes.
-          PASS if there are meaningful code changes in packages/.
-          FAIL if PR contains only specs/docs without implementation.
+          (2) Implementation: meaningful code changes under packages/ or
+          excalidraw-app/, not only docs/config. FAIL if only specs/docs.
 
       - mode: "warning"
         name: "Self-review checklist in PR description"
