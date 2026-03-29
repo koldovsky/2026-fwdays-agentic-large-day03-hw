@@ -15,7 +15,6 @@ Two code paths call `parseMermaidToExcalidraw()` followed by `convertToExcalidra
 **Non-Goals:**
 - Full HTML sanitization of skeleton element text (other tags like `<b>`, `<i>` are not in scope)
 - Changes to `@excalidraw/mermaid-to-excalidraw` library itself
-- Handling `<BR>` uppercase (Mermaid only produces lowercase)
 
 ## Decisions
 
@@ -25,11 +24,13 @@ Two code paths call `parseMermaidToExcalidraw()` followed by `convertToExcalidra
 
 **Alternatives considered**:
 - *Inside `convertToExcalidrawElements()`*: Would be a lower-level change in the shared utility, but that function is general-purpose and should not carry Mermaid-specific concerns.
-- *A shared helper imported by both sites*: Reasonable for a larger HTML-normalization effort, but over-engineered for a two-line fix. The transformation is simple enough to inline.
+- *Inline at each call site*: Would avoid introducing a new export, but duplicates the regex and the field-mapping logic across two files.
+
+**Actual decision**: Extract `normalizeMermaidBrTags<T>()` as a shared helper in `packages/excalidraw/mermaid.ts` (already imported by `App.tsx`). Both call sites import and apply it immediately before `convertToExcalidrawElements()`.
 
 ### Regex pattern
 
-Use `/(<br\s*\/?>)/gi` to match `<br>`, `<br/>`, and `<br />` (case-insensitive for robustness) and replace with `\n`.
+Use `/<br\s*\/?>/gi` to match `<br>`, `<br/>`, and `<br />`. The `i` flag covers uppercase `<BR>` for robustness even though Mermaid only produces lowercase. The `g` flag replaces all occurrences in a single field.
 
 ## Risks / Trade-offs
 

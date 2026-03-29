@@ -1,3 +1,5 @@
+# Tasks: Fix Mermaid `<br>` Tag Rendering
+
 ## 1. Core Fix
 
 - [x] 1.1 In `packages/excalidraw/components/App.tsx`, after `parseMermaidToExcalidraw()` returns `skeletonElements`, map over the array and replace `<br>`, `<br/>`, and `<br />` with `\n` in all text/label fields before calling `convertToExcalidrawElements()`
@@ -12,3 +14,19 @@
 ## 3. Snapshot Updates
 
 - [x] 3.1 Run `yarn test:update` to regenerate any affected snapshots (e.g., `MermaidToExcalidraw.test.tsx.snap`)
+- [x] 3.2 Run `yarn build` to verify the project builds successfully
+
+
+## 4. Self-Review Checklist
+
+- [x] SDD approach is chosen and justified (Markdown / OpenSpec / BMAD)
+- [x] Implementation matches the specification
+- [x] Project conventions are followed (per rules)
+- [x] Edge cases are handled
+- [x] Blast radius is acceptable (minimal unrelated changes)
+- [x] Existing tests pass
+- [x] New tests are added (if needed)
+- [x] No security concerns
+- [x] i18n is handled correctly
+- [x] No hardcoded values
+- [x] Another developer can understand this code without explanations
