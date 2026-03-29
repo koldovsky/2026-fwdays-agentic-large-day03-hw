@@ -16,7 +16,7 @@ I'll create a change with artifacts:
 - design.md (how)
 - tasks.md (implementation steps)
 
-When ready to implement, run /opsx:apply
+When ready to implement, run `/opsx-apply`
 
 ---
 
@@ -24,10 +24,10 @@ When ready to implement, run /opsx:apply
 
 **Steps**
 
-1. **If no clear input provided, ask what they want to build**
+1. **If no clear input provided, ask what they want to create**
 
    Use the **AskUserQuestion tool** (open-ended, no preset options) to ask:
-   > "What change do you want to work on? Describe what you want to build or fix."
+   > "What change do you want to work on? Describe the feature or fix you have in mind."
 
    From their description, derive a kebab-case name (e.g., "add user authentication" → `add-user-auth`).
 
@@ -90,7 +90,7 @@ After completing all artifacts, summarize:
 - Change name and location
 - List of artifacts created with brief descriptions
 - What's ready: "All artifacts created! Ready for implementation."
-- Prompt: "Run `/opsx:apply` or ask me to implement to start working on the tasks."
+- Prompt: "Run `/opsx-apply` or ask me to implement to start working on the tasks."
 
 **Artifact Creation Guidelines**
 

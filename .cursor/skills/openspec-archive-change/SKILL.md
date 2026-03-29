@@ -63,7 +63,9 @@ Archive a completed change in the experimental workflow.
    - If changes needed: "Sync now (recommended)", "Archive without syncing"
    - If already synced: "Archive now", "Sync anyway", "Cancel"
 
-   If user chooses sync, use Task tool (subagent_type: "general-purpose", prompt: "Use Skill tool to invoke openspec-sync-specs for change '<name>'. Delta spec analysis: <include the analyzed delta spec summary>"). Proceed to archive regardless of choice.
+   If user chooses **Sync now** or **Sync anyway**: merge delta specs from `openspec/changes/<name>/specs/` into the matching `openspec/specs/<capability>/spec.md` files using the summary from the assessment (this OpenSpec CLI has no `openspec sync` command or `openspec-sync-specs` skill), then run `openspec validate --specs` and `openspec validate "<name>"` (change id as positional argument) as needed.
+   If user chooses **Cancel**: stop without merging, validating, or archiving.
+   If user chooses **Archive without syncing** or **Archive now**: proceed to the archive step without running the merge/validate sync path.
 
 5. **Perform the archive**
 
@@ -110,5 +112,5 @@ All artifacts complete. All tasks complete.
 - Don't block archive on warnings - just inform and confirm
 - Preserve .openspec.yaml when moving to archive (it moves with the directory)
 - Show clear summary of what happened
-- If sync is requested, use openspec-sync-specs approach (agent-driven)
+- If sync is requested, merge delta specs into `openspec/specs/` and validate with `openspec validate` (no separate sync skill)
 - If delta specs exist, always run the sync assessment and show the combined summary before prompting

@@ -179,5 +179,32 @@ describe("laser tool interactions", () => {
       });
       expect(getLaserTrailPersistenceMode()).toBe("persistent");
     });
+
+    it("clears persistent laser marks via Clear laser marks control", async () => {
+      await render(<Excalidraw />);
+      act(() => {
+        setLaserTrailPersistenceMode("persistent", { app: h.app });
+        h.app.laserTrails.startPath(10, 10);
+        h.app.laserTrails.addPointToPath(20, 20);
+        h.app.laserTrails.endPath();
+      });
+      expect(h.app.laserTrails.hasLocalContent()).toBe(true);
+      expect(getLaserTrailPersistenceMode()).toBe("persistent");
+
+      const moreToolsTrigger = document.querySelector(
+        ".App-toolbar .App-toolbar__extra-tools-trigger",
+      ) as HTMLElement | null;
+      expect(moreToolsTrigger).toBeTruthy();
+      await act(async () => {
+        fireEvent.click(moreToolsTrigger!);
+      });
+      const clearBtn = await screen.findByTestId("laser-clear-marks");
+      await act(async () => {
+        fireEvent.click(clearBtn);
+      });
+
+      expect(h.app.laserTrails.hasLocalContent()).toBe(false);
+      expect(getLaserTrailPersistenceMode()).toBe("persistent");
+    });
   });
 });

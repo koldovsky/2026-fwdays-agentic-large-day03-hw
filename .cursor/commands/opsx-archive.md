@@ -7,7 +7,7 @@ description: Archive a completed change in the experimental workflow
 
 Archive a completed change in the experimental workflow.
 
-**Input**: Optionally specify a change name after `/opsx:archive` (e.g., `/opsx:archive add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
+**Input**: Optionally specify a change name after `/opsx-archive` (e.g., `/opsx-archive add-auth`). If omitted, check if it can be inferred from conversation context. If vague or ambiguous you MUST prompt for available changes.
 
 **Steps**
 
@@ -59,8 +59,8 @@ Archive a completed change in the experimental workflow.
    - If changes needed: "Sync now (recommended)", "Archive without syncing"
    - If already synced: "Archive now", "Sync anyway", "Cancel"
 
-   If user chooses sync, use Task tool (subagent_type: "general-purpose", prompt: "Use Skill tool to invoke openspec-sync-specs for change '<name>'. Delta spec analysis: <include the analyzed delta spec summary>").
-   If user chooses cancel, stop and return without archiving.
+   If user chooses sync: merge the delta specs under `openspec/changes/<name>/specs/` into the corresponding `openspec/specs/<capability>/spec.md` files per the summary (this OpenSpec CLI has no separate `openspec sync` command), then run `openspec validate --specs` and `openspec validate "<name>"` to confirm.
+   If user chooses cancel, stop and return without archiving (do not run sync steps or perform the archive).
    Otherwise, proceed to archive.
 5. **Perform the archive**
 
@@ -154,5 +154,5 @@ Target archive directory already exists.
 - Don't block archive on warnings - just inform and confirm
 - Preserve .openspec.yaml when moving to archive (it moves with the directory)
 - Show clear summary of what happened
-- If sync is requested, use the Skill tool to invoke `openspec-sync-specs` (agent-driven)
+- If sync is requested, merge delta specs into `openspec/specs/` per the assessed summary, then validate with `openspec validate` (no `openspec-sync-specs` skill in this repo)
 - If delta specs exist, always run the sync assessment and show the combined summary before prompting

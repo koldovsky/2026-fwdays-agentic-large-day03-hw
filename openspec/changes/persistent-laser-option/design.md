@@ -1,4 +1,4 @@
-## Context
+# Context
 
 Laser strokes are rendered as SVG trails via `LaserTrails` → `AnimatedTrail` → `@excalidraw/laser-pointer`. Temporary fading is implemented in `laser-trails.ts` through `sizeMapping`, which reduces stroke contribution using `performance.now()` (`DECAY_TIME` ≈ 1s) and path length. `AnimatedTrail.onFrame` drops trails when `getStrokeOutline()` is empty. There is already `AnimatedTrail.clearTrails()` for wiping past trails.
 

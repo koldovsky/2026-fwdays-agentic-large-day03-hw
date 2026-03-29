@@ -26,3 +26,11 @@ The laser tool currently fades strokes using a time-based decay in trail renderi
 - **Tests**: `packages/excalidraw/tests/laser.test.tsx` and any new unit/UI tests for mode toggle and clear.
 - **Dependencies**: Existing `@excalidraw/laser-pointer`; no new packages expected unless design requires it.
 - **API / embed**: If `AppState` or props surface laser options, document for hosts; default behavior unchanged.
+
+## Risks
+
+- **Performance with many persistent strokes** — Large `pastTrails` growth could slow laser updates. *Mitigation:* Cap segment count or batch invalidations; add tests around many-stroke sessions; monitor frame time in manual QA.
+- **UX confusion (Temporary vs Persistent)** — Users may not understand why marks linger or how to remove them. *Mitigation:* Default **Temporary**; clear labels/tooltips; show **Clear laser marks** only when relevant; document in help/release notes.
+- **Backward compatibility / sessions** — Existing flows assume ephemeral laser only. *Mitigation:* Default unchanged; treat persistence as opt-in; document embed/host expectations.
+- **Collaboration / sync** — Remote lasers may not match local persistence semantics. *Mitigation:* v1 local-only persistence for completed strokes where needed; document protocol limits; add tests for local vs remote where applicable.
+- **Test and maintenance burden** — Mode toggle, clear, and decay branches multiply scenarios. *Mitigation:* Keep automated coverage (`laser.test.tsx`, typecheck, app tests); require `yarn build` before merge for packaging regressions.

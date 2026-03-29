@@ -14,6 +14,13 @@ import type { AnimationFrameHandler } from "./animation-frame-handler";
 import type App from "./components/App";
 import type { SocketId } from "./types";
 
+/** Time window (ms) over which temporary laser stroke width decays. */
+const TRAIL_DECAY_TIME_MS = 1000;
+/** Path length (px) over which temporary laser stroke width decays along the trail. */
+const TRAIL_DECAY_LENGTH_PX = 50;
+/** Persistence mode value when laser strokes do not time-decay locally. */
+const TRAIL_LIFETIME_PERSISTENT = "persistent";
+
 export class LaserTrails implements Trail {
   public localTrail: AnimatedTrail;
   private collabTrails = new Map<SocketId, AnimatedTrail>();
@@ -37,16 +44,14 @@ export class LaserTrails implements Trail {
       simplify: 0,
       streamline: 0.4,
       sizeMapping: (c) => {
-        const DECAY_TIME = 1000;
-        const DECAY_LENGTH = 50;
         const t = Math.max(
           0,
-          1 - (performance.now() - c.pressure) / DECAY_TIME,
+          1 - (performance.now() - c.pressure) / TRAIL_DECAY_TIME_MS,
         );
         const l =
-          (DECAY_LENGTH -
-            Math.min(DECAY_LENGTH, c.totalLength - c.currentIndex)) /
-          DECAY_LENGTH;
+          (TRAIL_DECAY_LENGTH_PX -
+            Math.min(TRAIL_DECAY_LENGTH_PX, c.totalLength - c.currentIndex)) /
+          TRAIL_DECAY_LENGTH_PX;
 
         return Math.min(easeOut(l), easeOut(t));
       },
@@ -58,19 +63,17 @@ export class LaserTrails implements Trail {
       simplify: 0,
       streamline: 0.4,
       sizeMapping: (c) => {
-        if (getLaserTrailPersistenceMode() === "persistent") {
+        if (getLaserTrailPersistenceMode() === TRAIL_LIFETIME_PERSISTENT) {
           return 1;
         }
-        const DECAY_TIME = 1000;
-        const DECAY_LENGTH = 50;
         const t = Math.max(
           0,
-          1 - (performance.now() - c.pressure) / DECAY_TIME,
+          1 - (performance.now() - c.pressure) / TRAIL_DECAY_TIME_MS,
         );
         const l =
-          (DECAY_LENGTH -
-            Math.min(DECAY_LENGTH, c.totalLength - c.currentIndex)) /
-          DECAY_LENGTH;
+          (TRAIL_DECAY_LENGTH_PX -
+            Math.min(TRAIL_DECAY_LENGTH_PX, c.totalLength - c.currentIndex)) /
+          TRAIL_DECAY_LENGTH_PX;
 
         return Math.min(easeOut(l), easeOut(t));
       },
@@ -79,7 +82,6 @@ export class LaserTrails implements Trail {
 
   clearLocalTrails() {
     this.localTrail.clearTrails();
-    bumpLaserPersistenceUi();
   }
 
   hasLocalContent() {
@@ -88,7 +90,7 @@ export class LaserTrails implements Trail {
 
   startPath(x: number, y: number): void {
     this.localTrail.startPath(x, y);
-    if (getLaserTrailPersistenceMode() === "persistent") {
+    if (getLaserTrailPersistenceMode() === TRAIL_LIFETIME_PERSISTENT) {
       bumpLaserPersistenceUi();
     }
   }
@@ -99,7 +101,7 @@ export class LaserTrails implements Trail {
 
   endPath(): void {
     this.localTrail.endPath();
-    if (getLaserTrailPersistenceMode() === "persistent") {
+    if (getLaserTrailPersistenceMode() === TRAIL_LIFETIME_PERSISTENT) {
       bumpLaserPersistenceUi();
     }
   }

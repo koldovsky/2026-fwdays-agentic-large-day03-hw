@@ -42,16 +42,17 @@ export const setLaserTrailPersistenceMode = (
   mode = next;
   if (prev === "persistent" && next === "temporary" && opts?.app) {
     opts.app.laserTrails.clearLocalTrails();
-  } else {
-    bumpLaserPersistenceUi();
   }
+  bumpLaserPersistenceUi();
 };
 
 export const clearPersistentLaserMarks = (app: AppWithLaserTrails) => {
   app.laserTrails.clearLocalTrails();
+  bumpLaserPersistenceUi();
 };
 
 export const resetLaserPersistenceForNewScene = (app: AppWithLaserTrails) => {
   mode = "temporary";
   app.laserTrails.clearLocalTrails();
+  bumpLaserPersistenceUi();
 };
