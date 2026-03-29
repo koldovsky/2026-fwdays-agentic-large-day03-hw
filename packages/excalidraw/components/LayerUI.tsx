@@ -59,6 +59,10 @@ import { HintViewer } from "./HintViewer";
 import { ImageExportDialog } from "./ImageExportDialog";
 import { Island } from "./Island";
 import { JSONExportDialog } from "./JSONExportDialog";
+import {
+  LaserToolIslandControls,
+  type AppWithLaserTrailsForTool,
+} from "./laser-tool-options";
 import { LaserPointerButton } from "./LaserPointerButton";
 import { Toast } from "./Toast";
 
@@ -374,16 +378,21 @@ const LayerUI = ({
                               height: "fit-content",
                             }}
                           >
-                            <LaserPointerButton
-                              title={t("toolBar.laser")}
-                              checked={
-                                appState.activeTool.type === TOOL_TYPE.laser
-                              }
-                              onChange={() =>
-                                app.setActiveTool({ type: TOOL_TYPE.laser })
-                              }
-                              isMobile
-                            />
+                            <Stack.Col gap={2} align="center">
+                              <LaserPointerButton
+                                title={t("toolBar.laser")}
+                                checked={
+                                  appState.activeTool.type === TOOL_TYPE.laser
+                                }
+                                onChange={() =>
+                                  app.setActiveTool({ type: TOOL_TYPE.laser })
+                                }
+                                isMobile
+                              />
+                              <LaserToolIslandControls
+                                app={app as AppWithLaserTrailsForTool}
+                              />
+                            </Stack.Col>
                           </Island>
                         )}
                       </Stack.Row>

@@ -1,0 +1,36 @@
+---
+description: "Conventions for the excalidraw-app web application"
+globs: excalidraw-app/**
+alwaysApply: false
+---
+
+# excalidraw-app
+
+This package is the full product shell around `@excalidraw/excalidraw`. Prefer keeping **app-only** concerns here; core editor behavior belongs in `packages/excalidraw/`.
+
+## Boundaries
+
+- Import the public API of packages where possible; avoid deep imports into `packages/excalidraw` internals unless already established in this repo.
+- App routing, hosting config (Vite), analytics, collaboration UI, and deployment-specific code live under `excalidraw-app/`.
+
+## Vite and env
+
+- Use `import.meta.env` for build-time configuration; document new `VITE_*` variables for local setup.
+- Do not ship secrets in client bundles — anything prefixed for the client is visible in the browser.
+
+## Styling and UI
+
+- Match existing layout and component patterns in the app; reuse shared styles/components before adding parallel systems.
+
+```tsx
+// ✅ GOOD — app feature colocated
+// excalidraw-app/components/MyPanel.tsx
+
+// ❌ BAD — duplicating core editor logic that belongs in packages/excalidraw
+```
+
+## How to verify
+
+- `yarn test:typecheck` and, when tests exist for the area, `yarn test:app` (see `.cursor/rules/testing.mdc` for all scripts).
+- Run the Vite dev server for `excalidraw-app` and **manually** smoke-test routing, env-driven features, and any UI you changed.
+- Confirm new `VITE_*` variables are documented and that no secrets ship in client bundles.

@@ -14,6 +14,10 @@ import { useTunnels } from "../context/tunnels";
 import { HandButton } from "./HandButton";
 import { ToolButton } from "./ToolButton";
 import DropdownMenu from "./dropdownMenu/DropdownMenu";
+import {
+  LaserToolDropdownSection,
+  type AppWithLaserTrailsForTool,
+} from "./laser-tool-options";
 import { ToolPopover } from "./ToolPopover";
 
 import {
@@ -455,6 +459,9 @@ export const MobileToolBar = ({
           >
             {t("toolBar.laser")}
           </DropdownMenu.Item>
+          <LaserToolDropdownSection
+            app={app as AppWithLaserTrailsForTool}
+          />
           <div style={{ margin: "6px 0", fontSize: 14, fontWeight: 600 }}>
             Generate
           </div>

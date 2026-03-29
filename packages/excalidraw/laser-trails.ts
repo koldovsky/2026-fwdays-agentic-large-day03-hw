@@ -3,6 +3,10 @@ import { DEFAULT_LASER_COLOR, easeOut } from "@excalidraw/common";
 import type { LaserPointerOptions } from "@excalidraw/laser-pointer";
 
 import { AnimatedTrail } from "./animated-trail";
+import {
+  bumpLaserPersistenceUi,
+  getLaserTrailPersistenceMode,
+} from "./laser-persistence";
 import { getClientColor } from "./clients";
 
 import type { Trail } from "./animated-trail";
@@ -23,12 +27,12 @@ export class LaserTrails implements Trail {
     this.animationFrameHandler.register(this, this.onFrame.bind(this));
 
     this.localTrail = new AnimatedTrail(animationFrameHandler, app, {
-      ...this.getTrailOptions(),
+      ...this.getLocalTrailOptions(),
       fill: () => DEFAULT_LASER_COLOR,
     });
   }
 
-  private getTrailOptions() {
+  private getCollaboratorTrailOptions() {
     return {
       simplify: 0,
       streamline: 0.4,
@@ -49,8 +53,44 @@ export class LaserTrails implements Trail {
     } as Partial<LaserPointerOptions>;
   }
 
+  private getLocalTrailOptions() {
+    return {
+      simplify: 0,
+      streamline: 0.4,
+      sizeMapping: (c) => {
+        if (getLaserTrailPersistenceMode() === "persistent") {
+          return 1;
+        }
+        const DECAY_TIME = 1000;
+        const DECAY_LENGTH = 50;
+        const t = Math.max(
+          0,
+          1 - (performance.now() - c.pressure) / DECAY_TIME,
+        );
+        const l =
+          (DECAY_LENGTH -
+            Math.min(DECAY_LENGTH, c.totalLength - c.currentIndex)) /
+          DECAY_LENGTH;
+
+        return Math.min(easeOut(l), easeOut(t));
+      },
+    } as Partial<LaserPointerOptions>;
+  }
+
+  clearLocalTrails() {
+    this.localTrail.clearTrails();
+    bumpLaserPersistenceUi();
+  }
+
+  hasLocalContent() {
+    return this.localTrail.hasContent();
+  }
+
   startPath(x: number, y: number): void {
     this.localTrail.startPath(x, y);
+    if (getLaserTrailPersistenceMode() === "persistent") {
+      bumpLaserPersistenceUi();
+    }
   }
 
   addPointToPath(x: number, y: number): void {
@@ -59,6 +99,9 @@ export class LaserTrails implements Trail {
 
   endPath(): void {
     this.localTrail.endPath();
+    if (getLaserTrailPersistenceMode() === "persistent") {
+      bumpLaserPersistenceUi();
+    }
   }
 
   start(container: SVGSVGElement) {
@@ -87,7 +130,7 @@ export class LaserTrails implements Trail {
 
       if (!this.collabTrails.has(key)) {
         trail = new AnimatedTrail(this.animationFrameHandler, this.app, {
-          ...this.getTrailOptions(),
+          ...this.getCollaboratorTrailOptions(),
           fill: () =>
             collaborator.pointer?.laserColor ||
             getClientColor(key, collaborator),
