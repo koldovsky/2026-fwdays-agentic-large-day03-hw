@@ -21,3 +21,4 @@
 - [x] 4.1 Extend or add tests in `packages/excalidraw/tests/laser.test.tsx` (or colocated tests) for default temporary behavior, persistent visibility, clear, and mode switch.
 - [x] 4.2 Run `yarn test:typecheck` and targeted `yarn test:app` (or `yarn test:all` if core paths touched).
 - [x] 4.3 Manual QA: laser on/off, collab bar if applicable, zoom/pan with persistent strokes.
+- [ ] 4.4 Run `yarn build` and confirm successful production build.
