@@ -5161,6 +5161,36 @@ class App extends React.Component<AppProps, AppState> {
         event.preventDefault();
       } else if (event.key === KEYS.ENTER) {
         const selectedElements = this.scene.getSelectedElements(this.state);
+        const selectedGroupIds = getSelectedGroupIds(this.state);
+        if (selectedGroupIds.length > 0) {
+          const groupId = selectedGroupIds[selectedGroupIds.length - 1];
+          const elementsInGroup = getElementsInGroup(
+            this.scene.getNonDeletedElements(),
+            groupId,
+          );
+          const allGroupElementIds = elementsInGroup.reduce(
+            (acc: Record<string, true>, el) => {
+              acc[el.id] = true;
+              return acc;
+            },
+            {},
+          );
+          this.store.scheduleCapture();
+          this.setState((prevState) => ({
+            ...prevState,
+            ...selectGroupsForSelectedElements(
+              {
+                editingGroupId: groupId,
+                selectedElementIds: allGroupElementIds,
+              },
+              this.scene.getNonDeletedElements(),
+              prevState,
+              this,
+            ),
+          }));
+          event.preventDefault();
+          return;
+        }
         if (selectedElements.length === 1) {
           const selectedElement = selectedElements[0];
           if (event[KEYS.CTRL_OR_CMD] || isLineElement(selectedElement)) {
