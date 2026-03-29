@@ -564,6 +564,72 @@ describe("deselecting", () => {
     await render(<Excalidraw handleKeyboardGlobally={true} />);
   });
 
+  it("enter key enters group edit mode and selects all group elements", () => {
+    const rectA = API.createElement({
+      type: "rectangle",
+      x: 0,
+      y: 0,
+      groupIds: ["groupA"],
+    });
+    const rectB = API.createElement({
+      type: "rectangle",
+      x: 100,
+      y: 0,
+      groupIds: ["groupA"],
+    });
+
+    API.setElements([rectA, rectB]);
+
+    // Click to select the group
+    mouse.select(rectA);
+    assertSelectedElements(rectA, rectB);
+    expect(h.state.editingGroupId).toBeNull();
+    expect(h.state.selectedGroupIds).toEqual({ groupA: true });
+
+    // Press Enter to edit the group
+    Keyboard.keyPress(KEYS.ENTER);
+    expect(h.state.editingGroupId).toBe("groupA");
+    assertSelectedElements(rectA, rectB);
+
+    // Press Escape to exit group edit
+    Keyboard.keyPress(KEYS.ESCAPE);
+    expect(h.state.editingGroupId).toBeNull();
+    assertSelectedElements(rectA, rectB);
+    expect(h.state.selectedGroupIds).toEqual({ groupA: true });
+  });
+
+  it("enter key enters outermost group in nested groups", () => {
+    const rectA = API.createElement({
+      type: "rectangle",
+      x: 0,
+      y: 0,
+      groupIds: ["inner", "outer"],
+    });
+    const rectB = API.createElement({
+      type: "rectangle",
+      x: 100,
+      y: 0,
+      groupIds: ["outer"],
+    });
+    const rectC = API.createElement({
+      type: "rectangle",
+      x: 200,
+      y: 0,
+      groupIds: ["inner", "outer"],
+    });
+
+    API.setElements([rectA, rectB, rectC]);
+
+    // Click to select the outer group
+    mouse.select(rectA);
+    assertSelectedElements(rectA, rectB, rectC);
+    expect(h.state.editingGroupId).toBeNull();
+
+    // Press Enter to edit the outer group
+    Keyboard.keyPress(KEYS.ENTER);
+    expect(h.state.editingGroupId).toBe("outer");
+  });
+
   it("esc unwinds nested group editing before deselecting", () => {
     const rectA = API.createElement({
       type: "rectangle",

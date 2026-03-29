@@ -5162,7 +5162,7 @@ class App extends React.Component<AppProps, AppState> {
       } else if (event.key === KEYS.ENTER) {
         const selectedElements = this.scene.getSelectedElements(this.state);
         const selectedGroupIds = getSelectedGroupIds(this.state);
-        if (selectedGroupIds.length > 0) {
+        if (selectedGroupIds.length > 0 && !this.state.viewModeEnabled) {
           const groupId = selectedGroupIds[selectedGroupIds.length - 1];
           const elementsInGroup = getElementsInGroup(
             this.scene.getNonDeletedElements(),
