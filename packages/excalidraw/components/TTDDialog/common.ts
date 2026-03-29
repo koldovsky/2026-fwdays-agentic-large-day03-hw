@@ -15,6 +15,8 @@ import type {
 
 import { EditorLocalStorage } from "../../data/EditorLocalStorage";
 
+import { normalizeMermaidBrTags } from "../../mermaid";
+
 import type { MermaidToExcalidrawLibProps } from "./types";
 
 import type { AppClassProperties, BinaryFiles } from "../../types";
@@ -98,9 +100,10 @@ export const convertMermaidToExcalidraw = async ({
     setError(null);
 
     data.current = {
-      elements: convertToExcalidrawElements(elements, {
-        regenerateIds: true,
-      }),
+      elements: convertToExcalidrawElements(
+        normalizeMermaidBrTags(elements),
+        { regenerateIds: true },
+      ),
       files,
     };
 

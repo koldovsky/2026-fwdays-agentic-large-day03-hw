@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("@excalidraw/utils", () => ({
+  exportToCanvas: vi.fn().mockResolvedValue(document.createElement("canvas")),
+}));
+
 import { convertMermaidToExcalidraw } from "./common";
 
 type ConvertMermaidArgs = Parameters<typeof convertMermaidToExcalidraw>[0];
@@ -10,6 +14,7 @@ type ParseMermaidToExcalidraw = Awaited<
 const createConvertArgs = (
   mermaidDefinition: string,
   parseMermaidToExcalidraw: ParseMermaidToExcalidraw,
+  data: ConvertMermaidArgs["data"] = { current: { elements: [], files: null } },
 ): ConvertMermaidArgs => {
   const parent = document.createElement("div");
   const canvas = document.createElement("div");
@@ -23,12 +28,7 @@ const createConvertArgs = (
     },
     mermaidDefinition,
     setError: vi.fn(),
-    data: {
-      current: {
-        elements: [],
-        files: null,
-      },
-    },
+    data,
     theme: "light",
   };
 };
@@ -64,6 +64,51 @@ describe("convertMermaidToExcalidraw", () => {
     if (!result.success) {
       expect(result.error).toBe(originalError);
     }
+  });
+
+  it("normalizes <br> tags in text element text field to newlines", async () => {
+    const parseMermaidToExcalidraw = vi.fn<ParseMermaidToExcalidraw>().mockResolvedValue({
+      elements: [
+        { type: "text", text: "Line1<br>Line2", x: 0, y: 0, fontSize: 16 },
+      ],
+      files: {},
+    });
+
+    const data: ConvertMermaidArgs["data"] = {
+      current: { elements: [], files: null },
+    };
+    const result = await convertMermaidToExcalidraw(
+      createConvertArgs("flowchart TD\nA[test]", parseMermaidToExcalidraw, data),
+    );
+
+    expect(result.success).toBe(true);
+    const textEl = data.current.elements.find((el) => el.type === "text");
+    expect(textEl?.text).toBe("Line1\nLine2");
+  });
+
+  it("normalizes <br/> and <br /> variants in container label to newlines", async () => {
+    const parseMermaidToExcalidraw = vi.fn<ParseMermaidToExcalidraw>().mockResolvedValue({
+      elements: [
+        {
+          type: "rectangle",
+          x: 0,
+          y: 0,
+          label: { text: "Title<br/>Sub<br />End", fontSize: 16 },
+        },
+      ],
+      files: {},
+    });
+
+    const data: ConvertMermaidArgs["data"] = {
+      current: { elements: [], files: null },
+    };
+    const result = await convertMermaidToExcalidraw(
+      createConvertArgs("flowchart TD\nA[test]", parseMermaidToExcalidraw, data),
+    );
+
+    expect(result.success).toBe(true);
+    const textEl = data.current.elements.find((el) => el.type === "text");
+    expect(textEl?.text).toBe("Title\nSub\nEnd");
   });
 
   it("does not retry quote normalization when the input has no double quotes", async () => {
