@@ -598,6 +598,36 @@ describe("deselecting", () => {
     expect(h.state.selectedGroupIds).toEqual({ groupA: true });
   });
 
+  it("enter key does not enter group edit in view mode", () => {
+    const rectA = API.createElement({
+      type: "rectangle",
+      x: 0,
+      y: 0,
+      groupIds: ["groupA"],
+    });
+    const rectB = API.createElement({
+      type: "rectangle",
+      x: 100,
+      y: 0,
+      groupIds: ["groupA"],
+    });
+
+    API.setElements([rectA, rectB]);
+
+    // Click to select the group
+    mouse.select(rectA);
+    assertSelectedElements(rectA, rectB);
+    expect(h.state.editingGroupId).toBeNull();
+    expect(h.state.selectedGroupIds).toEqual({ groupA: true });
+
+    // Enable view mode
+    API.setAppState({ viewModeEnabled: true });
+
+    // Press Enter — should NOT enter group edit
+    Keyboard.keyPress(KEYS.ENTER);
+    expect(h.state.editingGroupId).toBeNull();
+  });
+
   it("enter key enters outermost group in nested groups", () => {
     const rectA = API.createElement({
       type: "rectangle",
