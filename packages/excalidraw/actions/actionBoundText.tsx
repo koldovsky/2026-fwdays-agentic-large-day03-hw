@@ -1,5 +1,6 @@
 import {
   BOUND_TEXT_PADDING,
+  KEYS,
   ROUNDNESS,
   TEXT_ALIGN,
   VERTICAL_ALIGN,
@@ -219,6 +220,29 @@ const pushContainerBelowText = (
 
   return updatedElements;
 };
+
+export const actionToggleContainerBinding = register({
+  name: "toggleContainerBinding",
+  label: "labels.toggleContainerBinding",
+  trackEvent: { category: "element" },
+  predicate: (elements, appState, _, app) => {
+    const selectedElements = app.scene.getSelectedElements(appState);
+    return selectedElements.some((el) => isTextElement(el));
+  },
+  keyTest: (event) =>
+    event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey &&
+    event.key === KEYS.W,
+  perform: (elements, appState, formData, app) => {
+    const selectedElements = app.scene.getSelectedElements(appState);
+    const hasUnboundText = selectedElements.some(
+      (el) => isTextElement(el) && !isBoundToContainer(el),
+    );
+    if (hasUnboundText) {
+      return actionWrapTextInContainer.perform(elements, appState, formData, app);
+    }
+    return actionUnbindText.perform(elements, appState, formData, app);
+  },
+});
 
 export const actionWrapTextInContainer = register({
   name: "wrapTextInContainer",

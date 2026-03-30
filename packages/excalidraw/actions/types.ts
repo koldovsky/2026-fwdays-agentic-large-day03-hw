@@ -135,6 +135,7 @@ export type ActionName =
   | "setEmbeddableAsActiveTool"
   | "createContainerFromText"
   | "wrapTextInContainer"
+  | "toggleContainerBinding"
   | "commandPalette"
   | "autoResize"
   | "elementStats"
