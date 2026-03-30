@@ -1,16 +1,16 @@
 import {
-  COLOR_PALETTE,
   ARROW_TYPE,
+  COLOR_PALETTE,
   DEFAULT_ELEMENT_PROPS,
   DEFAULT_FONT_FAMILY,
   DEFAULT_FONT_SIZE,
-  DEFAULT_TEXT_ALIGN,
   DEFAULT_GRID_SIZE,
+  DEFAULT_GRID_STEP,
+  DEFAULT_TEXT_ALIGN,
   EXPORT_SCALES,
+  isTestEnv,
   STATS_PANELS,
   THEME,
-  DEFAULT_GRID_STEP,
-  isTestEnv,
 } from "@excalidraw/common";
 
 import type { AppState, NormalizedZoomValue } from "./types";
@@ -43,6 +43,7 @@ export const getDefaultAppState = (): Omit<
     currentItemTextAlign: DEFAULT_TEXT_ALIGN,
     currentHoveredFontFamily: null,
     cursorButton: "up",
+    laserToolPersistence: false,
     activeEmbeddable: null,
     newElement: null,
     editingTextElement: null,
@@ -174,6 +175,7 @@ const APP_STATE_STORAGE_CONF = (<
   currentItemTextAlign: { browser: true, export: false, server: false },
   currentHoveredFontFamily: { browser: false, export: false, server: false },
   cursorButton: { browser: true, export: false, server: false },
+  laserToolPersistence: { browser: true, export: false, server: false },
   activeEmbeddable: { browser: false, export: false, server: false },
   newElement: { browser: false, export: false, server: false },
   editingTextElement: { browser: false, export: false, server: false },

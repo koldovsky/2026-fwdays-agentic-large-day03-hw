@@ -23,7 +23,7 @@ export class LaserTrails implements Trail {
     this.animationFrameHandler.register(this, this.onFrame.bind(this));
 
     this.localTrail = new AnimatedTrail(animationFrameHandler, app, {
-      ...this.getTrailOptions(),
+      ...this.getLocalTrailOptions(),
       fill: () => DEFAULT_LASER_COLOR,
     });
   }
@@ -47,6 +47,34 @@ export class LaserTrails implements Trail {
         return Math.min(easeOut(l), easeOut(t));
       },
     } as Partial<LaserPointerOptions>;
+  }
+
+  private getLocalTrailOptions() {
+    return {
+      ...this.getTrailOptions(),
+      sizeMapping: (c) => {
+        if (this.app.state.laserToolPersistence) {
+          return 1;
+        }
+        const DECAY_TIME = 1000;
+        const DECAY_LENGTH = 50;
+        const t = Math.max(
+          0,
+          1 - (performance.now() - c.pressure) / DECAY_TIME,
+        );
+        const l =
+          (DECAY_LENGTH -
+            Math.min(DECAY_LENGTH, c.totalLength - c.currentIndex)) /
+          DECAY_LENGTH;
+
+        return Math.min(easeOut(l), easeOut(t));
+      },
+      persistent: () => this.app.state.laserToolPersistence,
+    } as Partial<LaserPointerOptions>;
+  }
+
+  clearTrails(): void {
+    this.localTrail.clearTrails();
   }
 
   startPath(x: number, y: number): void {

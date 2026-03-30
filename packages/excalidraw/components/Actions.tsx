@@ -1,24 +1,24 @@
 import clsx from "clsx";
-import { useRef, useState } from "react";
 import { Popover } from "radix-ui";
+import { useRef, useState } from "react";
 
 import {
-  CLASSES,
-  KEYS,
   capitalizeString,
+  CLASSES,
   isTransparent,
+  KEYS,
 } from "@excalidraw/common";
 
 import {
-  shouldAllowVerticalAlign,
-  suppportsHorizontalAlign,
   hasBoundTextElement,
+  hasStrokeColor,
+  isArrowElement,
   isElbowArrow,
   isImageElement,
   isLinearElement,
   isTextElement,
-  isArrowElement,
-  hasStrokeColor,
+  shouldAllowVerticalAlign,
+  suppportsHorizontalAlign,
   toolIsArrow,
 } from "@excalidraw/element";
 
@@ -57,43 +57,43 @@ import "./Actions.scss";
 
 import {
   useEditorInterface,
-  useStylesPanelMode,
   useExcalidrawContainer,
+  useStylesPanelMode,
 } from "./App";
+import { PropertiesPopover } from "./PropertiesPopover";
 import Stack from "./Stack";
 import { ToolButton } from "./ToolButton";
 import { ToolPopover } from "./ToolPopover";
 import { Tooltip } from "./Tooltip";
 import DropdownMenu from "./dropdownMenu/DropdownMenu";
-import { PropertiesPopover } from "./PropertiesPopover";
 import {
+  adjustmentsIcon,
+  DotsHorizontalIcon,
+  elbowArrowIcon,
   EmbedIcon,
   extraToolsIcon,
   frameToolIcon,
-  mermaidLogoIcon,
   laserPointerToolIcon,
-  MagicIcon,
   LassoIcon,
-  sharpArrowIcon,
-  roundArrowIcon,
-  elbowArrowIcon,
-  TextSizeIcon,
-  adjustmentsIcon,
-  DotsHorizontalIcon,
-  SelectionIcon,
+  MagicIcon,
+  mermaidLogoIcon,
   pencilIcon,
+  roundArrowIcon,
+  SelectionIcon,
+  sharpArrowIcon,
+  TextSizeIcon,
 } from "./icons";
 
 import { Island } from "./Island";
 
+import type { ActionManager } from "../actions/manager";
 import type {
   AppClassProperties,
   AppProps,
+  AppState,
   UIAppState,
   Zoom,
-  AppState,
 } from "../types";
-import type { ActionManager } from "../actions/manager";
 
 // Common CSS class combinations
 const PROPERTIES_CLASSES = clsx([
@@ -1241,6 +1241,25 @@ export const ShapesSwitcher = ({
           >
             {t("toolBar.laser")}
           </DropdownMenu.Item>
+          <DropdownMenu.ItemCheckbox
+            checked={app.state.laserToolPersistence}
+            onSelect={() =>
+              setAppState({
+                laserToolPersistence: !app.state.laserToolPersistence,
+              })
+            }
+            data-testid="toolbar-laser-persistence"
+          >
+            {t("toolBar.laserPersist")}
+          </DropdownMenu.ItemCheckbox>
+          {app.state.laserToolPersistence && (
+            <DropdownMenu.Item
+              onSelect={() => app.clearLaserTrails()}
+              data-testid="toolbar-laser-clear"
+            >
+              {t("toolBar.laserClear")}
+            </DropdownMenu.Item>
+          )}
           {isFullStylesPanel && (
             <DropdownMenu.Item
               onSelect={() => app.setActiveTool({ type: "lasso" })}

@@ -1,9 +1,9 @@
 import type {
+  EditorInterface,
   IMAGE_MIME_TYPES,
+  MIME_TYPES,
   UserIdleState,
   throttleRAF,
-  MIME_TYPES,
-  EditorInterface,
 } from "@excalidraw/common";
 
 import type { LinearElementEditor } from "@excalidraw/element";
@@ -11,35 +11,35 @@ import type { LinearElementEditor } from "@excalidraw/element";
 import type { MaybeTransformHandleType } from "@excalidraw/element";
 
 import type {
-  PointerType,
-  ExcalidrawLinearElement,
-  NonDeletedExcalidrawElement,
-  NonDeleted,
-  TextAlign,
-  ExcalidrawElement,
-  GroupId,
-  ExcalidrawBindableElement,
   Arrowhead,
-  FontFamilyValues,
-  FileId,
-  Theme,
-  StrokeRoundness,
-  ExcalidrawEmbeddableElement,
-  ExcalidrawMagicFrameElement,
-  ExcalidrawFrameLikeElement,
-  ExcalidrawElementType,
-  ExcalidrawIframeLikeElement,
-  OrderedExcalidrawElement,
-  ExcalidrawNonSelectionElement,
   BindMode,
+  ExcalidrawBindableElement,
+  ExcalidrawElement,
+  ExcalidrawElementType,
+  ExcalidrawEmbeddableElement,
+  ExcalidrawFrameLikeElement,
+  ExcalidrawIframeLikeElement,
+  ExcalidrawLinearElement,
+  ExcalidrawMagicFrameElement,
+  ExcalidrawNonSelectionElement,
   ExcalidrawTextElement,
+  FileId,
+  FontFamilyValues,
+  GroupId,
+  NonDeleted,
+  NonDeletedExcalidrawElement,
+  OrderedExcalidrawElement,
+  PointerType,
+  StrokeRoundness,
+  TextAlign,
+  Theme,
 } from "@excalidraw/element/types";
 
 import type {
-  Merge,
-  MaybePromise,
-  ValueOf,
   MakeBrand,
+  MaybePromise,
+  Merge,
+  ValueOf,
 } from "@excalidraw/common/utility-types";
 
 import type {
@@ -53,15 +53,15 @@ import type { Action } from "./actions/types";
 import type { Spreadsheet } from "./charts";
 import type { ClipboardData } from "./clipboard";
 import type App from "./components/App";
-import type Library from "./data/library";
 import type { ContextMenuItems } from "./components/ContextMenu";
-import type { SnapLine } from "./snapping";
+import type Library from "./data/library";
 import type { ImportedDataState } from "./data/types";
+import type { SnapLine } from "./snapping";
 
-import type { Language } from "./i18n";
-import type { isOverScrollBars } from "./scene/scrollbars";
 import type React from "react";
 import type { JSX } from "react";
+import type { Language } from "./i18n";
+import type { isOverScrollBars } from "./scene/scrollbars";
 
 export type { App };
 
@@ -368,6 +368,7 @@ export interface AppState {
   scrollX: number;
   scrollY: number;
   cursorButton: "up" | "down";
+  laserToolPersistence: boolean;
   scrolledOutside: boolean;
   name: string | null;
   isResizing: boolean;
@@ -828,6 +829,7 @@ export type AppClassProperties = {
   bindModeHandler: App["bindModeHandler"];
 
   setAppState: App["setAppState"];
+  clearLaserTrails: App["clearLaserTrails"];
 };
 
 export type PointerDownState = Readonly<{
