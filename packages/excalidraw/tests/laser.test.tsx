@@ -1,3 +1,4 @@
+import { fireEvent, screen } from "@testing-library/react";
 import { vi } from "vitest";
 
 import { CURSOR_TYPE } from "@excalidraw/common";
@@ -5,6 +6,11 @@ import { getElementAbsoluteCoords } from "@excalidraw/element";
 
 import { Excalidraw } from "../index";
 import { getLinkHandleFromCoords } from "../components/hyperlink/helpers";
+import {
+  getLaserTrailPersistenceMode,
+  resetLaserPersistenceForNewScene,
+  setLaserTrailPersistenceMode,
+} from "../laser-persistence";
 
 import { API } from "./helpers/api";
 import { Pointer } from "./helpers/ui";
@@ -15,6 +21,14 @@ import type { ExcalidrawProps } from "../types";
 describe("laser tool interactions", () => {
   const h = window.h;
   const mouse = new Pointer("mouse");
+
+  afterEach(() => {
+    act(() => {
+      if (window.h?.app) {
+        resetLaserPersistenceForNewScene(window.h.app);
+      }
+    });
+  });
 
   it("opens links while using the laser tool", async () => {
     const onLinkOpenSpy = vi.fn();
@@ -127,5 +141,70 @@ describe("laser tool interactions", () => {
     expect(h.state.scrollX).toBe(initialScrollX);
     expect(h.state.scrollY).toBe(initialScrollY);
     expect(GlobalTestState.interactiveCanvas.style.cursor).toContain("");
+  });
+
+  describe("laser persistence", () => {
+    it("defaults to temporary mode", async () => {
+      await render(<Excalidraw />);
+      expect(getLaserTrailPersistenceMode()).toBe("temporary");
+    });
+
+    it("clears local laser trails when switching from persistent to temporary", async () => {
+      await render(<Excalidraw />);
+      act(() => {
+        setLaserTrailPersistenceMode("persistent", { app: h.app });
+        h.app.laserTrails.startPath(10, 10);
+        h.app.laserTrails.addPointToPath(20, 20);
+        h.app.laserTrails.endPath();
+      });
+      expect(h.app.laserTrails.hasLocalContent()).toBe(true);
+      act(() => {
+        setLaserTrailPersistenceMode("temporary", { app: h.app });
+      });
+      expect(h.app.laserTrails.hasLocalContent()).toBe(false);
+    });
+
+    it("sets persistent mode from the extra tools menu", async () => {
+      await render(<Excalidraw />);
+      const moreToolsTrigger = document.querySelector(
+        ".App-toolbar .App-toolbar__extra-tools-trigger",
+      ) as HTMLElement | null;
+      expect(moreToolsTrigger).toBeTruthy();
+      await act(async () => {
+        fireEvent.click(moreToolsTrigger!);
+      });
+      const persistentBtn = await screen.findByTestId("laser-mode-persistent");
+      await act(async () => {
+        fireEvent.click(persistentBtn);
+      });
+      expect(getLaserTrailPersistenceMode()).toBe("persistent");
+    });
+
+    it("clears persistent laser marks via Clear laser marks control", async () => {
+      await render(<Excalidraw />);
+      act(() => {
+        setLaserTrailPersistenceMode("persistent", { app: h.app });
+        h.app.laserTrails.startPath(10, 10);
+        h.app.laserTrails.addPointToPath(20, 20);
+        h.app.laserTrails.endPath();
+      });
+      expect(h.app.laserTrails.hasLocalContent()).toBe(true);
+      expect(getLaserTrailPersistenceMode()).toBe("persistent");
+
+      const moreToolsTrigger = document.querySelector(
+        ".App-toolbar .App-toolbar__extra-tools-trigger",
+      ) as HTMLElement | null;
+      expect(moreToolsTrigger).toBeTruthy();
+      await act(async () => {
+        fireEvent.click(moreToolsTrigger!);
+      });
+      const clearBtn = await screen.findByTestId("laser-clear-marks");
+      await act(async () => {
+        fireEvent.click(clearBtn);
+      });
+
+      expect(h.app.laserTrails.hasLocalContent()).toBe(false);
+      expect(getLaserTrailPersistenceMode()).toBe("persistent");
+    });
   });
 });

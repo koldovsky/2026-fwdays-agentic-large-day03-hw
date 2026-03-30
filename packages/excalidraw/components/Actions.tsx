@@ -85,6 +85,10 @@ import {
 } from "./icons";
 
 import { Island } from "./Island";
+import {
+  LaserToolDropdownSection,
+  type AppWithLaserTrailsForTool,
+} from "./laser-tool-options";
 
 import type {
   AppClassProperties,
@@ -1241,6 +1245,9 @@ export const ShapesSwitcher = ({
           >
             {t("toolBar.laser")}
           </DropdownMenu.Item>
+          <LaserToolDropdownSection
+            app={app as AppWithLaserTrailsForTool}
+          />
           {isFullStylesPanel && (
             <DropdownMenu.Item
               onSelect={() => app.setActiveTool({ type: "lasso" })}

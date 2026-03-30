@@ -1,0 +1,40 @@
+---
+description: "Security expectations for code, data, and dependencies"
+alwaysApply: true
+---
+
+# Security
+
+## Secrets and configuration
+
+- Never commit API keys, tokens, passwords, or private URLs. Use env vars documented in `docs/technical/dev-setup.md` (or project README) and reference placeholders in examples only.
+- Do not log sensitive payloads (auth headers, cookies, full scene JSON from untrusted sources).
+
+## Untrusted input
+
+- Treat `.excalidraw` / imported files and deep links as untrusted: validate shape, size limits, and types before use; avoid `eval`, dynamic `Function`, or string-to-code paths.
+- When rendering or storing user-provided text, prefer existing sanitization paths; do not inject raw HTML into the DOM without escaping or a vetted sanitizer.
+
+## Dependencies and supply chain
+
+- Do not add or upgrade dependencies without a clear need; prefer audited, maintained packages.
+- After dependency changes that affect install or build, run the project’s documented checks (e.g. `yarn test:typecheck`).
+
+## Web surfaces
+
+- Prefer same-origin or explicit CORS for APIs; avoid widening CORS or cookie flags without review.
+- For new endpoints or embed flows, consider CSRF, clickjacking, and content isolation (CSP where the app defines it).
+
+## How to verify
+
+- **Review** the diff for hardcoded secrets, tokens, or private URLs; confirm client-visible `import.meta.env` usage is documented and non-sensitive.
+- After **dependency** or lockfile changes, run `yarn test:typecheck` and the checks noted in `docs/technical/dev-setup.md` (or project README).
+- For behavior that handles imports or user content, manually exercise unsafe inputs (oversized files, malformed payloads) in dev when feasible.
+
+```typescript
+// ❌ BAD — secret in source
+const apiKey = "sk-live-...";
+
+// ✅ GOOD — env + fail closed in dev docs
+const apiKey = import.meta.env.VITE_...; // documented, not committed
+```

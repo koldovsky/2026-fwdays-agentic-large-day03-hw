@@ -1,0 +1,39 @@
+---
+description: "Testing and snapshots for Vitest and package tests"
+globs: **/*.test.ts,**/*.test.tsx,**/*.spec.ts,**/*.spec.tsx
+alwaysApply: false
+---
+
+# Testing
+
+## How to verify
+
+From the repo root (see `package.json`):
+
+- `yarn test:typecheck` — workspace TypeScript (`tsc`). Run when types or imports change.
+- `yarn test:app` — Vitest. Prefer a focused run on touched `*.test.ts(x)` when the change is narrow.
+- `yarn test:code` — ESLint (`--max-warnings=0`).
+- `yarn test:other` — Prettier `--list-different`.
+- `yarn test:all` — full gate: typecheck, ESLint, Prettier, then Vitest non-watch. Use before large or risky changes.
+- `yarn test:update` — refresh snapshots **only** when output changes are intentional; review snapshot diffs before commit.
+- `yarn fix` — auto-fix formatting and ESLint issues where applicable.
+
+For UI or integration-sensitive work, add **manual** checks (e.g. exercise flows in `excalidraw-app`). If changes touch protected core files, follow **How to verify** in `.cursor/rules/do-not-touch.mdc`.
+
+## Style
+
+- Colocate tests next to source: `ComponentName.test.tsx` alongside `ComponentName.tsx`.
+- Prefer descriptive `it`/`test` names; avoid shared mutable state between tests.
+- Mock network, timers, and canvas only at the boundary needed — avoid over-mocking implementation details.
+
+## Snapshots
+
+- Treat snapshot failures as a signal: either fix the code or update the snapshot with a deliberate reason in the commit message.
+
+```typescript
+// ❌ BAD — disabling type or lint in tests without cause
+// @ts-ignore
+
+// ✅ GOOD — narrow mock + assert behavior
+expect(screen.getByRole("button")).toBeEnabled();
+```

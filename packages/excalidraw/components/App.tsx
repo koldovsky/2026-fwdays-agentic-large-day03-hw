@@ -415,6 +415,7 @@ import {
   setCursorForShape,
 } from "../cursor";
 import { ElementCanvasButtons } from "../components/ElementCanvasButtons";
+import { resetLaserPersistenceForNewScene } from "../laser-persistence";
 import { LaserTrails } from "../laser-trails";
 import { withBatchedUpdates, withBatchedUpdatesThrottled } from "../reactUtils";
 import { isPointHittingTextAutoResizeHandle } from "../textAutoResizeHandle";
@@ -2846,6 +2847,7 @@ class App extends React.Component<AppProps, AppState> {
    */
   private resetScene = withBatchedUpdates(
     (opts?: { resetLoadingState: boolean }) => {
+      resetLaserPersistenceForNewScene(this);
       this.scene.replaceAllElements([]);
       this.setState((state) => ({
         ...getDefaultAppState(),
