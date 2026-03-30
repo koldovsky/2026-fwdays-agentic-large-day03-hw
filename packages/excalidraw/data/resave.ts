@@ -28,7 +28,8 @@ export const resaveAsImageWithScene = async (
 
   let { elements, appState, files } = await data;
 
-  const { exportBackground, viewBackgroundColor } = appState;
+  const { exportBackground, canvasBackgroundPattern, viewBackgroundColor } =
+    appState;
 
   appState = {
     ...appState,
@@ -43,6 +44,7 @@ export const resaveAsImageWithScene = async (
 
   await exportCanvas(fileHandleType, exportedElements, appState, files, {
     exportBackground,
+    canvasBackgroundPattern,
     viewBackgroundColor,
     name: filename,
     fileHandle,

@@ -215,6 +215,7 @@ describe("<Excalidraw/>", () => {
         toggleMenu(container);
         expect(queryByTestId(container, "canvas-background-label")).toBeNull();
         expect(queryByTestId(container, "canvas-background-picker")).toBeNull();
+        expect(queryByTestId(container, "canvas-background-pattern")).toBeNull();
       });
 
       it("should hide the canvas background picker even if passed if the `canvasActions.changeViewBackgroundColor` is set to false", async () => {
@@ -231,6 +232,26 @@ describe("<Excalidraw/>", () => {
         toggleMenu(container);
         expect(queryByTestId(container, "canvas-background-label")).toBeNull();
         expect(queryByTestId(container, "canvas-background-picker")).toBeNull();
+        expect(queryByTestId(container, "canvas-background-pattern")).toBeNull();
+      });
+
+      it("should allow changing the canvas background pattern", async () => {
+        const { container } = await render(<Excalidraw />);
+        toggleMenu(container);
+
+        const backgroundPattern = queryByTestId(
+          container,
+          "canvas-background-pattern",
+        ) as HTMLSelectElement;
+
+        expect(backgroundPattern).not.toBeNull();
+        expect(backgroundPattern.value).toBe("none");
+
+        fireEvent.change(backgroundPattern, {
+          target: { value: "squared-paper" },
+        });
+
+        expect(h.state.canvasBackgroundPattern).toBe("squared-paper");
       });
 
       it("should hide the theme toggle when theme is false", async () => {

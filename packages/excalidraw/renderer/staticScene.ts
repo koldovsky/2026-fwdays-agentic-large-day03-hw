@@ -53,6 +53,17 @@ const GridLineColor = {
   },
 } as const;
 
+const SquaredPaperLineColor = {
+  [THEME.LIGHT]: {
+    bold: "#bfd3f2",
+    regular: "#d9e5f8",
+  },
+  [THEME.DARK]: {
+    bold: applyDarkModeFilter("#bfd3f2"),
+    regular: applyDarkModeFilter("#d9e5f8"),
+  },
+} as const;
+
 const strokeGrid = (
   context: CanvasRenderingContext2D,
   /** grid cell pixel size */
@@ -126,6 +137,66 @@ const strokeGrid = (
     context.lineTo(Math.ceil(offsetX + width + gridSize * 2), y);
     context.stroke();
   }
+  context.restore();
+};
+
+const strokeSquaredPaper = (
+  context: CanvasRenderingContext2D,
+  gridSize: number,
+  gridStep: number,
+  scrollX: number,
+  scrollY: number,
+  zoom: Zoom,
+  theme: StaticCanvasRenderConfig["theme"],
+  width: number,
+  height: number,
+) => {
+  const offsetX = (scrollX % gridSize) - gridSize;
+  const offsetY = (scrollY % gridSize) - gridSize;
+  const actualGridSize = gridSize * zoom.value;
+
+  context.save();
+
+  if (zoom.value === 1) {
+    context.translate(offsetX % 1 ? 0 : 0.5, offsetY % 1 ? 0 : 0.5);
+  }
+
+  for (let x = offsetX; x < offsetX + width + gridSize * 2; x += gridSize) {
+    const isBold =
+      gridStep > 1 && Math.round(x - scrollX) % (gridStep * gridSize) === 0;
+    if (!isBold && actualGridSize < 8) {
+      continue;
+    }
+
+    context.beginPath();
+    context.setLineDash([]);
+    context.lineWidth = Math.min(1 / zoom.value, isBold ? 1.5 : 1);
+    context.strokeStyle = isBold
+      ? SquaredPaperLineColor[theme].bold
+      : SquaredPaperLineColor[theme].regular;
+    context.moveTo(x, offsetY - gridSize);
+    context.lineTo(x, Math.ceil(offsetY + height + gridSize * 2));
+    context.stroke();
+  }
+
+  for (let y = offsetY; y < offsetY + height + gridSize * 2; y += gridSize) {
+    const isBold =
+      gridStep > 1 && Math.round(y - scrollY) % (gridStep * gridSize) === 0;
+    if (!isBold && actualGridSize < 8) {
+      continue;
+    }
+
+    context.beginPath();
+    context.setLineDash([]);
+    context.lineWidth = Math.min(1 / zoom.value, isBold ? 1.5 : 1);
+    context.strokeStyle = isBold
+      ? SquaredPaperLineColor[theme].bold
+      : SquaredPaperLineColor[theme].regular;
+    context.moveTo(offsetX - gridSize, y);
+    context.lineTo(Math.ceil(offsetX + width + gridSize * 2), y);
+    context.stroke();
+  }
+
   context.restore();
 };
 
@@ -259,6 +330,23 @@ const _renderStaticScene = ({
 
   // Apply zoom
   context.scale(appState.zoom.value, appState.zoom.value);
+
+  if (
+    appState.viewBackgroundColor &&
+    appState.canvasBackgroundPattern === "squared-paper"
+  ) {
+    strokeSquaredPaper(
+      context,
+      appState.gridSize,
+      appState.gridStep,
+      appState.scrollX,
+      appState.scrollY,
+      appState.zoom,
+      renderConfig.theme,
+      normalizedWidth / appState.zoom.value,
+      normalizedHeight / appState.zoom.value,
+    );
+  }
 
   // Grid
   if (renderGrid) {

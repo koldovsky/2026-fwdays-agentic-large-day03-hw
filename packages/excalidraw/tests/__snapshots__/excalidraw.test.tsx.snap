@@ -2,7 +2,7 @@
 
 exports[`<Excalidraw/> > <MainMenu/> > should render main menu with host menu items if passed from host 1`] = `
 <div
-  aria-labelledby="radix-:r85:"
+  aria-labelledby="radix-:r8k:"
   aria-orientation="vertical"
   class="dropdown-menu main-menu"
   data-align="start"
@@ -12,7 +12,7 @@ exports[`<Excalidraw/> > <MainMenu/> > should render main menu with host menu it
   data-state="open"
   data-testid="dropdown-menu"
   dir="ltr"
-  id="radix-:r86:"
+  id="radix-:r8l:"
   role="menu"
   style="outline: none; --radix-dropdown-menu-content-transform-origin: var(--radix-popper-transform-origin); --radix-dropdown-menu-content-available-width: var(--radix-popper-available-width); --radix-dropdown-menu-content-available-height: var(--radix-popper-available-height); --radix-dropdown-menu-trigger-width: var(--radix-popper-anchor-width); --radix-dropdown-menu-trigger-height: var(--radix-popper-anchor-height); animation: none;"
   tabindex="-1"
@@ -776,6 +776,32 @@ exports[`<Excalidraw/> > Test UIOptions prop > Test canvasActions > should rende
             </button>
           </div>
         </div>
+      </div>
+      <div
+        style="padding: 0.5rem 0.625rem 0px;"
+      >
+        <label
+          for="canvas-background-pattern"
+          style="display: block; font-size: 0.75rem; margin-bottom: 0.25rem; margin-left: 0.125rem;"
+        >
+          Background pattern
+        </label>
+        <select
+          data-testid="canvas-background-pattern"
+          id="canvas-background-pattern"
+          style="width: 100%; border-radius: var(--border-radius-md); padding: 0.5rem 0.625rem;"
+        >
+          <option
+            value="none"
+          >
+            None
+          </option>
+          <option
+            value="squared-paper"
+          >
+            Squared paper
+          </option>
+        </select>
       </div>
     </div>
   </div>

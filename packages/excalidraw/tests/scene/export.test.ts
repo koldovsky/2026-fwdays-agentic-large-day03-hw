@@ -110,6 +110,42 @@ describe("exportToSvg", () => {
     );
   });
 
+  it("with squared paper background pattern", async () => {
+    const svgElement = await exportUtils.exportToSvg(
+      ELEMENTS,
+      {
+        ...DEFAULT_OPTIONS,
+        canvasBackgroundPattern: "squared-paper",
+        exportBackground: true,
+      },
+      null,
+    );
+
+    expect(
+      svgElement.querySelector("#canvas-background-pattern-squared-paper"),
+    ).not.toBeNull();
+    expect(svgElement.querySelectorAll("rect")[1]).toHaveAttribute(
+      "fill",
+      "url(#canvas-background-pattern-squared-paper)",
+    );
+  });
+
+  it("should omit squared paper background when export background is disabled", async () => {
+    const svgElement = await exportUtils.exportToSvg(
+      ELEMENTS,
+      {
+        ...DEFAULT_OPTIONS,
+        canvasBackgroundPattern: "squared-paper",
+        exportBackground: false,
+      },
+      null,
+    );
+
+    expect(
+      svgElement.querySelector("#canvas-background-pattern-squared-paper"),
+    ).toBeNull();
+  });
+
   it("with dark mode", async () => {
     const svgElement = await exportUtils.exportToSvg(
       ELEMENTS,

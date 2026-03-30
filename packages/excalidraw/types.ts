@@ -197,6 +197,7 @@ type _CommonCanvasAppState = {
 export type StaticCanvasAppState = Readonly<
   _CommonCanvasAppState & {
     shouldCacheIgnoreZoom: AppState["shouldCacheIgnoreZoom"];
+    canvasBackgroundPattern: AppState["canvasBackgroundPattern"];
     /** null indicates transparent bg */
     viewBackgroundColor: AppState["viewBackgroundColor"] | null;
     exportScale: AppState["exportScale"];
@@ -253,6 +254,7 @@ export type ObservedAppState = ObservedStandaloneAppState &
 
 export type ObservedStandaloneAppState = {
   name: AppState["name"];
+  canvasBackgroundPattern: AppState["canvasBackgroundPattern"];
   viewBackgroundColor: AppState["viewBackgroundColor"];
 };
 
@@ -364,6 +366,7 @@ export interface AppState {
   currentHoveredFontFamily: FontFamilyValues | null;
   currentItemRoundness: StrokeRoundness;
   currentItemArrowType: "sharp" | "round" | "elbow";
+  canvasBackgroundPattern: "none" | "squared-paper";
   viewBackgroundColor: string;
   scrollX: number;
   scrollY: number;

@@ -119,6 +119,11 @@ export const AllowedExcalidrawActiveTools: Record<
   magicframe: false,
 };
 
+const isCanvasBackgroundPattern = (
+  value: unknown,
+): value is AppState["canvasBackgroundPattern"] =>
+  value === "none" || value === "squared-paper";
+
 export type RestoredDataState = {
   elements: OrderedExcalidrawElement[];
   appState: RestoredAppState;
@@ -967,6 +972,11 @@ export const restoreAppState = (
       typeof (appState.openSidebar as any as string) === "string"
         ? { name: DEFAULT_SIDEBAR.name }
         : nextAppState.openSidebar,
+    canvasBackgroundPattern: isCanvasBackgroundPattern(
+      nextAppState.canvasBackgroundPattern,
+    )
+      ? nextAppState.canvasBackgroundPattern
+      : defaultAppState.canvasBackgroundPattern,
     gridSize: getNormalizedGridSize(
       isFiniteNumber(appState.gridSize) ? appState.gridSize : DEFAULT_GRID_SIZE,
     ),

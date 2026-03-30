@@ -88,6 +88,28 @@ export const actionChangeViewBackgroundColor = register<Partial<AppState>>({
   },
 });
 
+export const actionChangeCanvasBackgroundPattern = register<Partial<AppState>>(
+  {
+    name: "changeCanvasBackgroundPattern",
+    label: "labels.canvasBackgroundPattern",
+    trackEvent: false,
+    predicate: (elements, appState, props, app) => {
+      return (
+        !!app.props.UIOptions.canvasActions.changeViewBackgroundColor &&
+        !appState.viewModeEnabled
+      );
+    },
+    perform: (_, appState, value) => {
+      return {
+        appState: { ...appState, ...value },
+        captureUpdate: !!value?.canvasBackgroundPattern
+          ? CaptureUpdateAction.IMMEDIATELY
+          : CaptureUpdateAction.EVENTUALLY,
+      };
+    },
+  },
+);
+
 export const actionClearCanvas = register({
   name: "clearCanvas",
   label: "labels.clearCanvas",
@@ -114,6 +136,7 @@ export const actionClearCanvas = register({
         penDetected: appState.penDetected,
         exportBackground: appState.exportBackground,
         exportEmbedScene: appState.exportEmbedScene,
+        canvasBackgroundPattern: appState.canvasBackgroundPattern,
         gridSize: appState.gridSize,
         gridStep: appState.gridStep,
         gridModeEnabled: appState.gridModeEnabled,

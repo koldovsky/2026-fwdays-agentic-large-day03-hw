@@ -993,6 +993,7 @@ const getDefaultObservedAppState = (): ObservedAppState => {
   return {
     name: null,
     editingGroupId: null,
+    canvasBackgroundPattern: "none",
     viewBackgroundColor: COLOR_PALETTE.white,
     selectedElementIds: {},
     selectedGroupIds: {},
@@ -1009,6 +1010,7 @@ export const getObservedAppState = (
   const observedAppState = {
     name: appState.name,
     editingGroupId: appState.editingGroupId,
+    canvasBackgroundPattern: appState.canvasBackgroundPattern,
     viewBackgroundColor: appState.viewBackgroundColor,
     selectedElementIds: appState.selectedElementIds,
     selectedGroupIds: appState.selectedGroupIds,

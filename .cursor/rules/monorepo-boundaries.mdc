@@ -1,0 +1,28 @@
+---
+description: "Monorepo boundaries and file placement rules for Excalidraw workspaces"
+globs: "package.json,excalidraw-app/**,packages/**,examples/**,scripts/**"
+alwaysApply: false
+---
+
+# Monorepo Boundaries
+
+## Placement
+
+- Put reusable editor logic into `packages/*`.
+- Put app-only product behavior, integrations, and runtime wiring into `excalidraw-app/`.
+- Keep `examples/*` as thin consumers of published or workspace package APIs, not as the only place where behavior is fixed.
+- Keep `scripts/*` Node-only and focused on build, release, or maintenance workflows.
+
+## Dependency Direction
+
+- `packages/*` must not import from `excalidraw-app/` or `examples/*`.
+- Prefer existing package entrypoints and workspace aliases over deep relative imports across package boundaries.
+- If logic is used by both the app and a package, move it into the narrowest shared package instead of duplicating it.
+- When changing published package code, avoid coupling it to app-specific environment assumptions unless the behavior is explicitly app-only.
+
+## How To Verify
+
+- Confirm the edited file lives in the correct workspace for the responsibility you changed.
+- Check that no import path points from `packages/*` into `excalidraw-app/` or `examples/*`.
+- Verify `examples/*` only exercise existing public APIs or documented workspace aliases.
+- If a change is shared by multiple workspaces, confirm it was extracted instead of copied.
