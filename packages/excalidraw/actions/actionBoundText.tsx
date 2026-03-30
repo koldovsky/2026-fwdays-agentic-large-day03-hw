@@ -1,5 +1,7 @@
 import {
   BOUND_TEXT_PADDING,
+  CODES,
+  KEYS,
   ROUNDNESS,
   TEXT_ALIGN,
   VERTICAL_ALIGN,
@@ -224,6 +226,11 @@ export const actionWrapTextInContainer = register({
   name: "wrapTextInContainer",
   label: "labels.createContainerFromText",
   trackEvent: { category: "element" },
+  keyTest: (event) =>
+    event.altKey &&
+    event.shiftKey &&
+    !event[KEYS.CTRL_OR_CMD] &&
+    event.code === CODES.W,
   predicate: (elements, appState, _, app) => {
     const selectedElements = app.scene.getSelectedElements(appState);
     const someTextElements = selectedElements.some(
