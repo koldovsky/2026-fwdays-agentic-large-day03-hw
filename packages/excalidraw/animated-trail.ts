@@ -25,6 +25,7 @@ export interface AnimatedTrailOptions {
   fill: (trail: AnimatedTrail) => string;
   stroke?: (trail: AnimatedTrail) => string;
   animateTrail?: boolean;
+  persistent?: () => boolean;
 }
 
 export class AnimatedTrail implements Trail {
@@ -149,9 +150,11 @@ export class AnimatedTrail implements Trail {
       paths.push(currentPath);
     }
 
-    this.pastTrails = this.pastTrails.filter((trail) => {
-      return trail.getStrokeOutline().length !== 0;
-    });
+    if (!this.options.persistent?.()) {
+      this.pastTrails = this.pastTrails.filter((trail) => {
+        return trail.getStrokeOutline().length !== 0;
+      });
+    }
 
     if (paths.length === 0) {
       this.stop();

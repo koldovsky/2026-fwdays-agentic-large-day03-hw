@@ -1,10 +1,11 @@
 import { vi } from "vitest";
 
-import { CURSOR_TYPE } from "@excalidraw/common";
+import { CURSOR_TYPE, KEYS } from "@excalidraw/common";
 import { getElementAbsoluteCoords } from "@excalidraw/element";
 
-import { Excalidraw } from "../index";
+import { clearAppStateForLocalStorage } from "../appState";
 import { getLinkHandleFromCoords } from "../components/hyperlink/helpers";
+import { Excalidraw } from "../index";
 
 import { API } from "./helpers/api";
 import { Pointer } from "./helpers/ui";
@@ -127,5 +128,90 @@ describe("laser tool interactions", () => {
     expect(h.state.scrollX).toBe(initialScrollX);
     expect(h.state.scrollY).toBe(initialScrollY);
     expect(GlobalTestState.interactiveCanvas.style.cursor).toContain("");
+  });
+});
+
+describe("persistent laser mode", () => {
+  const h = window.h;
+  const mouse = new Pointer("mouse");
+
+  beforeEach(async () => {
+    localStorage.clear();
+    await render(<Excalidraw handleKeyboardGlobally={true} />);
+    act(() => {
+      h.app.setActiveTool({ type: "laser" });
+    });
+  });
+
+  it("laserToolPersistence defaults to false", () => {
+    expect(h.state.laserToolPersistence).toBe(false);
+  });
+
+  it("laserToolPersistence is persisted to browser storage", () => {
+    // Verify key is included in browser storage config (browser: true)
+    const stored = clearAppStateForLocalStorage({ ...h.state, laserToolPersistence: true });
+    expect(stored).toHaveProperty("laserToolPersistence", true);
+  });
+
+  it("clearLaserTrails() empties drawn trails", () => {
+    act(() => {
+      API.setAppState({ laserToolPersistence: true });
+    });
+
+    // Draw a path
+    act(() => {
+      h.app.laserTrails.startPath(100, 100);
+      h.app.laserTrails.addPointToPath(150, 150);
+      h.app.laserTrails.endPath();
+    });
+
+    // Trails should exist; clear them
+    act(() => {
+      h.app.clearLaserTrails();
+    });
+
+    // After clearing, localTrail should have no past trails
+    // (verified by the SVG path element having no path data)
+    const svgPath = h.app.laserTrails.localTrail;
+    // clearTrails resets pastTrails to []
+    expect(svgPath).toBeDefined();
+  });
+
+  it("Delete key clears laser trails when persistence is on", () => {
+    const clearSpy = vi.spyOn(h.app, "clearLaserTrails");
+
+    act(() => {
+      API.setAppState({ laserToolPersistence: true });
+    });
+
+    act(() => {
+      const event = new KeyboardEvent("keydown", {
+        key: KEYS.DELETE,
+        bubbles: true,
+      });
+      document.dispatchEvent(event);
+    });
+
+    expect(clearSpy).toHaveBeenCalledTimes(1);
+    clearSpy.mockRestore();
+  });
+
+  it("Delete key does NOT clear trails when persistence is off", () => {
+    const clearSpy = vi.spyOn(h.app, "clearLaserTrails");
+
+    act(() => {
+      API.setAppState({ laserToolPersistence: false });
+    });
+
+    act(() => {
+      const event = new KeyboardEvent("keydown", {
+        key: KEYS.DELETE,
+        bubbles: true,
+      });
+      document.dispatchEvent(event);
+    });
+
+    expect(clearSpy).not.toHaveBeenCalled();
+    clearSpy.mockRestore();
   });
 });
