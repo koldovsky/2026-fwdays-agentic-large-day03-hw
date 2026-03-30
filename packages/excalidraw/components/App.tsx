@@ -12430,6 +12430,7 @@ class App extends React.Component<AppProps, AppState> {
         resizeY,
         pointerDownState.resize.center.x,
         pointerDownState.resize.center.y,
+        isGridModeEnabled(this),
       )
     ) {
       const elementsToHighlight = new Set<ExcalidrawElement>();

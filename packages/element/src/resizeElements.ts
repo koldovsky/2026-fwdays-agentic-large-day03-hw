@@ -10,6 +10,7 @@ import {
 import {
   MIN_FONT_SIZE,
   SHIFT_LOCKING_ANGLE,
+  GRID_ROTATION_SNAP_ANGLE,
   rescalePoints,
   getFontString,
 } from "@excalidraw/common";
@@ -96,6 +97,7 @@ export const transformElements = (
   pointerY: number,
   centerX: number,
   centerY: number,
+  gridModeEnabled = false,
 ): boolean => {
   const elementsMap = scene.getNonDeletedElementsMap();
   if (selectedElements.length === 1) {
@@ -108,6 +110,7 @@ export const transformElements = (
           pointerX,
           pointerY,
           shouldRotateWithDiscreteAngle,
+          gridModeEnabled,
         );
         updateBoundElements(element, scene);
       }
@@ -160,6 +163,7 @@ export const transformElements = (
         shouldRotateWithDiscreteAngle,
         centerX,
         centerY,
+        gridModeEnabled,
       );
       return true;
     } else if (transformHandleType) {
@@ -206,6 +210,7 @@ const rotateSingleElement = (
   pointerX: number,
   pointerY: number,
   shouldRotateWithDiscreteAngle: boolean,
+  gridModeEnabled = false,
 ) => {
   const [x1, y1, x2, y2] = getElementAbsoluteCoords(
     element,
@@ -222,6 +227,9 @@ const rotateSingleElement = (
     if (shouldRotateWithDiscreteAngle) {
       angle = (angle + SHIFT_LOCKING_ANGLE / 2) as Radians;
       angle = (angle - (angle % SHIFT_LOCKING_ANGLE)) as Radians;
+    } else if (gridModeEnabled) {
+      angle = (angle + GRID_ROTATION_SNAP_ANGLE / 2) as Radians;
+      angle = (angle - (angle % GRID_ROTATION_SNAP_ANGLE)) as Radians;
     }
     angle = normalizeRadians(angle as Radians);
   }
@@ -410,6 +418,7 @@ const rotateMultipleElements = (
   shouldRotateWithDiscreteAngle: boolean,
   centerX: number,
   centerY: number,
+  gridModeEnabled = false,
 ) => {
   const elementsMap = scene.getNonDeletedElementsMap();
   let centerAngle =
@@ -417,6 +426,9 @@ const rotateMultipleElements = (
   if (shouldRotateWithDiscreteAngle) {
     centerAngle += SHIFT_LOCKING_ANGLE / 2;
     centerAngle -= centerAngle % SHIFT_LOCKING_ANGLE;
+  } else if (gridModeEnabled) {
+    centerAngle += GRID_ROTATION_SNAP_ANGLE / 2;
+    centerAngle -= centerAngle % GRID_ROTATION_SNAP_ANGLE;
   }
 
   const rotatedElementsMap = new Map<
