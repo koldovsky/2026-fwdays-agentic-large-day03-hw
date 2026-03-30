@@ -66,6 +66,58 @@ describe("convertMermaidToExcalidraw", () => {
     }
   });
 
+  it("sanitizes <br> tags in element labels to newlines", async () => {
+    const parseMermaidToExcalidraw = vi
+      .fn<ParseMermaidToExcalidraw>()
+      .mockResolvedValueOnce({
+        elements: [
+          {
+            id: "A",
+            type: "rectangle",
+            x: 0,
+            y: 0,
+            width: 300,
+            height: 80,
+            label: {
+              text: "Start<br>Process",
+              fontSize: 20,
+            },
+          },
+          {
+            id: "B",
+            type: "rectangle",
+            x: 0,
+            y: 100,
+            width: 300,
+            height: 80,
+            label: {
+              text: "Step<br/>One<BR />Two",
+              fontSize: 20,
+            },
+          },
+        ],
+      });
+
+    const args = createConvertArgs("flowchart TD", parseMermaidToExcalidraw);
+    const result = await convertMermaidToExcalidraw(args);
+
+    expect(result.success).toBe(true);
+
+    const elements = args.data.current.elements;
+    const textElements = elements.filter((el) => el.type === "text");
+
+    expect(textElements).toHaveLength(2);
+
+    // Verify <br> tags are not present as literal text
+    for (const textEl of textElements) {
+      expect((textEl as any).text).not.toMatch(/<br\s*\/?>/i);
+    }
+
+    // Verify newlines were inserted
+    expect((textElements[0] as any).text).toContain("\n");
+    expect((textElements[1] as any).text).toContain("\n");
+  });
+
   it("does not retry quote normalization when the input has no double quotes", async () => {
     const originalError = new Error("Parse error on line 9: ...");
     const parseMermaidToExcalidraw = vi
