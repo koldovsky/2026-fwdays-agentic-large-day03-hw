@@ -2477,6 +2477,17 @@ export const chevronRight = createIcon(
 );
 
 // tabler-icons: adjustments-horizontal
+export const minimapIcon = createIcon(
+  <g strokeWidth={1.25}>
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+    <rect x="14" y="14" width="5" height="5" rx="1" />
+    <path d="M3 9h18" />
+    <path d="M9 3v6" />
+  </g>,
+  tablerIconProps,
+);
+
 export const settingsIcon = createIcon(
   <g strokeWidth={1.25}>
     <path stroke="none" d="M0 0h24v24H0z" fill="none" />

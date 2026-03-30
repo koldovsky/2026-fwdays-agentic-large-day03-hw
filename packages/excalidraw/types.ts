@@ -446,6 +446,7 @@ export interface AppState {
     y: number;
   } | null;
   objectsSnapModeEnabled: boolean;
+  minimapEnabled: boolean;
   /** the user's socket id & username who is being followed on the canvas */
   userToFollow: UserToFollow | null;
   /** the socket ids of the users following the current user */
@@ -626,6 +627,7 @@ export interface ExcalidrawProps {
   zenModeEnabled?: boolean;
   gridModeEnabled?: boolean;
   objectsSnapModeEnabled?: boolean;
+  minimapEnabled?: boolean;
   libraryReturnUrl?: string;
   theme?: Theme;
   // @TODO come with better API before v0.18.0

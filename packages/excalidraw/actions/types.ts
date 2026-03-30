@@ -59,6 +59,7 @@ export type ActionName =
   | "gridMode"
   | "zenMode"
   | "objectsSnapMode"
+  | "minimap"
   | "arrowBinding"
   | "midpointSnapping"
   | "stats"

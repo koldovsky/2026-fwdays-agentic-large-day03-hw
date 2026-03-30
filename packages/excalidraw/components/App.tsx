@@ -448,6 +448,7 @@ import { SVGLayer } from "./SVGLayer";
 import { searchItemInFocusAtom } from "./SearchMenu";
 import { isSidebarDockedAtom } from "./Sidebar/Sidebar";
 import { StaticCanvas, InteractiveCanvas } from "./canvases";
+import Minimap from "./Minimap";
 import NewElementCanvas from "./canvases/NewElementCanvas";
 import { isPointHittingLink } from "./hyperlink/helpers";
 import { MagicIcon, copyIcon, fullscreenIcon } from "./icons";
@@ -2180,6 +2181,15 @@ class App extends React.Component<AppProps, AppState> {
                             {this.props.children}
                           </LayerUI>
 
+                          {this.state.minimapEnabled && (
+                            <Minimap
+                              elements={this.scene.getNonDeletedElements()}
+                              appState={this.state}
+                              onScrollChange={(scrollX, scrollY) =>
+                                this.setAppState({ scrollX, scrollY })
+                              }
+                            />
+                          )}
                           <div className="excalidraw-textEditorContainer" />
                           <div className="excalidraw-contextMenuContainer" />
                           <div className="excalidraw-eye-dropper-container" />
