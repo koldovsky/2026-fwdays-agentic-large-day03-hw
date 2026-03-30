@@ -1,0 +1,44 @@
+---
+description: "Keep docs/memory in sync with code; update the right files per change type"
+globs: "docs/**/*.md"
+alwaysApply: false
+---
+
+# Memory bank updates
+
+## When this applies
+
+User asks to **update memory bank**, **sync docs**, **refresh project context**, or after **significant** code changes (features, refactors, architecture, dependencies).
+
+## Location
+
+Primary files: **`docs/memory/`** (`activeContext.md`, `progress.md`, `projectbrief.md`, `productContext.md`, `systemPatterns.md`, `techContext.md`, `decisionLog.md`). Align with `memory-bank-update` skill when in doubt.
+
+## Mapping: change → file
+
+| Change | Update |
+|--------|--------|
+| New feature | `progress.md`, `activeContext.md` |
+| Architecture | `systemPatterns.md`, `decisionLog.md` |
+| Dependencies | `techContext.md` |
+| Scope / product | `projectbrief.md`, `productContext.md` |
+
+## Workflow
+
+1. Inspect recent changes: e.g. **`git diff --stat HEAD~5`** (adjust range if user names branch/commit).
+2. Read current Memory Bank files that match the change.
+3. Update text to match **actual** code, `AGENTS.md`, and config — **verify with grep/read**, not guesses.
+4. Keep each file **≤ 200 lines**; summarize or split if needed.
+
+## How to verify
+
+- Open each **updated** `docs/memory/*.md` file and confirm claims match **`git diff`**, `AGENTS.md`, or source under `packages/` / `excalidraw-app/`.
+- Each touched file stays **≤ 200 lines**; split or summarize if over limit.
+- No **speculative** bullets: every technical statement traceable to code, config, or an explicit user note.
+- Run **`git status`** so only intended Memory Bank (and related) files changed; no accidental deletion of curated sections.
+- Optional: ask the user to **spot-check** `activeContext.md` / `progress.md`.
+
+## Forbidden
+
+- No **speculative** or unverified facts.
+- Do not **bulk-delete** curated content without asking the user.

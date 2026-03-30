@@ -7,6 +7,7 @@ import { Excalidraw } from "../index";
 import { API } from "./helpers/api";
 import { Keyboard } from "./helpers/ui";
 import {
+  fireEvent,
   mockBoundingClientRect,
   render,
   restoreOriginalGetBoundingClientRect,
@@ -110,6 +111,48 @@ describe("appState", () => {
     // Assert we scroll properly with normal zoom
     API.setAppState({ zoom: { value: zoom } });
     scrollTest();
+    restoreOriginalGetBoundingClientRect();
+  });
+});
+
+describe("wheel zoom preference", () => {
+  it("pans on plain wheel when scroll-to-zoom is off", async () => {
+    mockBoundingClientRect();
+    const { container } = await render(<Excalidraw />);
+    const canvas = container.querySelector("canvas.interactive")!;
+    const scrollYBefore = h.state.scrollY;
+    const zoomBefore = h.state.zoom.value;
+    fireEvent.wheel(canvas, { deltaY: 50, deltaX: 0 });
+    expect(h.state.scrollY).not.toBe(scrollYBefore);
+    expect(h.state.zoom.value).toBe(zoomBefore);
+    restoreOriginalGetBoundingClientRect();
+  });
+
+  it("zooms on plain wheel when scroll-to-zoom is on", async () => {
+    mockBoundingClientRect();
+    const { container } = await render(<Excalidraw />);
+    API.setAppState({ scrollToZoomEnabled: true });
+    const canvas = container.querySelector("canvas.interactive")!;
+    const zoomBefore = h.state.zoom.value;
+    fireEvent.wheel(canvas, { deltaY: -50, deltaX: 0 });
+    expect(h.state.zoom.value).not.toBe(zoomBefore);
+    restoreOriginalGetBoundingClientRect();
+  });
+
+  it("pans on shift+wheel when scroll-to-zoom is on", async () => {
+    mockBoundingClientRect();
+    const { container } = await render(<Excalidraw />);
+    API.setAppState({ scrollToZoomEnabled: true });
+    const canvas = container.querySelector("canvas.interactive")!;
+    const scrollYBefore = h.state.scrollY;
+    const zoomBefore = h.state.zoom.value;
+    fireEvent.wheel(canvas, {
+      deltaY: 30,
+      deltaX: 0,
+      shiftKey: true,
+    });
+    expect(h.state.scrollY).not.toBe(scrollYBefore);
+    expect(h.state.zoom.value).toBe(zoomBefore);
     restoreOriginalGetBoundingClientRect();
   });
 });

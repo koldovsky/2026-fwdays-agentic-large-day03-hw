@@ -11,6 +11,7 @@ import {
   actionShortcuts,
   actionToggleArrowBinding,
   actionToggleGridMode,
+  actionToggleScrollToZoom,
   actionToggleMidpointSnapping,
   actionToggleObjectsSnapMode,
   actionToggleSearchMenu,
@@ -498,6 +499,24 @@ export const PreferencesToggleGridModeItem = () => {
   );
 };
 
+export const PreferencesToggleScrollToZoomItem = () => {
+  const { t } = useI18n();
+  const actionManager = useExcalidrawActionManager();
+  const appState = useUIAppState();
+
+  return (
+    <DropdownMenuItemCheckbox
+      checked={appState.scrollToZoomEnabled}
+      onSelect={(event) => {
+        actionManager.executeAction(actionToggleScrollToZoom);
+        event.preventDefault();
+      }}
+    >
+      {t("labels.scrollToZoom")}
+    </DropdownMenuItemCheckbox>
+  );
+};
+
 export const PreferencesToggleZenModeItem = () => {
   const { t } = useI18n();
   const actionManager = useExcalidrawActionManager();
@@ -571,6 +590,7 @@ export const Preferences = ({
             <PreferencesToggleToolLockItem />
             <PreferencesToggleSnapModeItem />
             <PreferencesToggleGridModeItem />
+            <PreferencesToggleScrollToZoomItem />
             <PreferencesToggleZenModeItem />
             <PreferencesToggleViewModeItem />
             <PreferencesToggleElementPropertiesItem />
@@ -589,6 +609,7 @@ Preferences.ToggleSnapMode = PreferencesToggleSnapModeItem;
 Preferences.ToggleArrowBinding = PreferencesToggleArrowBindingItem;
 Preferences.ToggleMidpointSnapping = PreferencesToggleMidpointSnappingItem;
 Preferences.ToggleGridMode = PreferencesToggleGridModeItem;
+Preferences.ToggleScrollToZoom = PreferencesToggleScrollToZoomItem;
 Preferences.ToggleZenMode = PreferencesToggleZenModeItem;
 Preferences.ToggleViewMode = PreferencesToggleViewModeItem;
 Preferences.ToggleElementProperties = PreferencesToggleElementPropertiesItem;

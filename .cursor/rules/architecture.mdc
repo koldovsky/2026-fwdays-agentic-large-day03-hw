@@ -1,0 +1,31 @@
+---
+description: "Architecture constraints for Excalidraw"
+globs: packages/excalidraw/**
+alwaysApply: false
+---
+
+# Excalidraw Architecture
+
+## State Management
+
+- Custom state via actionManager — NOT Redux/Zustand/MobX
+- State updates: **`actionManager.executeAction()`** only (see `packages/excalidraw/actions/manager.tsx`)
+- State type: AppState (`packages/excalidraw/types.ts`)
+
+## Rendering
+
+- Canvas 2D rendering — NOT React DOM for drawing
+- Render pipeline (exported scene renderer): Scene → **`renderSceneToSvg()`** (`packages/excalidraw/renderer/staticSvgScene`)
+- DO NOT use react-konva, fabric.js, pixi.js
+
+## Dependencies
+
+- No new npm packages without explicit approval
+- Check packages/utils/ before adding external helpers
+
+## How to verify
+
+1. From the **repo root**, run **`yarn test:typecheck`** — must exit **0** (no missing methods such as `dispatch` on `ActionManager`).
+2. **State:** New editor state changes go through **`actionManager.executeAction()`** (or the same paths `ActionManager` uses internally, e.g. keyboard → `perform`); grep for ad-hoc global stores only if you suspect violations — patterns like **`redux`**, **`zustand`**, **`mobx`** should not appear for core editor state.
+3. **Rendering:** If you add or call scene rendering from library code, use the real export **`renderSceneToSvg`** from **`packages/excalidraw/renderer/staticSvgScene`** — do not assume a public **`renderScene`** export.
+4. Run **relevant tests** after behavioral changes (e.g. **`yarn test:all`** per `AGENTS.md` when appropriate).

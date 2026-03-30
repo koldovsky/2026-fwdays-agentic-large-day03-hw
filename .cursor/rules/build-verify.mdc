@@ -1,0 +1,31 @@
+---
+description: "After TypeScript/React changes, run yarn build from repo root and fix compile errors properly"
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Build & verify
+
+## When this applies
+
+User asks to **build**, **verify**, **check compilation**, or after edits that might break the **excalidraw-app** / **packages** build.
+
+## Required workflow
+
+1. From **repository root**, run **`yarn build`** (see `AGENTS.md`).
+2. On **success:** report **PASS**, note touched areas, include **full** build output (or last run’s complete log).
+3. On **failure:** read errors (file, line, type vs syntax), fix **source** (types, imports, exports), re-run **`yarn build`**.
+4. Stop after **3** failed fix cycles; report **FAIL**, paste full output, summarize blockers.
+
+## How to verify
+
+- From the **repo root**, **`yarn build`** exits with code **0** and no unresolved compilation errors.
+- The reported **PASS** matches the terminal; if the log was truncated, re-run and confirm the same result.
+- Fixes did **not** introduce **`@ts-ignore`**, **`@ts-expect-error`**, or **`any`** solely to silence errors.
+- Optionally run **`yarn test:typecheck`** when the change touches TypeScript types.
+
+## Forbidden shortcuts
+
+- No **`@ts-ignore`**, **`@ts-expect-error`**, or **`any`** just to silence errors.
+- Do not weaken **tests** or skip assertions to green the build — fix production code or types.
+- Do not change **test files** only to mask production breakage (unless the test itself is wrong).
