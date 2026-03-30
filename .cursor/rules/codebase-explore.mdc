@@ -1,0 +1,32 @@
+---
+description: "How to explore and explain unfamiliar code: map files, data flow, dependencies — read-only"
+globs: "**/*.{ts,tsx,md}"
+alwaysApply: false
+---
+
+# Codebase exploration
+
+## When this applies
+
+User asks to **explore**, **investigate**, **how does X work**, **walk through**, or **map** part of the repo.
+
+## Workflow
+
+1. **Scope:** semantic search, grep, glob under relevant paths; prefer user-attached **`@folder`** / **`@codebase`**.
+2. **Orientation:** `README`, `AGENTS.md`, `docs/`, top-of-file comments in the area.
+3. **Map:** key files and one-line responsibility (UI, state, IO, types).
+4. **Data flow:** entry → processing → side effects (props, actions, APIs).
+5. **Dependencies:** cross-package imports (`packages/*`, `@excalidraw/*`).
+6. **Output:** short **summary** + **related files** for follow-up.
+
+## How to verify
+
+- **Paths and symbols** cited in the summary exist: open a few referenced files and confirm imports, exports, and described behavior match (no stale or guessed APIs).
+- **Data flow** matches a quick trace: follow one main path from entry (component, action, or public API) through the mentioned files.
+- If something was ambiguous, say so; **re-verify** after reading the suggested “related files.”
+- The user (or follow-up agent) can **confirm** the summary against a known scenario or test when available.
+
+## Rules
+
+- **Read-only** unless the user asks for edits.
+- **Evidence-based:** tie claims to files/symbols; do not invent APIs or behavior not visible in code.

@@ -419,6 +419,11 @@ export interface AppState {
   gridSize: number;
   gridStep: number;
   gridModeEnabled: boolean;
+  /**
+   * When true, the mouse wheel zooms without Ctrl/Cmd; Shift+wheel pans the canvas.
+   * When false (default), wheel pans and Ctrl/Cmd+wheel zooms.
+   */
+  scrollToZoomEnabled: boolean;
   viewModeEnabled: boolean;
 
   /** top-most selected groups (i.e. does not include nested groups) */

@@ -1,0 +1,23 @@
+---
+description: "Secure-by-default patterns for XSS, URLs, Vite env, storage, deps — Excalidraw monorepo"
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Security (common vulnerabilities)
+
+## Principles
+
+- **XSS:** avoid `dangerouslySetInnerHTML` with untrusted strings; treat iframe/srcDoc/remote HTML as hostile; prefer `toValidURL` / `normalizeLink` from `@excalidraw/common` for links/embeds.
+- **Secrets:** never put API secrets in **`VITE_*`** (client-bundled); no real secrets in committed `.env`.
+- **Deps:** no new npm packages without approval (`AGENTS.md`).
+
+See skill **`.cursor/skills/security-common-vulnerabilities/SKILL.md`** for full checklist.
+
+## How to verify
+
+- Re-run the skill’s **Review checklist** on the final diff; each item satisfied or explicitly rejected with rationale.
+- **Spot-check** the diff for `dangerouslySetInnerHTML`, raw `innerHTML`, `eval`, unvalidated URLs into `window.open` / iframe `src`.
+- Confirm **`VITE_*`** usage has no secrets; **`git grep VITE_`** on changed files if needed.
+- Run **`yarn test:typecheck`** and relevant tests / smoke for touched flows (embeds, paste, links, AI/TTD).
+- For UI-heavy changes, **manually** try pasted links, embeds, and new HTML/SVG paths in a dev build.

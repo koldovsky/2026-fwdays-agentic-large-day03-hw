@@ -1,0 +1,40 @@
+---
+description: "Protected files that should not be modified"
+globs: "packages/excalidraw/**"
+alwaysApply: true
+---
+
+# Protected Files
+
+NEVER modify these files without explicit approval:
+
+- `packages/excalidraw/scene/Renderer.ts` — render pipeline
+- `packages/excalidraw/data/restore.ts` — file format compat
+- `packages/excalidraw/actions/manager.tsx` — action system
+- `packages/excalidraw/types.ts` — core types
+
+Changes to protected files require:
+
+1. Full understanding of dependencies
+2. Running complete test suite
+3. Manual QA verification
+
+## How to verify (changes in git / PR)
+
+- **`git diff` / PR** does not touch **`Renderer.ts`**, **`restore.ts`**, **`manager.tsx`**, or **`types.ts`** unless the task explicitly approved those paths.
+- If a change **must** touch them: confirm **`yarn test:update`** (or full test suite per `AGENTS.md`) ran clean and **manual QA** on save/load, actions, and rendering is documented or done.
+- Prefer extending behavior via **non-protected** modules first; only then escalate with review.
+
+## How to verify this rule in Cursor
+
+This file is an **agent rule** (`alwaysApply: true`, `globs: packages/excalidraw/**`). It instructs the AI what to do; it does **not** lock files in the editor or show a separate OS warning when you save. Enforcement is: the model reads the rule and should comply.
+
+**Steps**
+
+1. Open Chat or Agent in a workspace where this rule is loaded.
+2. Ask the assistant to make a small change in **one** of the four paths above (for example: add a comment in `Renderer.ts`), **without** saying the task is approved to touch protected files.
+3. **Expected:** The assistant should **refuse** the edit, **defer** to a non-protected module, or **ask for explicit approval** before changing the file—and should **reference** protected paths / this rule when doing so.
+4. Repeat with explicit approval in the same thread (for example: “You may modify `packages/excalidraw/types.ts` for this task; run tests after.”).
+5. **Expected:** The assistant may proceed **only** if the user clearly approved that path; it should still call out **`yarn test:update`** / full tests and **manual QA** when those files change.
+
+**If the rule seems ignored:** Confirm the file is under `.cursor/rules/`, that `globs` matches the file you are editing, and that the chat has project context. Rules are guidance to the model—not a hard block; **`git diff` / PR review** remains the reliable check.
