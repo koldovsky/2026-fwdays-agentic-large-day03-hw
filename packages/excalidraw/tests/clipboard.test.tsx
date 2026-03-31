@@ -562,3 +562,53 @@ describe("clipboard - pasting mermaid definition", () => {
     });
   });
 });
+
+describe("clipboard - mermaid <br> in labels (OpenSpec mermaid-br-linebreaks)", () => {
+  beforeAll(() => {
+    mockMermaidToExcalidraw({
+      parseMermaidToExcalidraw: async (definition) => {
+        const lines = definition.split("\n");
+        return new Promise((resolve, reject) => {
+          if (lines.some((line) => line === "flowchart TD")) {
+            resolve({
+              elements: [
+                {
+                  id: "rect-br",
+                  type: "rectangle",
+                  groupIds: [],
+                  x: 0,
+                  y: 0,
+                  width: 69.703125,
+                  height: 44,
+                  strokeWidth: 2,
+                  label: {
+                    groupIds: [],
+                    text: "User Registration<br>Process",
+                    fontSize: 20,
+                  },
+                  link: null,
+                },
+              ],
+            });
+          } else {
+            reject(new Error("ERROR"));
+          }
+        });
+      },
+    });
+  });
+
+  it("should turn <br> in mermaid labels into newlines after paste", async () => {
+    const text = "flowchart TD\nA";
+
+    pasteWithCtrlCmdV(text);
+    await waitFor(() => {
+      expect(h.elements.length).toEqual(2);
+      const textEl = h.elements.find((e) => e.type === "text");
+      expect(textEl?.type).toBe("text");
+      if (textEl && textEl.type === "text") {
+        expect(textEl.originalText).toBe("User Registration\nProcess");
+      }
+    });
+  });
+});

@@ -13,6 +13,8 @@ import type {
   Theme,
 } from "@excalidraw/element/types";
 
+import { normalizeMermaidBrInSkeletonElements } from "../../mermaidBrNormalize";
+
 import { EditorLocalStorage } from "../../data/EditorLocalStorage";
 
 import type { MermaidToExcalidrawLibProps } from "./types";
@@ -95,6 +97,7 @@ export const convertMermaidToExcalidraw = async ({
     }
 
     const { elements, files = {} } = ret;
+    normalizeMermaidBrInSkeletonElements(elements);
     setError(null);
 
     data.current = {
