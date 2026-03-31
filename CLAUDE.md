@@ -9,6 +9,18 @@ Excalidraw is a **monorepo** with a clear separation between the core library an
 - **`packages/`** - Core packages: `@excalidraw/common`, `@excalidraw/element`, `@excalidraw/math`, `@excalidraw/utils`
 - **`examples/`** - Integration examples (NextJS, browser script)
 
+## Documentation & Context (entrypoints for new sessions)
+
+This repo contains **two documentation zones**:
+
+- **`docs/`** — **canonical** for how we work in this fork/worktree: SSD process, product/spec, technical architecture, and the Memory Bank.
+  - Start here: `docs/README.md`
+  - SSD process: `docs/spec/SSD.md`
+  - Memory Bank: `docs/memory/*` (especially `activeContext.md`, `progress.md`, `decisionLog.md`)
+- **`dev-docs/`** — upstream-style Docusaurus docs, **canonical** for `@excalidraw/excalidraw` integration and API reference.
+
+Rule of thumb: avoid duplicating full API tables in `docs/`; keep `docs/` as SSD + “cheatsheets with links” and point to `dev-docs/` for details.
+
 ## Development Workflow
 
 1. **Package Development**: Work in `packages/*` for editor features
@@ -23,6 +35,24 @@ yarn test:typecheck  # TypeScript type checking
 yarn test:update     # Run all tests (with snapshot updates)
 yarn fix             # Auto-fix formatting and linting issues
 ```
+
+## Constraints / Protected files
+
+Do not modify these files without explicit approval and extra verification:
+
+- `packages/excalidraw/scene/Renderer.ts`
+- `packages/excalidraw/data/restore.ts`
+- `packages/excalidraw/actions/manager.tsx`
+- `packages/excalidraw/types.ts`
+
+## Cursor rules & custom skills (repo-local)
+
+- Rules live in `.cursor/rules/` (notably `excalidraw-protected-files.mdc`, `project-communication-language.mdc`, `security-svg-import-and-collab.mdc`).
+- Custom skills live in `.cursor/skills/`:
+  - `build-verify`
+  - `codebase-explore`
+  - `memory-bank-update`
+  - `repomix-generated-docs`
 
 ## Architecture Notes
 

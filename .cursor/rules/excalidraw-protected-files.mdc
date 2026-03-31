@@ -1,0 +1,26 @@
+---
+description: "Protected files that should not be modified"
+globs: "packages/excalidraw/**"
+alwaysApply: true
+---
+
+# Protected Files
+
+NEVER modify these files without explicit approval:
+
+- `packages/excalidraw/scene/Renderer.ts` - render pipeline
+- `packages/excalidraw/data/restore.ts` - file format compat
+- `packages/excalidraw/actions/manager.tsx` - action system
+- `packages/excalidraw/types.ts` - core types
+
+Changes to protected files require:
+
+1. Full understanding of dependencies
+2. Running complete test suite
+3. Manual QA verification
+
+## How to verify
+
+1. Request a direct modification in one protected file (for example `packages/excalidraw/types.ts`).
+2. Confirm the agent asks for explicit approval before applying edits.
+3. After explicit approval, confirm the plan includes tests and manual QA notes.

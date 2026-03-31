@@ -1,0 +1,33 @@
+---
+description: "Code conventions for Excalidraw components and utilities"
+globs: packages/**/*.ts,packages/**/*.tsx
+alwaysApply: false
+---
+
+# Code Conventions
+
+## Components
+
+- Prefer functional components with hooks for new UI code.
+- Prefer naming props types as `{ComponentName}Props`.
+- Prefer named exports for shared modules; follow local file conventions when the module already uses default export.
+- Tests may be colocated or centralized under `packages/excalidraw/tests/` depending on existing project pattern.
+
+## TypeScript
+
+- Prefer strict typing: avoid `any` and `@ts-ignore` when practical.
+- Allow `any` or `@ts-ignore` only for documented exceptions: untyped external APIs (for example in `.d.ts`), test helpers accessing internal state, or known TypeScript inference limits — add a short comment explaining why.
+- Prefer `type` over `interface` for simple types.
+- Use type-only imports: `import type { X } from "..."`
+
+## Files
+
+- Use kebab-case for utility files, for example `element-utils.ts`.
+- Use PascalCase for component files, for example `LayerUI.tsx`.
+
+## How to verify
+
+1. Ask the agent to create a new component in `packages/excalidraw/components/`.
+2. Confirm it uses a functional component and named exports where appropriate; props typing is `{ComponentName}Props` **or** follows the existing local pattern (`Props`, inline props) used in neighboring files.
+3. Ask for a utility helper file and confirm file naming follows kebab-case.
+4. Confirm new code does not add unnecessary `any` / `@ts-ignore`; if needed, it matches one of the exception cases above and includes a brief comment.

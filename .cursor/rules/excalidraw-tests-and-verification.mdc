@@ -1,0 +1,27 @@
+---
+description: "Verification requirements for Excalidraw code changes"
+globs: packages/**/*.ts,packages/**/*.tsx,excalidraw-app/**/*.ts,excalidraw-app/**/*.tsx
+alwaysApply: false
+---
+
+# Excalidraw Change Verification
+
+## Before finalizing code changes
+
+- Run checks that match the change scope:
+  - Type-safety: `yarn test:typecheck`
+  - Repository tests/snapshots when behavior changes: `yarn test:update`
+  - Lint/format checks when touching style-heavy files: `yarn fix`
+- Do not claim verification that was not executed.
+- If a full run is too expensive, state what was skipped and why.
+
+## Reporting expectations
+
+- Summarize what commands were run and whether they passed.
+- Mention residual risks when no runtime/manual validation was done.
+
+## How to verify
+
+1. Ask the agent to make a code edit in `packages/excalidraw/`.
+2. Confirm it runs or recommends `yarn test:typecheck` and relevant checks.
+3. Confirm the final response includes what was run and what was not run.

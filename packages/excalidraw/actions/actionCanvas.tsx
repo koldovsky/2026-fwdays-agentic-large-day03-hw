@@ -7,6 +7,7 @@ import {
   MIN_ZOOM,
   THEME,
   ZOOM_STEP,
+  isSelectionLikeTool,
   updateActiveTool,
   CODES,
   KEYS,
@@ -514,12 +515,45 @@ export const actionToggleEraserTool = register({
       });
     }
 
+    const commonResets = {
+      snapLines: appState.snapLines.length ? [] : appState.snapLines,
+      originSnapOffset: null,
+      activeEmbeddable: null,
+      selectedLinearElement: isSelectionLikeTool(activeTool.type)
+        ? appState.selectedLinearElement
+        : null,
+    } as const;
+
+    let toolTransitionPatch: Partial<AppState>;
+
+    if (activeTool.type === "lasso") {
+      toolTransitionPatch = {
+        ...commonResets,
+        selectedElementIds: {},
+        selectedGroupIds: {},
+        editingGroupId: null,
+        multiElement: null,
+      };
+    } else if (activeTool.type !== "selection") {
+      toolTransitionPatch = {
+        ...commonResets,
+        selectedElementIds: {},
+        selectedGroupIds: {},
+        editingGroupId: null,
+        multiElement: null,
+      };
+    } else {
+      toolTransitionPatch = {
+        ...commonResets,
+        selectedElementIds: {},
+        selectedGroupIds: {},
+      };
+    }
+
     return {
       appState: {
         ...appState,
-        selectedElementIds: {},
-        selectedGroupIds: {},
-        activeEmbeddable: null,
+        ...toolTransitionPatch,
         activeTool,
       },
       captureUpdate: CaptureUpdateAction.IMMEDIATELY,
