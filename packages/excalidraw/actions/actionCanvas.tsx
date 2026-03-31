@@ -599,6 +599,4 @@ export const actionToggleHandTool = register({
       captureUpdate: CaptureUpdateAction.IMMEDIATELY,
     };
   },
-  keyTest: (event) =>
-    !event.altKey && !event[KEYS.CTRL_OR_CMD] && event.key === KEYS.H,
 });
