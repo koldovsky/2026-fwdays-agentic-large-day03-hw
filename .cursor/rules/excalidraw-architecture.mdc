@@ -1,0 +1,31 @@
+---
+description: "Architecture constraints for Excalidraw"
+globs: packages/excalidraw/**
+alwaysApply: false
+---
+
+# Excalidraw Architecture
+
+## State Management
+
+- Use custom state via `actionManager` (do not introduce Redux/Zustand/MobX).
+- Preserve the existing action/update flow patterns in `packages/excalidraw/actions/` and related App update paths.
+- Keep state aligned with `AppState` from `packages/excalidraw/types.ts`.
+
+## Rendering
+
+- Keep drawing in Canvas 2D rendering (do not use React DOM for drawing).
+- Preserve the existing scene rendering pipeline in `packages/excalidraw/scene/` (Scene-driven canvas rendering).
+- Do not add `react-konva`, `fabric.js`, or `pixi.js`.
+
+## Dependencies
+
+- Do not add new npm packages without explicit approval.
+- Before adding external helpers, check `packages/utils/` for existing utilities.
+
+## How to verify
+
+1. Ask the agent to implement a drawing change in `packages/excalidraw/`.
+2. Confirm the proposal keeps Canvas 2D rendering and action-driven state updates.
+3. Ask to add an external drawing library (for example `react-konva`).
+4. Confirm the agent refuses or asks for explicit approval first.

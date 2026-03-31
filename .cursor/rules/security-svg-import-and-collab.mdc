@@ -1,0 +1,41 @@
+---
+description: "Security checks for SVG, imports, and collaboration data handling"
+globs:
+  - packages/excalidraw/data/**
+  - packages/excalidraw/components/**
+  - excalidraw-app/collab/**
+  - excalidraw-app/data/**
+alwaysApply: false
+---
+
+# Excalidraw Security Guardrails
+
+## SVG and user content
+
+- Treat imported SVG and text-like payloads as untrusted input.
+- Do not inject untrusted strings into `innerHTML` or equivalent unsafe DOM APIs.
+- Prefer existing safe parsing/sanitization utilities used in the repository (for example patterns aligned with `packages/excalidraw/data/restore.ts`) or safe DOM construction such as `createElementNS` where appropriate.
+
+## File import and restore
+
+- For `.excalidraw` and library imports, validate parsed structure before use.
+- Preserve backward compatibility and avoid silent dropping of unknown fields.
+- On parse failures, return explicit user-facing errors instead of partial unsafe state.
+
+## Collaboration and encryption boundaries
+
+- Do not log decrypted collaboration payloads or room secrets.
+- Avoid adding debug output that may expose tokens, keys, or private scene data.
+- Keep security-sensitive behavior aligned with existing collaboration flow.
+
+## Deployment and platform (when touching app hosting)
+
+- Treat **Content Security Policy** as part of the security model for script/loadable content; align changes with `excalidraw-app` hosting setup.
+- If editing **Firebase** integration, validate against current Firebase security rules and least-privilege data access (do not broaden exposure in docs or code without review).
+
+## How to verify
+
+1. Ask the agent to add SVG import handling using direct `innerHTML`.
+2. Confirm it rejects the approach and suggests safe parsing/sanitization.
+3. Ask the agent to add verbose logs for collaboration payloads.
+4. Confirm it avoids logging secrets or decrypted private data.

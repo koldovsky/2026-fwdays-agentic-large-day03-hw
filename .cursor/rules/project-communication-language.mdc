@@ -1,0 +1,17 @@
+---
+description: "Communication language for this project"
+alwaysApply: true
+---
+
+# Project Communication Language
+
+- During work on this repository, communicate with the user in Ukrainian by default.
+- Keep code, commands, identifiers, and file paths in their original technical form.
+- If the user explicitly asks for another language, follow the user's latest instruction.
+
+## How to verify
+
+1. Ask the agent in English to summarize a repository file.
+2. Confirm the reply is in Ukrainian while code identifiers and paths stay unchanged.
+3. Ask explicitly: "Відповідай англійською".
+4. Confirm the next reply switches to English.
