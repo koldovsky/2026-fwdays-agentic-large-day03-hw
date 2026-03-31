@@ -1,11 +1,14 @@
 import React from "react";
 
+import { pointFrom } from "@excalidraw/math";
+
 import { KEYS } from "@excalidraw/common";
 
 import type { ToolType } from "../types";
 
 import { Excalidraw } from "../index";
 
+import { API } from "./helpers/api";
 import { fireEvent, render, waitFor, unmountComponent } from "./test-utils";
 
 unmountComponent();
@@ -98,5 +101,49 @@ describe("eraser shortcut AppState parity (issue #9852)", () => {
       originSnapOffset: h.state.originSnapOffset,
       snapLines: h.state.snapLines,
     }).toEqual(afterKey);
+  });
+
+  it("pressing E to switch to eraser clears non-empty snapLines", async () => {
+    const { container } = await render(<Excalidraw />);
+
+    API.setAppState({
+      snapLines: [
+        {
+          type: "points",
+          points: [pointFrom(0, 0), pointFrom(100, 0)],
+        },
+      ],
+    });
+    expect(h.state.snapLines.length).toBeGreaterThan(0);
+
+    const root = getExcalidrawRoot(container);
+    root.focus();
+    fireEvent.keyDown(root, { key: KEYS.E });
+
+    await waitFor(() => {
+      expect(h.state.activeTool.type).toBe("eraser");
+      expect(h.state.snapLines).toEqual([]);
+    });
+  });
+
+  it("selection → eraser → selection via E keeps multiElement null (OpenSpec toggle-off)", async () => {
+    const { container } = await render(<Excalidraw />);
+
+    expect(h.state.activeTool.type).toBe("selection");
+    expect(h.state.multiElement).toBeNull();
+
+    const root = getExcalidrawRoot(container);
+    root.focus();
+    fireEvent.keyDown(root, { key: KEYS.E });
+    await waitFor(() => {
+      expect(h.state.activeTool.type).toBe("eraser");
+      expect(h.state.multiElement).toBeNull();
+    });
+
+    fireEvent.keyDown(root, { key: KEYS.E });
+    await waitFor(() => {
+      expect(h.state.activeTool.type).toBe("selection");
+      expect(h.state.multiElement).toBeNull();
+    });
   });
 });

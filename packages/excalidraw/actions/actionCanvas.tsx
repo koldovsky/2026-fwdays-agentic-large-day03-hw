@@ -543,10 +543,10 @@ export const actionToggleEraserTool = register({
         multiElement: null,
       };
     } else {
+      // Match App.setActiveTool when the target tool is selection: do not clear
+      // selectedElementIds / selectedGroupIds (parity with toolbar transition).
       toolTransitionPatch = {
         ...commonResets,
-        selectedElementIds: {},
-        selectedGroupIds: {},
       };
     }
 
