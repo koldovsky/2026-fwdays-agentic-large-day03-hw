@@ -34,6 +34,47 @@ export const setCursor = (
   }
 };
 
+let crosshairCanvasCache: any;
+let crosshairDataURL: string;
+export const setCrosshairCursor = (
+  interactiveCanvas: HTMLCanvasElement | null,
+  theme: AppState["theme"],
+) => {
+  const cursorImageSizePx = 20;
+  const center = cursorImageSizePx / 2;
+  const armLength = 7;
+
+  const drawCanvas = () => {
+    const isDarkTheme = theme === THEME.DARK;
+    crosshairCanvasCache = document.createElement("canvas");
+    crosshairCanvasCache.theme = theme;
+    crosshairCanvasCache.height = cursorImageSizePx;
+    crosshairCanvasCache.width = cursorImageSizePx;
+    const context = crosshairCanvasCache.getContext("2d")!;
+    context.lineWidth = 1;
+    context.strokeStyle = isDarkTheme ? "#fff" : "#000";
+    context.beginPath();
+    // vertical line
+    context.moveTo(center, center - armLength);
+    context.lineTo(center, center + armLength);
+    // horizontal line
+    context.moveTo(center - armLength, center);
+    context.lineTo(center + armLength, center);
+    context.stroke();
+    crosshairDataURL = crosshairCanvasCache.toDataURL(
+      MIME_TYPES.svg,
+    ) as DataURL;
+  };
+  if (!crosshairCanvasCache || crosshairCanvasCache.theme !== theme) {
+    drawCanvas();
+  }
+
+  setCursor(
+    interactiveCanvas,
+    `url(${crosshairDataURL}) ${center} ${center}, crosshair`,
+  );
+};
+
 let eraserCanvasCache: any;
 let previewDataURL: string;
 export const setEraserCursor = (
@@ -99,7 +140,7 @@ export const setCursorForShape = (
         : laserPointerCursorDataURL_darkMode;
     interactiveCanvas.style.cursor = `url(${url}), auto`;
   } else if (!["image", "custom"].includes(appState.activeTool.type)) {
-    interactiveCanvas.style.cursor = CURSOR_TYPE.CROSSHAIR;
+    setCrosshairCursor(interactiveCanvas, appState.theme);
   } else if (appState.activeTool.type !== "image") {
     interactiveCanvas.style.cursor = CURSOR_TYPE.AUTO;
   }
