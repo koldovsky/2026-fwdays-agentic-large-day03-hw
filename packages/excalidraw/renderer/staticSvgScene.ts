@@ -4,11 +4,13 @@ import {
   SVG_NS,
   THEME,
   DARK_THEME_FILTER,
+  FONT_FAMILY,
   getFontFamilyString,
   isRTL,
   isTestEnv,
   getVerticalOffset,
   applyDarkModeFilter,
+  isTransparent,
   MIME_TYPES,
 } from "@excalidraw/common";
 import { normalizeLink, toValidURL } from "@excalidraw/common";
@@ -22,9 +24,15 @@ import { LinearElementEditor } from "@excalidraw/element";
 import { getBoundTextElement, getContainerElement } from "@excalidraw/element";
 import { getLineHeightInPx } from "@excalidraw/element";
 import {
+  CODE_SNIPPET_INNER_PADDING,
+  getTokenColor,
+  tokenizeCodeLine,
+} from "@excalidraw/element";
+import {
   isArrowElement,
   isIframeLikeElement,
   isInitializedImageElement,
+  isCodeElement,
   isTextElement,
 } from "@excalidraw/element";
 
@@ -632,7 +640,110 @@ const renderElementToSvg = (
       break;
     }
     default: {
-      if (isTextElement(element)) {
+      if (isCodeElement(element)) {
+        const node = svgRoot.ownerDocument.createElementNS(SVG_NS, "g");
+        if (opacity !== 1) {
+          node.setAttribute("stroke-opacity", `${opacity}`);
+          node.setAttribute("fill-opacity", `${opacity}`);
+        }
+
+        node.setAttribute(
+          "transform",
+          `translate(${offsetX || 0} ${
+            offsetY || 0
+          }) rotate(${degree} ${cx} ${cy})`,
+        );
+
+        if (!isTransparent(element.backgroundColor)) {
+          const bg = svgRoot.ownerDocument.createElementNS(SVG_NS, "rect");
+          bg.setAttribute("width", `${element.width}px`);
+          bg.setAttribute("height", `${element.height}px`);
+          bg.setAttribute(
+            "fill",
+            renderConfig.theme === THEME.DARK
+              ? applyDarkModeFilter(element.backgroundColor)
+              : element.backgroundColor,
+          );
+          node.appendChild(bg);
+        }
+
+        if (
+          element.strokeWidth > 0 &&
+          element.strokeColor &&
+          !isTransparent(element.strokeColor)
+        ) {
+          const border = svgRoot.ownerDocument.createElementNS(SVG_NS, "rect");
+          border.setAttribute("width", `${element.width}px`);
+          border.setAttribute("height", `${element.height}px`);
+          border.setAttribute("fill", "none");
+          border.setAttribute(
+            "stroke",
+            renderConfig.theme === THEME.DARK
+              ? applyDarkModeFilter(element.strokeColor)
+              : element.strokeColor,
+          );
+          border.setAttribute("stroke-width", `${element.strokeWidth}px`);
+          node.appendChild(border);
+        }
+
+        const lines = element.text.replace(/\r\n?/g, "\n").split("\n");
+        const lineHeightPx = getLineHeightInPx(
+          element.fontSize,
+          element.lineHeight,
+        );
+        const verticalOffset = getVerticalOffset(
+          FONT_FAMILY.Cascadia,
+          element.fontSize,
+          lineHeightPx,
+        );
+        const pad = CODE_SNIPPET_INNER_PADDING;
+        const defaultFill =
+          renderConfig.theme === THEME.DARK
+            ? applyDarkModeFilter(element.strokeColor)
+            : element.strokeColor;
+        for (let i = 0; i < lines.length; i++) {
+          const text = svgRoot.ownerDocument.createElementNS(SVG_NS, "text");
+          text.setAttribute("x", `${pad}`);
+          text.setAttribute("y", `${pad + i * lineHeightPx + verticalOffset}`);
+          text.setAttribute(
+            "font-family",
+            getFontFamilyString({ fontFamily: FONT_FAMILY.Cascadia }),
+          );
+          text.setAttribute("font-size", `${element.fontSize}px`);
+          text.setAttribute("fill", defaultFill);
+          text.setAttribute("text-anchor", "start");
+          text.setAttribute("style", "white-space: pre;");
+          text.setAttribute("xml:space", "preserve");
+          text.setAttribute("direction", "ltr");
+          text.setAttribute("dominant-baseline", "alphabetic");
+
+          const tokens = tokenizeCodeLine(lines[i]!, element.language);
+          for (const token of tokens) {
+            const tspan = svgRoot.ownerDocument.createElementNS(SVG_NS, "tspan");
+            tspan.textContent = token.text;
+            tspan.setAttribute(
+              "fill",
+              getTokenColor(
+                token.kind,
+                renderConfig.theme === THEME.DARK ? THEME.DARK : THEME.LIGHT,
+                defaultFill,
+              ),
+            );
+            text.appendChild(tspan);
+          }
+          node.appendChild(text);
+        }
+
+        const g = maybeWrapNodesInFrameClipPath(
+          element,
+          root,
+          [node],
+          renderConfig.frameRendering,
+          elementsMap,
+        );
+
+        addToRoot(g || node, element);
+      } else if (isTextElement(element)) {
         const node = svgRoot.ownerDocument.createElementNS(SVG_NS, "g");
         if (opacity !== 1) {
           node.setAttribute("stroke-opacity", `${opacity}`);

@@ -3,9 +3,12 @@ import { isFiniteNumber, pointFrom } from "@excalidraw/math";
 import {
   type CombineBrandsIfNeeded,
   DEFAULT_FONT_FAMILY,
+  DEFAULT_FONT_SIZE,
   DEFAULT_TEXT_ALIGN,
   DEFAULT_VERTICAL_ALIGN,
   FONT_FAMILY,
+  TEXT_ALIGN,
+  VERTICAL_ALIGN,
   ROUNDNESS,
   DEFAULT_SIDEBAR,
   DEFAULT_ELEMENT_PROPS,
@@ -34,6 +37,7 @@ import {
 } from "@excalidraw/element";
 import { LinearElementEditor } from "@excalidraw/element";
 import { bumpVersion } from "@excalidraw/element";
+import { CODE_SNIPPET_DEFAULT_FONT_SIZE } from "@excalidraw/element";
 import { getContainerElement } from "@excalidraw/element";
 import { detectLineHeight } from "@excalidraw/element";
 import {
@@ -45,6 +49,7 @@ import {
   isTextElement,
   isUsingAdaptiveRadius,
 } from "@excalidraw/element";
+import { refreshCodeSnippetDimensions } from "@excalidraw/element";
 
 import { syncInvalidIndices } from "@excalidraw/element";
 
@@ -66,6 +71,7 @@ import type {
   ExcalidrawLinearElement,
   ExcalidrawSelectionElement,
   ExcalidrawTextElement,
+  ExcalidrawCodeElement,
   FixedPointBinding,
   FontFamilyValues,
   NonDeletedSceneElementsMap,
@@ -103,6 +109,7 @@ export const AllowedExcalidrawActiveTools: Record<
   selection: true,
   lasso: true,
   text: true,
+  code: true,
   rectangle: true,
   diamond: true,
   ellipse: true,
@@ -132,6 +139,28 @@ const getFontFamilyByName = (fontFamilyName: string): FontFamilyValues => {
     ] as FontFamilyValues;
   }
   return DEFAULT_FONT_FAMILY;
+};
+
+const getDefaultTextProps = (
+  element: Pick<
+    ExcalidrawTextElement | ExcalidrawCodeElement,
+    "text" | "fontSize" | "fontFamily" | "originalText" | "autoResize"
+  >,
+  defaults: {
+    fontSize: number;
+    fontFamily: FontFamilyValues;
+    autoResize: boolean;
+  },
+) => {
+  const text = (typeof element.text === "string" && element.text) || "";
+
+  return {
+    text,
+    fontSize: element.fontSize ?? defaults.fontSize,
+    fontFamily: element.fontFamily ?? defaults.fontFamily,
+    originalText: element.originalText || text,
+    autoResize: element.autoResize ?? defaults.autoResize,
+  };
 };
 
 const repairBinding = <T extends ExcalidrawArrowElement>(
@@ -366,8 +395,13 @@ export const restoreElement = (
       // conflict when porting between the apps
       delete (element as any).rawText;
 
-      let fontSize = element.fontSize;
-      let fontFamily = element.fontFamily;
+      const textDefaults = getDefaultTextProps(element, {
+        fontSize: DEFAULT_FONT_SIZE,
+        fontFamily: DEFAULT_FONT_FAMILY,
+        autoResize: true,
+      });
+      let fontSize = textDefaults.fontSize;
+      let fontFamily = textDefaults.fontFamily;
       if ("font" in element) {
         const [fontPx, _fontFamily]: [string, string] = (
           element as any
@@ -375,7 +409,7 @@ export const restoreElement = (
         fontSize = parseFloat(fontPx);
         fontFamily = getFontFamilyByName(_fontFamily);
       }
-      const text = (typeof element.text === "string" && element.text) || "";
+      const { text } = textDefaults;
 
       // line-height might not be specified either when creating elements
       // programmatically, or when importing old diagrams.
@@ -389,16 +423,14 @@ export const restoreElement = (
             detectLineHeight(element)
           : // no element height likely means programmatic use, so default
             // to a fixed line height
-            getLineHeight(element.fontFamily));
+            getLineHeight(textDefaults.fontFamily));
       element = restoreElementWithProperties(element, {
+        ...textDefaults,
         fontSize,
         fontFamily,
-        text,
         textAlign: element.textAlign || DEFAULT_TEXT_ALIGN,
         verticalAlign: element.verticalAlign || DEFAULT_VERTICAL_ALIGN,
         containerId: element.containerId ?? null,
-        originalText: element.originalText || text,
-        autoResize: element.autoResize ?? true,
         lineHeight,
       });
 
@@ -411,6 +443,55 @@ export const restoreElement = (
       }
 
       return element;
+    case "code": {
+      const codeDefaults = getDefaultTextProps(
+        element as ExcalidrawCodeElement,
+        {
+          fontSize: CODE_SNIPPET_DEFAULT_FONT_SIZE,
+          fontFamily: FONT_FAMILY.Cascadia,
+          autoResize: false,
+        },
+      );
+      const { text, fontFamily } = codeDefaults;
+      const lineHeight =
+        (element as ExcalidrawCodeElement).lineHeight ||
+        getLineHeight(fontFamily);
+      const languageRaw = (element as ExcalidrawCodeElement).language;
+      const restoredCodeElement = restoreElementWithProperties(
+        element as any,
+        {
+          ...codeDefaults,
+          textAlign:
+            (element as ExcalidrawCodeElement).textAlign || TEXT_ALIGN.LEFT,
+          verticalAlign:
+            (element as ExcalidrawCodeElement).verticalAlign ||
+            VERTICAL_ALIGN.TOP,
+          lineHeight,
+          language:
+            typeof languageRaw === "string" && languageRaw.trim()
+              ? languageRaw
+              : null,
+        } as any,
+      ) as ExcalidrawCodeElement;
+      const refreshedCodeDimensions = refreshCodeSnippetDimensions(
+        restoredCodeElement,
+        targetElementsMap,
+      );
+      element = refreshedCodeDimensions
+        ? {
+            ...restoredCodeElement,
+            ...refreshedCodeDimensions,
+          }
+        : restoredCodeElement;
+      if (opts?.deleteInvisibleElements && !text && !element.isDeleted) {
+        element = bumpVersion({
+          ...(element as ExcalidrawCodeElement),
+          originalText: text,
+          isDeleted: true,
+        });
+      }
+      return element;
+    }
     case "freedraw": {
       return restoreElementWithProperties(element, {
         points: element.points,
