@@ -472,6 +472,11 @@ exports[`<Excalidraw/> > Test UIOptions prop > Test canvasActions > should rende
           Reset the canvas
         </span>
       </div>
+      <div
+        class="dropdown-menu-item__shortcut"
+      >
+        Ctrl+Delete
+      </div>
     </button>
     <div
       style="height: 1px; margin: 6px 0px; flex: 0 0 auto;"
