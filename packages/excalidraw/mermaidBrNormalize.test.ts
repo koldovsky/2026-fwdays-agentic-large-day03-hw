@@ -35,6 +35,19 @@ describe("replaceMermaidBrTagsWithNewlines", () => {
 });
 
 describe("normalizeMermaidBrInSkeletonElements", () => {
+  it("skips label when text is not a string (defensive)", () => {
+    const elements = [
+      {
+        type: "rectangle",
+        x: 0,
+        y: 0,
+        label: { text: 123, fontSize: 20 },
+      },
+    ] as unknown as ExcalidrawElementSkeleton[];
+    expect(() => normalizeMermaidBrInSkeletonElements(elements)).not.toThrow();
+    expect((elements[0] as { label: { text: unknown } }).label.text).toBe(123);
+  });
+
   it("normalizes label.text on containers", () => {
     const elements: ExcalidrawElementSkeleton[] = [
       {

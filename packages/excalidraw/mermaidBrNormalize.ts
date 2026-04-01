@@ -6,7 +6,10 @@ const MERMAID_BR_TAG_RE = /<br\s*\/?>/gi;
 export const replaceMermaidBrTagsWithNewlines = (text: string): string =>
   text.replace(MERMAID_BR_TAG_RE, "\n");
 
-const normalizeLabel = (label: { text: string }): void => {
+const normalizeLabel = (label: { text: unknown }): void => {
+  if (typeof label.text !== "string") {
+    return;
+  }
   label.text = replaceMermaidBrTagsWithNewlines(label.text);
 };
 
@@ -26,7 +29,7 @@ export const normalizeMermaidBrInSkeletonElements = (
       el.text = replaceMermaidBrTagsWithNewlines(el.text);
     }
 
-    if ("label" in el && el.label?.text != null) {
+    if ("label" in el && el.label && typeof el.label.text === "string") {
       normalizeLabel(el.label);
     }
 

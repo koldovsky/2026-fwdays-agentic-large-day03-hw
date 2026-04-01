@@ -15,6 +15,10 @@ Normalize Mermaid-derived label/text content so that **HTML line-break tokens us
 
 Exact normalization rules are specified in the delta spec (`specs/mermaid-text/spec.md`).
 
+## Non-goals
+
+- **Literal `<br>` as visible user content:** We do not try to preserve a visible literal `<br>` substring inside labels when Mermaid has already interpreted the token as a line break. Aligning with Mermaid’s rendering, `<br>` in node label syntax becomes newline characters in Excalidraw text; edge cases where someone wants angle-bracket text literally are out of scope for this change.
+
 ## Impact
 
 | Area | Files / modules (expected) |
@@ -28,6 +32,6 @@ Exact normalization rules are specified in the delta spec (`specs/mermaid-text/s
 
 | Risk | Mitigation |
 |------|------------|
-| Over-aggressive replacement breaks legitimate text that should show angle brackets | Limit replacement to known break patterns; document in spec; add scenarios for literal `<br>` as content if product decision differs |
-| Divergence between paste and TTD | Single shared normalizer used by both call sites |
+| Over-aggressive replacement breaks legitimate text that should show angle brackets | Limit replacement to known break patterns; **Non-goals** documents that preserving literal `<br>` as visible text is out of scope |
+| Divergence between paste and TTD | Single shared `normalizeMermaidBrInSkeletonElements` applied to the **parse output** on both paths; see delta spec for TTD quote-retry behavior (pre-existing) |
 | i18n / RTL | Only affects diagram label strings from Mermaid; no new user-facing strings unless we add error copy (avoid unless needed) |

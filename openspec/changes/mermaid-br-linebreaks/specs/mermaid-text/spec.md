@@ -42,8 +42,10 @@ The system SHALL normalize text coming from the Mermaid-to-Excalidraw parse resu
 
 The same normalization logic SHALL be applied on both the clipboard Mermaid import path and the TTD Mermaid conversion path, so behavior does not diverge.
 
+**Clarification (pre-existing pipeline difference):** The TTD flow in `TTDDialog/common.ts` may call `parseMermaidToExcalidraw` twice when the first parse fails and the definition contains double quotes (retry with `"` replaced by `'`). Clipboard paste does not perform that retry. This change does not alter that behavior. **Normalization** runs on the **successful parse result** in both cases, so `<br>` handling is identical for the same skeleton output.
+
 **Scenario: Consistency**
 
-- **GIVEN** the same Mermaid source string
-- **WHEN** it is imported via paste and via TTD insert
+- **GIVEN** the same **successful** parse result (same skeleton `elements` from `parseMermaidToExcalidraw`) whether it came from paste or from TTD
+- **WHEN** `normalizeMermaidBrInSkeletonElements` runs before `convertToExcalidrawElements`
 - **THEN** the resulting element text for equivalent nodes MUST match (subject to ID regeneration)

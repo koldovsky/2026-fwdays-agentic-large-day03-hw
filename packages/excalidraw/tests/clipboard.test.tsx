@@ -488,32 +488,29 @@ describe("clipboard - pasting mermaid definition", () => {
     mockMermaidToExcalidraw({
       parseMermaidToExcalidraw: async (definition) => {
         const lines = definition.split("\n");
-        return new Promise((resolve, reject) => {
-          if (lines.some((line) => line === "flowchart TD")) {
-            resolve({
-              elements: [
-                {
-                  id: "rect1",
-                  type: "rectangle",
+        if (lines.some((line) => line === "flowchart TD")) {
+          return {
+            elements: [
+              {
+                id: "rect1",
+                type: "rectangle",
+                groupIds: [],
+                x: 0,
+                y: 0,
+                width: 69.703125,
+                height: 44,
+                strokeWidth: 2,
+                label: {
                   groupIds: [],
-                  x: 0,
-                  y: 0,
-                  width: 69.703125,
-                  height: 44,
-                  strokeWidth: 2,
-                  label: {
-                    groupIds: [],
-                    text: "A",
-                    fontSize: 20,
-                  },
-                  link: null,
+                  text: "A",
+                  fontSize: 20,
                 },
-              ],
-            });
-          } else {
-            reject(new Error("ERROR"));
-          }
-        });
+                link: null,
+              },
+            ],
+          };
+        }
+        throw new Error("ERROR");
       },
     });
   });
@@ -568,32 +565,29 @@ describe("clipboard - mermaid <br> in labels (OpenSpec mermaid-br-linebreaks)", 
     mockMermaidToExcalidraw({
       parseMermaidToExcalidraw: async (definition) => {
         const lines = definition.split("\n");
-        return new Promise((resolve, reject) => {
-          if (lines.some((line) => line === "flowchart TD")) {
-            resolve({
-              elements: [
-                {
-                  id: "rect-br",
-                  type: "rectangle",
+        if (lines.some((line) => line === "flowchart TD")) {
+          return {
+            elements: [
+              {
+                id: "rect-br",
+                type: "rectangle",
+                groupIds: [],
+                x: 0,
+                y: 0,
+                width: 69.703125,
+                height: 44,
+                strokeWidth: 2,
+                label: {
                   groupIds: [],
-                  x: 0,
-                  y: 0,
-                  width: 69.703125,
-                  height: 44,
-                  strokeWidth: 2,
-                  label: {
-                    groupIds: [],
-                    text: "User Registration<br>Process",
-                    fontSize: 20,
-                  },
-                  link: null,
+                  text: "User Registration<br>Process",
+                  fontSize: 20,
                 },
-              ],
-            });
-          } else {
-            reject(new Error("ERROR"));
-          }
-        });
+                link: null,
+              },
+            ],
+          };
+        }
+        throw new Error("ERROR");
       },
     });
   });
