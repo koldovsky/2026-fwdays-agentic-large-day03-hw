@@ -1,0 +1,44 @@
+schema: spec-driven
+
+context: |
+  Domain: Excalidraw — open-source collaborative vector whiteboard / drawing tool.
+
+  Monorepo structure (Yarn 1.22 workspaces):
+    - packages/excalidraw/    — Main React component library (@excalidraw/excalidraw, published to npm)
+    - packages/common/        — Shared utilities (@excalidraw/common)
+    - packages/element/       — Element/document model (@excalidraw/element)
+    - packages/math/          — Geometry & math helpers (@excalidraw/math)
+    - packages/utils/         — General utilities (@excalidraw/utils)
+    - excalidraw-app/         — Full web application (excalidraw.com) using the library
+    - examples/               — Integration examples (Next.js, browser script)
+
+  Tech stack:
+    - TypeScript 5.9+ in main packages and app (strict mode, type-only imports enforced); dev-docs uses TypeScript ^4.7
+    - React 17/18/19 (peer dep), JSX transform: react-jsx
+    - Build: esbuild for packages, Vite 5 for the app
+    - Testing: Vitest + jsdom + @testing-library/react + vitest-canvas-mock
+    - Linting: ESLint (@excalidraw/eslint-config + react-app), Prettier (@excalidraw/prettier-config)
+    - Git hooks: Husky + lint-staged (ESLint --fix on .ts/.tsx/.js, Prettier on .css/.scss/.json/.md/.html/.yml)
+    - State management: Jotai (do NOT import jotai directly; use app/editor wrapper modules)
+    - Canvas rendering: RoughJS
+    - App-layer: Firebase, Sentry, socket.io (real-time collaboration), i18next
+
+  Conventions:
+    - Prefer type-only imports (@typescript-eslint/consistent-type-imports)
+    - Inside packages/excalidraw (non-test): use relative imports, never import from the @excalidraw/excalidraw barrel
+    - Package features go in packages/*, app-specific features in excalidraw-app/
+    - Run "yarn test:update" before committing
+    - Run "yarn test:typecheck" to verify TypeScript
+    - Run "yarn fix" to auto-fix formatting and linting
+    - Node >= 18.0.0
+
+rules:
+  proposal:
+    - Always specify which package or app area the change targets (packages/excalidraw, excalidraw-app, etc.)
+    - Include a "Non-goals" section to keep scope clear
+    - Note any cross-package impact (e.g. changes in @excalidraw/element that affect @excalidraw/excalidraw)
+  tasks:
+    - Break tasks into chunks of max 2 hours
+    - Each task should specify the target package/directory
+    - Include a task for running "yarn test:typecheck" and "yarn test:update" after implementation
+    - If UI is involved, note which React components are affected
