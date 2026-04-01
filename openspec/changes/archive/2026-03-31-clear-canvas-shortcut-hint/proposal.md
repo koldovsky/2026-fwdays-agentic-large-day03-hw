@@ -28,6 +28,11 @@ Resolves [GitHub issue #10558](https://github.com/excalidraw/excalidraw/issues/1
 
 _(none — no existing spec-level behavior is changing)_
 
+## Risks
+
+- **Snapshot diff** — The menu snapshot in `excalidraw.test.tsx.snap` (line ~475) updates to include a `dropdown-menu-item__shortcut` block with `Ctrl+Delete` on the Clear Canvas row. **Mitigation**: run `yarn test:update`, review the diff to confirm only the expected shortcut string was added, verify CI passes.
+- **Mobile rendering, Ctrl+Delete regression, accessibility/locale** — Verified as non-risks. Mobile hiding is handled generically in `DropdownMenuItemContent.tsx` (lines 28-30) for all menu items. No keybinding code is touched; `shortcuts.test.tsx` already covers the Ctrl+Delete → confirm → clear flow. Shortcut text is localized via `getShortcutKey`/`t(...)` and `aria-label` uses `t("buttons.clearReset")`, matching Load/Save/Export exactly.
+
 ## Impact
 
 - **Code**: Single file change in `packages/excalidraw` (`DefaultItems.tsx`). No cross-package impact.
