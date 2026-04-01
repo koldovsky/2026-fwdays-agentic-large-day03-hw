@@ -2,10 +2,7 @@ import React from "react";
 
 import { reseed, KEYS } from "@excalidraw/common";
 
-import type {
-  ExcalidrawArrowElement,
-  ExcalidrawLinearElement,
-} from "@excalidraw/element/types";
+import type { ExcalidrawArrowElement } from "@excalidraw/element/types";
 
 import { Excalidraw } from "../index";
 
@@ -34,9 +31,7 @@ describe("Arrow curve inside shapes", () => {
   });
 
   beforeEach(async () => {
-    if (typeof localStorage !== "undefined" && localStorage.clear) {
-      localStorage.clear();
-    }
+    localStorage.clear();
     reseed(7);
     await render(<Excalidraw handleKeyboardGlobally={true} />);
     h.state.width = 1920;
@@ -121,7 +116,7 @@ describe("Arrow curve inside shapes", () => {
     });
   });
 
-  it("arrow inside a shape finalizes normally via Enter key", async () => {
+  it("arrow inside a shape finalizes normally via Escape key", async () => {
     // Create a large rectangle
     API.setElements([
       API.createElement({
@@ -134,19 +129,57 @@ describe("Arrow curve inside shapes", () => {
       }),
     ]);
 
-    // Start arrow inside the rectangle
+    // Start arrow inside the rectangle and add points
     UI.clickTool("arrow");
     mouse.click(100, 100);
     mouse.click(200, 200);
-    // Finalize via Enter key
-    Keyboard.keyPress(KEYS.ENTER);
+    // Finalize via Escape (triggers actionFinalize)
+    Keyboard.keyPress(KEYS.ESCAPE);
 
     await waitFor(() => {
       const arrow = h.elements.find(
         (el): el is ExcalidrawArrowElement => el.type === "arrow",
       );
       expect(arrow).toBeDefined();
-      // Arrow should exist and have been finalized (not be a multiElement)
+      // Arrow should have been finalized
+      expect(h.state.multiElement).toBeNull();
+    });
+  });
+
+  it("mouse move inside start-bound shape does not auto-finalize arrow", async () => {
+    // Create a large rectangle
+    API.setElements([
+      API.createElement({
+        type: "rectangle",
+        id: "rect3",
+        x: 0,
+        y: 0,
+        width: 500,
+        height: 400,
+      }),
+    ]);
+
+    // Start arrow inside the rectangle
+    UI.clickTool("arrow");
+    mouse.click(100, 100);
+
+    // Move mouse within the same shape — should NOT auto-finalize
+    mouse.moveTo(250, 200);
+    mouse.moveTo(350, 300);
+
+    // Arrow should still be in progress (multiElement is set)
+    expect(h.state.multiElement).not.toBeNull();
+
+    // Verify no premature finalization occurred
+    const arrowInProgress = h.elements.find(
+      (el): el is ExcalidrawArrowElement => el.type === "arrow",
+    );
+    expect(arrowInProgress).toBeDefined();
+
+    // Finalize with Enter to confirm arrow is still controllable
+    Keyboard.keyPress(KEYS.ENTER);
+
+    await waitFor(() => {
       expect(h.state.multiElement).toBeNull();
     });
   });

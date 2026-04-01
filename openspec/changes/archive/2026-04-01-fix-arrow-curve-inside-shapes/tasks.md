@@ -14,3 +14,4 @@
 - [x] 3.2 Write a test: create an arrow starting inside shape A, end on shape B — assert finalization and end-binding to shape B works correctly
 - [x] 3.3 Write a test: create an arrow inside a shape and double-click or click in commit zone — assert normal finalization still works
 - [x] 3.4 Run existing arrow and binding test suites to verify no regressions (`yarn test:app --watch=false`)
+- [x] 3.5 Run build: run `yarn build` and confirm no build errors

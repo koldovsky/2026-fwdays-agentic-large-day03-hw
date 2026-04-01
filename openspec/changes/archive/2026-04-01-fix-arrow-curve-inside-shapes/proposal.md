@@ -21,3 +21,10 @@ When drawing a multi-point (curved) arrow inside a closed shape (e.g., a rounded
   - `handleLinearElementOnPointerDown` (~line 9066-9087): click handler auto-finalizes arrow when `hoveredElementForBinding` matches enclosing shape
 - `packages/element/src/collision.ts` — `getHoveredElementForBinding` may need an optional exclusion parameter, or the filtering can be done at the call site
 - No API/dependency changes. No breaking changes.
+
+## Risks
+
+- **Arrow cannot end-bind to its start-bound element** — After the fix, an arrow starting inside shape A and clicking again inside shape A will add a point instead of finalizing. This is desired behavior; ending on a different shape still triggers finalization and binding normally.
+- **Regression in existing binding behavior** — Mitigated by scoping the check narrowly: only skip finalization when `hoveredElement.id === startBinding.elementId`. All other binding scenarios (different shapes, elbow arrows, lines) remain unchanged.
+- **Edge case with nested shapes** — When shapes overlap, `getHoveredElementForBinding` returns the topmost/smallest shape. If the arrow starts bound to an inner shape, hovering the outer shape correctly triggers finalization (different element ID).
+- **Test coverage gap** — Mitigated by adding 3 dedicated tests (multi-point inside shape, cross-shape binding, Enter-key finalization) and verifying existing arrow/binding suites pass with no regressions.
