@@ -6912,7 +6912,12 @@ class App extends React.Component<AppProps, AppState> {
             this.scene.getNonDeletedElementsMap(),
             maxBindingDistance_simple(this.state.zoom),
           );
-        if (hoveredElement) {
+        // Skip finalization if the hovered element is the arrow's start-bound
+        // element (user is adding intermediate points inside the same shape)
+        if (
+          hoveredElement &&
+          hoveredElement.id !== multiElement.startBinding?.elementId
+        ) {
           this.actionManager.executeAction(actionFinalize, "ui", {
             event: event.nativeEvent,
             sceneCoords: {
@@ -9064,8 +9069,13 @@ class App extends React.Component<AppProps, AppState> {
         );
 
       // clicking inside commit zone → finalize arrow
+      // Skip finalization if the hovered element is the arrow's start-bound
+      // element (user is adding intermediate points inside the same shape)
       if (
-        (isBindingElement(multiElement) && hoveredElementForBinding) ||
+        (isBindingElement(multiElement) &&
+          hoveredElementForBinding &&
+          hoveredElementForBinding.id !==
+            multiElement.startBinding?.elementId) ||
         (multiElement.points.length > 1 &&
           lastCommittedPoint &&
           pointDistance(
