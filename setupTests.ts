@@ -24,6 +24,41 @@ HTMLElement.prototype.setPointerCapture = vi.fn();
 
 Object.assign(globalThis, testPolyfills);
 
+// Node 25+ ships a native `localStorage` (getter/setter on globalThis) that
+// lacks the standard Storage methods (clear, getItem, etc.).  jsdom provides
+// its own spec-compliant Storage, but the native getter can shadow it.
+// Replace with a minimal spec-compliant in-memory Storage implementation.
+if (
+  typeof globalThis.localStorage !== "undefined" &&
+  typeof globalThis.localStorage.clear !== "function"
+) {
+  const createStorage = (): Storage => {
+    let store: Record<string, string> = {};
+    return {
+      getItem: (key: string) =>
+        Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null,
+      setItem: (key: string, value: string) => {
+        store[key] = String(value);
+      },
+      removeItem: (key: string) => {
+        delete store[key];
+      },
+      clear: () => {
+        store = {};
+      },
+      get length() {
+        return Object.keys(store).length;
+      },
+      key: (index: number) => Object.keys(store)[index] ?? null,
+    };
+  };
+  Object.defineProperty(globalThis, "localStorage", {
+    configurable: true,
+    enumerable: true,
+    value: createStorage(),
+  });
+}
+
 require("fake-indexeddb/auto");
 
 polyfill();
