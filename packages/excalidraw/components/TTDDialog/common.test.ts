@@ -2,6 +2,14 @@ import { describe, expect, it, vi } from "vitest";
 
 import { convertMermaidToExcalidraw } from "./common";
 
+vi.mock("@excalidraw/utils", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("@excalidraw/utils")>();
+  return {
+    ...mod,
+    exportToCanvas: vi.fn().mockResolvedValue(document.createElement("canvas")),
+  };
+});
+
 type ConvertMermaidArgs = Parameters<typeof convertMermaidToExcalidraw>[0];
 type ParseMermaidToExcalidraw = Awaited<
   ConvertMermaidArgs["mermaidToExcalidrawLib"]["api"]
@@ -84,6 +92,43 @@ describe("convertMermaidToExcalidraw", () => {
     expect(result.success).toBe(false);
     if (!result.success) {
       expect(result.error).toBe(originalError);
+    }
+  });
+
+  it("normalizes <br> in skeleton label text on successful parse (TTD path)", async () => {
+    const parseMermaidToExcalidraw = vi
+      .fn<ParseMermaidToExcalidraw>()
+      .mockResolvedValue({
+        elements: [
+          {
+            id: "rect-br",
+            type: "rectangle",
+            groupIds: [],
+            x: 0,
+            y: 0,
+            width: 69.703125,
+            height: 44,
+            strokeWidth: 2,
+            label: {
+              groupIds: [],
+              text: "Line1<br>Line2",
+              fontSize: 20,
+            },
+            link: null,
+          },
+        ],
+        files: {},
+      });
+
+    const args = createConvertArgs("flowchart TD\nA", parseMermaidToExcalidraw);
+
+    const result = await convertMermaidToExcalidraw(args);
+
+    expect(result.success).toBe(true);
+    const textEl = args.data.current.elements.find((e) => e.type === "text");
+    expect(textEl?.type).toBe("text");
+    if (textEl && textEl.type === "text") {
+      expect(textEl.originalText).toBe("Line1\nLine2");
     }
   });
 });

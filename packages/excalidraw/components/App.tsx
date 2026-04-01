@@ -422,6 +422,7 @@ import { textWysiwyg } from "../wysiwyg/textWysiwyg";
 import { isOverScrollBars } from "../scene/scrollbars";
 
 import { isMaybeMermaidDefinition } from "../mermaid";
+import { normalizeMermaidBrInSkeletonElements } from "../mermaidBrNormalize";
 
 import { LassoTrail } from "../lasso";
 
@@ -3753,6 +3754,8 @@ class App extends React.Component<AppProps, AppState> {
       try {
         const { elements: skeletonElements, files = {} } =
           await api.parseMermaidToExcalidraw(data.text);
+
+        normalizeMermaidBrInSkeletonElements(skeletonElements);
 
         const elements = convertToExcalidrawElements(skeletonElements, {
           regenerateIds: true,
