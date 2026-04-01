@@ -33,3 +33,9 @@ The system SHALL allow users to create multi-point (curved) arrows inside closed
 - **GIVEN** a canvas with a closed shape and the line tool selected
 - **WHEN** the user draws a multi-point line inside the shape
 - **THEN** the line creation behavior SHALL remain unchanged (lines already work correctly inside shapes)
+
+#### Scenario: Edge case — arrow without start binding inside a shape
+- **GIVEN** a canvas with a closed shape, the arrow tool selected, and binding disabled
+- **WHEN** the user starts drawing a multi-point arrow inside the shape (arrow has no startBinding)
+- **AND** the user clicks at additional positions inside the shape
+- **THEN** the system SHALL add intermediate points normally without premature finalization (the startBinding check is safely skipped via optional chaining)
