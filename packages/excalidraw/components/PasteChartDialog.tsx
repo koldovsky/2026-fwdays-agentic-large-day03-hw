@@ -5,7 +5,11 @@ import { newTextElement } from "@excalidraw/element";
 import type { ChartType } from "@excalidraw/element/types";
 
 import { trackEvent } from "../analytics";
-import { isSpreadsheetValidForChartType, renderSpreadsheet } from "../charts";
+import {
+  isSpreadsheetValidForChartType,
+  renderRoughTable,
+  renderSpreadsheet,
+} from "../charts";
 import { t } from "../i18n";
 import { exportToSvg } from "../scene/export";
 
@@ -23,6 +27,8 @@ import type { ChartElements, Spreadsheet } from "../charts";
 type OnPlainTextPaste = (rawText: string) => void;
 
 type OnInsertChart = (chartType: ChartType, elements: ChartElements) => void;
+
+type OnInsertTable = (elements: ChartElements) => void;
 
 const getChartTypeLabel = (chartType: ChartType) => {
   switch (chartType) {
@@ -113,6 +119,73 @@ const ChartPreviewBtn = (props: {
   );
 };
 
+const TablePreviewBtn = (props: {
+  textGrid: string[][];
+  colorSeed: number;
+  onClick: OnInsertTable;
+}) => {
+  const previewRef = useRef<HTMLDivElement | null>(null);
+  const [tableElements, setTableElements] = useState<ChartElements | null>(
+    null,
+  );
+  const { theme } = useUIAppState();
+
+  useLayoutEffect(() => {
+    if (!props.textGrid.length || !props.textGrid[0]?.length) {
+      setTableElements(null);
+      return;
+    }
+
+    const elements = renderRoughTable(
+      props.textGrid,
+      0,
+      0,
+      props.colorSeed,
+    );
+    setTableElements(elements);
+    let svg: SVGSVGElement;
+    const previewNode = previewRef.current!;
+
+    (async () => {
+      svg = await exportToSvg(
+        elements,
+        {
+          exportBackground: false,
+          viewBackgroundColor: "#fff",
+          exportWithDarkMode: theme === "dark",
+        },
+        null,
+        {
+          skipInliningFonts: true,
+        },
+      );
+      svg.querySelector(".style-fonts")?.remove();
+      previewNode.replaceChildren();
+      previewNode.appendChild(svg);
+    })();
+
+    return () => {
+      previewNode.replaceChildren();
+    };
+  }, [props.textGrid, props.colorSeed, theme]);
+
+  return (
+    <button
+      type="button"
+      className="ChartPreview"
+      aria-label={t("labels.chartType_table")}
+      onClick={() => {
+        if (tableElements) {
+          props.onClick(tableElements);
+        }
+      }}
+    >
+      <div className="ChartPreview__canvas" ref={previewRef} />
+      <div className="ChartPreview__label">{t("labels.chartType_table")}</div>
+    </button>
+  );
+};
+
 const PlainTextPreviewBtn = (props: {
   rawText: string;
   onClick: OnPlainTextPaste;
@@ -175,10 +248,12 @@ const PlainTextPreviewBtn = (props: {
 
 export const PasteChartDialog = ({
   data,
+  textGrid,
   rawText,
   onClose,
 }: {
-  data: Spreadsheet;
+  data: Spreadsheet | null;
+  textGrid: string[][];
   rawText: string;
   onClose: () => void;
 }) => {
@@ -210,6 +285,13 @@ export const PasteChartDialog = ({
     });
     onInsertElements([textElement]);
     trackEvent("paste", "chart", "plaintext");
+    onClose();
+    focusContainer();
+  };
+
+  const handleTableClick = (elements: ChartElements) => {
+    onInsertElements(elements);
+    trackEvent("paste", "chart", "table");
     onClose();
     focusContainer();
   };
@@ -258,6 +340,13 @@ export const PasteChartDialog = ({
             />
           );
         })}
+        {textGrid.length >= 2 && textGrid[0].length >= 2 && (
+          <TablePreviewBtn
+            textGrid={textGrid}
+            colorSeed={colorSeed}
+            onClick={handleTableClick}
+          />
+        )}
         {rawText && (
           <PlainTextPreviewBtn
             rawText={rawText}

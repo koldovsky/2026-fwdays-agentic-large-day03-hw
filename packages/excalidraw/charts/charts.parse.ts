@@ -16,6 +16,73 @@ const isNumericColumn = (lines: string[][], columnIndex: number) =>
   lines.slice(1).every((line) => tryParseNumber(line[columnIndex]) !== null);
 
 /**
+ * Result of splitting clipboard text into a rectangular grid using tab, comma, or
+ * semicolon delimiters (same scoring as spreadsheet paste).
+ */
+export type ParseDelimitedGridResult =
+  | { ok: false; reason: string }
+  | { ok: true; lines: string[][] };
+
+/**
+ * Split pasted text into a consistent column grid (TSV/CSV/semicolon), without
+ * requiring numeric cells.
+ */
+export const parseDelimitedGrid = (text: string): ParseDelimitedGridResult => {
+  const parseDelimitedLines = (delimiter: "\t" | "," | ";") =>
+    text
+      .replace(/\r\n?/g, "\n")
+      .split("\n")
+      .filter((line) => line.trim().length > 0)
+      .map((line) => line.split(delimiter).map((cell) => cell.trim()));
+
+  const candidates = (["\t", ",", ";"] as const).map((delimiter) => {
+    const parsed = parseDelimitedLines(delimiter);
+    const numCols = parsed[0]?.length ?? 0;
+    const isConsistent =
+      parsed.length > 0 && parsed.every((line) => line.length === numCols);
+    return { delimiter, parsed, numCols, isConsistent };
+  });
+
+  const best =
+    candidates.find((c) => c.isConsistent && c.numCols > 1) ??
+    candidates.find((c) => c.isConsistent) ??
+    candidates[0];
+
+  const lines = best.parsed;
+
+  if (lines.length === 0) {
+    return { ok: false, reason: "No values" };
+  }
+
+  const numColsFirstLine = lines[0].length;
+  const isSpreadsheet = lines.every((line) => line.length === numColsFirstLine);
+
+  if (!isSpreadsheet) {
+    return {
+      ok: false,
+      reason: "All rows don't have same number of columns",
+    };
+  }
+
+  return { ok: true, lines };
+};
+
+/**
+ * True when the grid is at least 2×2 and can be pasted as a rough table.
+ */
+export const tryParseTextTable = (text: string): ParseDelimitedGridResult => {
+  const grid = parseDelimitedGrid(text);
+  if (!grid.ok) {
+    return grid;
+  }
+  const { lines } = grid;
+  if (lines.length < 2 || lines[0].length < 2) {
+    return { ok: false, reason: "Table too small" };
+  }
+  return { ok: true, lines };
+};
+
+/**
  * @private exported for testing
  */
 export const tryParseCells = (cells: string[][]): ParseSpreadsheetResult => {
@@ -129,46 +196,9 @@ export const tryParseCells = (cells: string[][]): ParseSpreadsheetResult => {
 };
 
 export const tryParseSpreadsheet = (text: string): ParseSpreadsheetResult => {
-  // Copy/paste from excel, spreadsheets, TSV, CSV, semicolon-separated.
-  const parseDelimitedLines = (delimiter: "\t" | "," | ";") =>
-    text
-      .replace(/\r\n?/g, "\n")
-      .split("\n")
-      .filter((line) => line.trim().length > 0)
-      .map((line) => line.split(delimiter).map((cell) => cell.trim()));
-
-  // Score each delimiter: prefer consistent column counts with the most columns.
-  // A delimiter that produces all single-column rows likely isn't the right one.
-  const candidates = (["\t", ",", ";"] as const).map((delimiter) => {
-    const parsed = parseDelimitedLines(delimiter);
-    const numCols = parsed[0]?.length ?? 0;
-    const isConsistent =
-      parsed.length > 0 && parsed.every((line) => line.length === numCols);
-    return { delimiter, parsed, numCols, isConsistent };
-  });
-
-  // Prefer: consistent + most columns. Among ties, tab > comma > semicolon
-  // (the array order already encodes this priority).
-  const best =
-    candidates.find((c) => c.isConsistent && c.numCols > 1) ??
-    candidates.find((c) => c.isConsistent) ??
-    candidates[0];
-
-  const lines = best.parsed;
-
-  if (lines.length === 0) {
-    return { ok: false, reason: "No values" };
+  const gridResult = parseDelimitedGrid(text);
+  if (!gridResult.ok) {
+    return gridResult;
   }
-
-  const numColsFirstLine = lines[0].length;
-  const isSpreadsheet = lines.every((line) => line.length === numColsFirstLine);
-
-  if (!isSpreadsheet) {
-    return {
-      ok: false,
-      reason: "All rows don't have same number of columns",
-    };
-  }
-
-  return tryParseCells(lines);
+  return tryParseCells(gridResult.lines);
 };
