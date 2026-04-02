@@ -1,27 +1,32 @@
 import React from "react";
 
-import { CURSOR_TYPE, KEYS } from "@excalidraw/common";
+import { CODES, CURSOR_TYPE, KEYS } from "@excalidraw/common";
 
-import { createTestHook } from "../components/App";
+import { vi } from "vitest";
+
 import { Excalidraw } from "../index";
 
 import { API } from "./helpers/api";
 import { Keyboard, Pointer, UI } from "./helpers/ui";
 import { act, fireEvent, render, GlobalTestState } from "./test-utils";
 
-createTestHook();
+/** Matches first-frame dt fallback in `stepViewModeArrowPan` when `lastTs` is unset (1/60 s). */
+const VIEW_MODE_KEYBOARD_PAN_TEST_DT_MS = 1000 / 60;
 
-const { h } = window;
+/**
+ * Steps with arrow held (~0.8s at 60Hz): enough to approach target velocity for stable assertions.
+ */
+const VIEW_MODE_KEYBOARD_PAN_HOLD_STEPS = 48;
 
-const flushAnimationFrames = async (n: number) => {
-  await act(async () => {
-    for (let i = 0; i < n; i++) {
-      await new Promise<void>((resolve) => {
-        requestAnimationFrame(() => resolve());
-      });
-    }
-  });
-};
+/**
+ * Steps after releasing arrows to drain coasting friction (~0.5s at 60Hz).
+ */
+const VIEW_MODE_KEYBOARD_PAN_COAST_OUT_STEPS = 30;
+
+/**
+ * Steps to build speed before ease-out assertions (~1.1s at 60Hz).
+ */
+const VIEW_MODE_KEYBOARD_PAN_EASE_OUT_WARMUP_STEPS = 66;
 
 const mouse = new Pointer("mouse");
 const touch = new Pointer("touch");
@@ -56,9 +61,6 @@ describe("view mode", () => {
   });
 
   it("cursor should stay as grabbing type when hovering over canvas elements", async () => {
-    // create a rectangle, then hover over it – cursor should be
-    // move type for mouse and grab for touch & pen
-    // then switch to view-mode and cursor should be grabbing type
     UI.createElement("rectangle", { size: 100 });
 
     pointerTypes.forEach((pointerType) => {
@@ -83,42 +85,159 @@ describe("view mode", () => {
     });
   });
 
-  it("pans canvas with arrow keys (view mode)", async () => {
-    API.setAppState({ viewModeEnabled: true });
-    const scrollX0 = h.state.scrollX;
-    const scrollY0 = h.state.scrollY;
+  describe("view-mode keyboard pan (fixed timestep)", () => {
+    let simTimeMs = 0;
 
-    await act(async () => {
-      fireEvent.keyDown(document, { key: KEYS.ARROW_RIGHT });
+    beforeEach(() => {
+      simTimeMs = 0;
+      vi.spyOn(window, "requestAnimationFrame").mockReturnValue(0);
     });
-    await flushAnimationFrames(12);
-    await act(async () => {
-      fireEvent.keyUp(document, { key: KEYS.ARROW_RIGHT });
-    });
-    await flushAnimationFrames(20);
 
-    expect(h.state.scrollX).toBeLessThan(scrollX0);
-    expect(h.state.scrollY).toBe(scrollY0);
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+
+    const advancePanSteps = (count: number) => {
+      act(() => {
+        const { app } = window.h;
+        for (let i = 0; i < count; i++) {
+          simTimeMs += VIEW_MODE_KEYBOARD_PAN_TEST_DT_MS;
+          app.testStepViewModeKeyboardPan(simTimeMs);
+        }
+      });
+    };
+
+    it("pans canvas with arrow keys (view mode)", async () => {
+      API.setAppState({ viewModeEnabled: true });
+      const scrollX0 = window.h.state.scrollX;
+      const scrollY0 = window.h.state.scrollY;
+
+      await act(async () => {
+        fireEvent.keyDown(document, { key: KEYS.ARROW_RIGHT });
+      });
+      advancePanSteps(VIEW_MODE_KEYBOARD_PAN_HOLD_STEPS);
+      await act(async () => {
+        fireEvent.keyUp(document, { key: KEYS.ARROW_RIGHT });
+      });
+      advancePanSteps(VIEW_MODE_KEYBOARD_PAN_COAST_OUT_STEPS);
+
+      expect(window.h.state.scrollX).toBeLessThan(scrollX0);
+      expect(window.h.state.scrollY).toBe(scrollY0);
+    });
+
+    it("eases out: scroll keeps moving after keyup with decreasing step size", async () => {
+      API.setAppState({ viewModeEnabled: true });
+
+      await act(async () => {
+        fireEvent.keyDown(document, { key: KEYS.ARROW_RIGHT });
+      });
+      advancePanSteps(VIEW_MODE_KEYBOARD_PAN_EASE_OUT_WARMUP_STEPS);
+
+      const scrollBeforeKeyUp = window.h.state.scrollX;
+
+      await act(async () => {
+        fireEvent.keyUp(document, { key: KEYS.ARROW_RIGHT });
+      });
+
+      advancePanSteps(1);
+      const scrollAfterCoast1 = window.h.state.scrollX;
+
+      advancePanSteps(1);
+      const scrollAfterCoast2 = window.h.state.scrollX;
+
+      expect(scrollAfterCoast1).toBeLessThan(scrollBeforeKeyUp);
+
+      const step1 = scrollBeforeKeyUp - scrollAfterCoast1;
+      const step2 = scrollAfterCoast1 - scrollAfterCoast2;
+
+      expect(step1).toBeGreaterThan(1e-6);
+      expect(step2).toBeGreaterThan(0);
+      expect(step2).toBeLessThan(step1);
+    });
+
+    it("stops pan when focus moves to a writable control during arrow hold", async () => {
+      API.setAppState({ viewModeEnabled: true });
+
+      await act(async () => {
+        fireEvent.keyDown(document, { key: KEYS.ARROW_RIGHT });
+      });
+      advancePanSteps(6);
+
+      const scrollWhenShiftingFocus = window.h.state.scrollX;
+
+      const input = document.createElement("input");
+      input.type = "text";
+      document.body.appendChild(input);
+
+      try {
+        await act(async () => {
+          input.focus();
+        });
+        advancePanSteps(16);
+
+        expect(window.h.state.scrollX).toBe(scrollWhenShiftingFocus);
+
+        await act(async () => {
+          fireEvent.keyUp(document, { key: KEYS.ARROW_RIGHT });
+        });
+        advancePanSteps(4);
+      } finally {
+        input.remove();
+      }
+    });
+
+    it("pans diagonally when two arrow keys are held (view mode)", async () => {
+      API.setAppState({ viewModeEnabled: true });
+      const scrollX0 = window.h.state.scrollX;
+      const scrollY0 = window.h.state.scrollY;
+
+      await act(async () => {
+        fireEvent.keyDown(document, { key: KEYS.ARROW_LEFT });
+        fireEvent.keyDown(document, { key: KEYS.ARROW_UP });
+      });
+      advancePanSteps(VIEW_MODE_KEYBOARD_PAN_HOLD_STEPS);
+      await act(async () => {
+        fireEvent.keyUp(document, { key: KEYS.ARROW_LEFT });
+        fireEvent.keyUp(document, { key: KEYS.ARROW_UP });
+      });
+      advancePanSteps(VIEW_MODE_KEYBOARD_PAN_COAST_OUT_STEPS);
+
+      expect(window.h.state.scrollX).toBeGreaterThan(scrollX0);
+      expect(window.h.state.scrollY).toBeGreaterThan(scrollY0);
+    });
+
+    it("does not pan when ActionManager consumes the keydown (ordering vs shortcuts)", async () => {
+      API.setAppState({ viewModeEnabled: true });
+      const scrollX0 = window.h.state.scrollX;
+
+      const spy = vi
+        .spyOn(window.h.app.actionManager, "handleKeyDown")
+        .mockReturnValue(true);
+
+      await act(async () => {
+        fireEvent.keyDown(document, { key: KEYS.ARROW_RIGHT });
+      });
+      advancePanSteps(8);
+
+      spy.mockRestore();
+
+      expect(window.h.state.scrollX).toBe(scrollX0);
+    });
   });
 
-  it("pans diagonally when two arrow keys are held (view mode)", async () => {
+  it("view-mode zoom shortcut still works (ActionManager runs before arrow pan)", async () => {
     API.setAppState({ viewModeEnabled: true });
-    const scrollX0 = h.state.scrollX;
-    const scrollY0 = h.state.scrollY;
+    const zoomBefore = window.h.state.zoom.value;
 
     await act(async () => {
-      fireEvent.keyDown(document, { key: KEYS.ARROW_LEFT });
-      fireEvent.keyDown(document, { key: KEYS.ARROW_UP });
+      fireEvent.keyDown(document, {
+        code: CODES.MINUS,
+        key: KEYS.SUBTRACT,
+        ctrlKey: true,
+      });
     });
-    await flushAnimationFrames(12);
-    await act(async () => {
-      fireEvent.keyUp(document, { key: KEYS.ARROW_LEFT });
-      fireEvent.keyUp(document, { key: KEYS.ARROW_UP });
-    });
-    await flushAnimationFrames(20);
 
-    expect(h.state.scrollX).toBeGreaterThan(scrollX0);
-    expect(h.state.scrollY).toBeGreaterThan(scrollY0);
+    expect(window.h.state.zoom.value).toBeLessThan(zoomBefore);
   });
 
   it("does not pan with arrow keys when focus is in a writable input", async () => {
@@ -126,19 +245,21 @@ describe("view mode", () => {
     const input = document.createElement("input");
     input.type = "text";
     document.body.appendChild(input);
-    input.focus();
 
-    const scrollX0 = h.state.scrollX;
-    const scrollY0 = h.state.scrollY;
+    try {
+      input.focus();
 
-    await act(async () => {
-      fireEvent.keyDown(input, { key: KEYS.ARROW_RIGHT });
-    });
-    await flushAnimationFrames(12);
+      const scrollX0 = window.h.state.scrollX;
+      const scrollY0 = window.h.state.scrollY;
 
-    expect(h.state.scrollX).toBe(scrollX0);
-    expect(h.state.scrollY).toBe(scrollY0);
+      await act(async () => {
+        fireEvent.keyDown(input, { key: KEYS.ARROW_RIGHT });
+      });
 
-    document.body.removeChild(input);
+      expect(window.h.state.scrollX).toBe(scrollX0);
+      expect(window.h.state.scrollY).toBe(scrollY0);
+    } finally {
+      input.remove();
+    }
   });
 });

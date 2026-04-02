@@ -589,10 +589,32 @@ let tappedTwiceTimer = 0;
 let firstTapPosition: { x: number; y: number } | null = null;
 let isHoldingSpace: boolean = false;
 
-/** View-mode keyboard pan (#6688) — scene units/sec and easing */
-const VIEW_MODE_ARROW_PAN_MAX_SPEED = 720;
-const VIEW_MODE_ARROW_PAN_ACCEL = 10;
-const VIEW_MODE_ARROW_PAN_FRICTION = 9;
+/**
+ * View-mode arrow-key canvas pan (#6688).
+ *
+ * Coordinate system: `AppState.scrollX` / `scrollY` are scene-space offsets (not CSS pixels).
+ * Each frame we integrate velocity in scene units per second: Δscroll = v * dt, same as other
+ * `translateCanvas` callers that mutate scroll directly.
+ *
+ * Zoom: middle-button / space-drag pan converts pointer movement in CSS pixels to scene delta
+ * via `Δscroll = Δclient / zoom.value`. Keyboard pan scales its speed cap by `zoom.value` so
+ * perceived motion on the viewport stays in a similar range when zoom changes (device pixel
+ * density does not enter here — browser reports CSS pixels).
+ *
+ * Tuning (at 100% zoom):
+ * - Base cap 720 scene-units/s is a comfortable read/present pace; adjust relative to wheel step.
+ * - Approach rate 1/s: while keys are held, v → target with factor min(1, rate·dt) (~0.1s scale).
+ * - Coast decay rate 1/s: after keyup, v *= exp(-rate·dt); higher = shorter ease-out.
+ */
+const VIEW_MODE_KEYBOARD_PAN_BASE_MAX_SCENE_VELOCITY_PER_SEC = 720;
+const VIEW_MODE_KEYBOARD_PAN_APPROACH_TARGET_RATE_PER_SEC = 10;
+const VIEW_MODE_KEYBOARD_PAN_COAST_DECAY_RATE_PER_SEC = 9;
+/**
+ * Speed threshold (scene units/s): below this we snap velocity to zero when coasting, and the
+ * rAF loop stops when no keys are held and speed is at or below this (same value for both).
+ */
+const VIEW_MODE_KEYBOARD_PAN_STOP_SPEED_SCENE_UNITS_PER_SEC = 0.5;
+
 let isPanning: boolean = false;
 let isDraggingScrollBar: boolean = false;
 let currentScrollBars: ScrollBars = { horizontal: null, vertical: null };
@@ -4493,7 +4515,8 @@ class App extends React.Component<AppProps, AppState> {
     if (
       !this.state.viewModeEnabled ||
       this.state.activeTool.type === "laser" ||
-      this.state.editingTextElement
+      this.state.editingTextElement ||
+      isWritableElement(document.activeElement)
     ) {
       this.clearViewModeArrowPan();
       return;
@@ -4526,21 +4549,27 @@ class App extends React.Component<AppProps, AppState> {
       ty /= len;
     }
 
-    const targetVx = tx * VIEW_MODE_ARROW_PAN_MAX_SPEED;
-    const targetVy = ty * VIEW_MODE_ARROW_PAN_MAX_SPEED;
+    const maxSceneVelocityPerSec =
+      VIEW_MODE_KEYBOARD_PAN_BASE_MAX_SCENE_VELOCITY_PER_SEC *
+      this.state.zoom.value;
+    const targetVx = tx * maxSceneVelocityPerSec;
+    const targetVy = ty * maxSceneVelocityPerSec;
 
     if (hasKeys) {
-      const k = Math.min(1, VIEW_MODE_ARROW_PAN_ACCEL * dt);
+      const k = Math.min(1, VIEW_MODE_KEYBOARD_PAN_APPROACH_TARGET_RATE_PER_SEC * dt);
       this.viewModeArrowPanVelX += (targetVx - this.viewModeArrowPanVelX) * k;
       this.viewModeArrowPanVelY += (targetVy - this.viewModeArrowPanVelY) * k;
     } else {
-      const decay = Math.exp(-VIEW_MODE_ARROW_PAN_FRICTION * dt);
+      const decay = Math.exp(-VIEW_MODE_KEYBOARD_PAN_COAST_DECAY_RATE_PER_SEC * dt);
       this.viewModeArrowPanVelX *= decay;
       this.viewModeArrowPanVelY *= decay;
-      if (Math.hypot(this.viewModeArrowPanVelX, this.viewModeArrowPanVelY) < 0.5) {
-        this.viewModeArrowPanVelX = 0;
-        this.viewModeArrowPanVelY = 0;
-      }
+    }
+
+    let speed = Math.hypot(this.viewModeArrowPanVelX, this.viewModeArrowPanVelY);
+    if (!hasKeys && speed < VIEW_MODE_KEYBOARD_PAN_STOP_SPEED_SCENE_UNITS_PER_SEC) {
+      this.viewModeArrowPanVelX = 0;
+      this.viewModeArrowPanVelY = 0;
+      speed = 0;
     }
 
     const dx = this.viewModeArrowPanVelX * dt;
@@ -4555,7 +4584,7 @@ class App extends React.Component<AppProps, AppState> {
 
     const keepGoing =
       this.viewModeArrowPanKeys.size > 0 ||
-      Math.hypot(this.viewModeArrowPanVelX, this.viewModeArrowPanVelY) > 0.5;
+      speed > VIEW_MODE_KEYBOARD_PAN_STOP_SPEED_SCENE_UNITS_PER_SEC;
 
     if (keepGoing) {
       this.viewModeArrowPanRafId = requestAnimationFrame(this.stepViewModeArrowPan);
@@ -4572,6 +4601,15 @@ class App extends React.Component<AppProps, AppState> {
       this.viewModeArrowPanRafId = requestAnimationFrame(this.stepViewModeArrowPan);
     }
   };
+
+  /**
+   * Test-only: advance view-mode keyboard pan with explicit monotonic `nowMs` (same as rAF timestamp).
+   * Stub `requestAnimationFrame` in tests so the real loop does not run alongside manual steps.
+   */
+  testStepViewModeKeyboardPan(nowMs: number): void {
+    invariant(isTestEnv(), "testStepViewModeKeyboardPan is test-only");
+    this.stepViewModeArrowPan(nowMs);
+  }
 
   setToast = (toast: AppState["toast"]) => {
     this.setState({ toast });
@@ -5120,6 +5158,12 @@ class App extends React.Component<AppProps, AppState> {
         return;
       }
 
+      // View-mode arrow pan MUST stay after `actionManager.handleKeyDown`:
+      // - Registered actions with `viewMode: true` (zoom, reset zoom, …) must win on their keys so
+      //   we never double-handle one keydown (pan + shortcut).
+      // - Actions without `viewMode: true` are already ignored in view mode inside ActionManager.
+      // This block is still *before* `findShapeByKey` / tool-switch, which would otherwise map Arrow*
+      // to the arrow tool and return early without panning (#6688).
       if (
         this.state.viewModeEnabled &&
         this.state.activeTool.type !== "laser" &&
@@ -5435,14 +5479,16 @@ class App extends React.Component<AppProps, AppState> {
     if (
       this.state.viewModeEnabled &&
       this.state.activeTool.type !== "laser" &&
+      !this.state.editingTextElement &&
       isArrowKey(event.key) &&
-      !event[KEYS.CTRL_OR_CMD] &&
-      !event.altKey &&
+      !isWritableElement(event.target) &&
       (event.key === KEYS.ARROW_LEFT ||
         event.key === KEYS.ARROW_RIGHT ||
         event.key === KEYS.ARROW_UP ||
         event.key === KEYS.ARROW_DOWN)
     ) {
+      // Align with keydown guards; omit modifier checks on keyup so keys leave the Set when the
+      // arrow is released with Alt/Ctrl still down. Writable keyup is skipped — step clears via activeElement.
       this.viewModeArrowPanKeys.delete(event.key);
       this.ensureViewModeArrowPanLoop();
     }
