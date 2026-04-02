@@ -576,6 +576,9 @@
     "colors": "Colors",
     "shades": "Nuanças",
     "hexCode": "Còdi exadecimal",
+    "hexErrorLength": "Lo còdi exadecimal deu aver 3, 4, 6 o 8 caractèrs (sens #).",
+    "hexErrorInvalidChars": "Caractèrs invalids dins lo còdi exadecimal.",
+    "hexErrorInvalid": "Pas una color exadecimala valida.",
     "noShades": "Cap de nuança pas disponibla per aquesta color"
   },
   "overwriteConfirm": {

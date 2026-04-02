@@ -576,6 +576,9 @@
     "colors": "色",
     "shades": "影",
     "hexCode": "16進コード",
+    "hexErrorLength": "16進コードは # を除いて 3、4、6、または 8 文字である必要があります。",
+    "hexErrorInvalidChars": "16進コードに無効な文字が含まれています。",
+    "hexErrorInvalid": "有効な16進色ではありません。",
     "noShades": "この色で利用できる影はありません"
   },
   "overwriteConfirm": {

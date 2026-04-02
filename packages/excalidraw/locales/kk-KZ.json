@@ -576,6 +576,9 @@
     "colors": "",
     "shades": "",
     "hexCode": "",
+    "hexErrorLength": "Хекс кодында # қоспағанда 3, 4, 6 немесе 8 таңба болуы керек.",
+    "hexErrorInvalidChars": "Хекс кодында жарамсыз таңбалар.",
+    "hexErrorInvalid": "Жарамды хекс түсі емес.",
     "noShades": ""
   },
   "overwriteConfirm": {

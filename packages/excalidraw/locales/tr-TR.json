@@ -576,6 +576,9 @@
     "colors": "Renkler",
     "shades": "Tonlar",
     "hexCode": "Hex kodu",
+    "hexErrorLength": "Hex kodu # hariç 3, 4, 6 veya 8 karakter olmalıdır.",
+    "hexErrorInvalidChars": "Hex kodunda geçersiz karakterler.",
+    "hexErrorInvalid": "Geçerli bir hex rengi değil.",
     "noShades": "Bu renk için ton mevcut değil"
   },
   "overwriteConfirm": {

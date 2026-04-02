@@ -576,6 +576,9 @@
     "colors": "Farger",
     "shades": "Toner",
     "hexCode": "Heksadesimal kode",
+    "hexErrorLength": "Hex-koden må ha 3, 4, 6 eller 8 tegn (uten #).",
+    "hexErrorInvalidChars": "Ugyldige tegn i hex-koden.",
+    "hexErrorInvalid": "Ikke en gyldig hex-farge.",
     "noShades": "Ingen toner tilgjengelig for denne fargen"
   },
   "overwriteConfirm": {

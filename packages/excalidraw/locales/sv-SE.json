@@ -576,6 +576,9 @@
     "colors": "Färger",
     "shades": "Nyanser",
     "hexCode": "Hex-kod",
+    "hexErrorLength": "Hex-koden måste ha 3, 4, 6 eller 8 tecken (utan #).",
+    "hexErrorInvalidChars": "Ogiltiga tecken i hex-koden.",
+    "hexErrorInvalid": "Inte en giltig hex-färg.",
     "noShades": "Inga nyanser tillgängliga för denna färg"
   },
   "overwriteConfirm": {

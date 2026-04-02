@@ -576,6 +576,9 @@
     "colors": "ڕەنگەکان",
     "shades": "سێبەرەکان",
     "hexCode": "کۆدی هێکس",
+    "hexErrorLength": "کۆدی هێکس دەبێت ٣، ٤، ٦ یان ٨ پیت بێت (# بەجیا).",
+    "hexErrorInvalidChars": "پیتە نادروستەکان لە کۆدی هێکسدا.",
+    "hexErrorInvalid": "ڕەنگی هێکسی دروست نییە.",
     "noShades": "هیچ سێبەرێک بۆ ئەم ڕەنگە بەردەست نییە"
   },
   "overwriteConfirm": {

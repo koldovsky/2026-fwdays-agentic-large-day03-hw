@@ -576,6 +576,9 @@
     "colors": "สี",
     "shades": "รูปร่าง",
     "hexCode": "Hex code",
+    "hexErrorLength": "รหัส Hex ต้องมี 3, 4, 6 หรือ 8 ตัวอักษร (ไม่นับ #)",
+    "hexErrorInvalidChars": "ตัวอักษรไม่ถูกต้องในรหัส Hex",
+    "hexErrorInvalid": "ไม่ใช่สี Hex ที่ถูกต้อง",
     "noShades": ""
   },
   "overwriteConfirm": {

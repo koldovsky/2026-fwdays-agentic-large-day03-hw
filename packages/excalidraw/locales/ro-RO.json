@@ -576,6 +576,9 @@
     "colors": "Culori",
     "shades": "Nuanțe",
     "hexCode": "Cod hexa",
+    "hexErrorLength": "Codul hexazecimal trebuie să aibă 3, 4, 6 sau 8 caractere (fără #).",
+    "hexErrorInvalidChars": "Caractere nevalide în codul hexazecimal.",
+    "hexErrorInvalid": "Nu este o culoare hexazecimală validă.",
     "noShades": "Nu este disponibilă nicio nuanță pentru această culoare"
   },
   "overwriteConfirm": {

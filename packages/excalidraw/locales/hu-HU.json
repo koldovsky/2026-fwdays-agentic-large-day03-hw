@@ -576,6 +576,9 @@
     "colors": "",
     "shades": "",
     "hexCode": "",
+    "hexErrorLength": "A hex kódnak 3, 4, 6 vagy 8 karakter hosszúnak kell lennie (# nélkül).",
+    "hexErrorInvalidChars": "Érvénytelen karakterek a hex kódban.",
+    "hexErrorInvalid": "Nem érvényes hex szín.",
     "noShades": ""
   },
   "overwriteConfirm": {

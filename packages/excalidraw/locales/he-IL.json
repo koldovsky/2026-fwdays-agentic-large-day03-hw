@@ -576,6 +576,9 @@
     "colors": "צבעים",
     "shades": "הצללות",
     "hexCode": "קוד הקסדצימלי",
+    "hexErrorLength": "קוד הקסדצימלי חייב להיות באורך 3, 4, 6 או 8 תווים (ללא #).",
+    "hexErrorInvalidChars": "תווים לא חוקיים בקוד הקסדצימלי.",
+    "hexErrorInvalid": "לא צבע הקסדצימלי חוקי.",
     "noShades": "אין הצללות זמינות לצבע הזה"
   },
   "overwriteConfirm": {

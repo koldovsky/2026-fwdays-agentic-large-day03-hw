@@ -1,6 +1,7 @@
 import {
   applyDarkModeFilter,
   COLOR_PALETTE,
+  getCustomColorInputValidationError,
   rgbToHex,
 } from "@excalidraw/common";
 
@@ -282,5 +283,40 @@ describe("rgbToHex", () => {
       // 0.05 * 255 = 12.75 -> rounds to 13 = 0x0d
       expect(rgbToHex(255, 0, 0, 0.05)).toBe("#ff00000d");
     });
+  });
+});
+
+describe("getCustomColorInputValidationError", () => {
+  it("returns null for empty input and valid colors", () => {
+    expect(getCustomColorInputValidationError("")).toBe(null);
+    expect(getCustomColorInputValidationError("   ")).toBe(null);
+    expect(getCustomColorInputValidationError("#ff0000")).toBe(null);
+    expect(getCustomColorInputValidationError("ff0000")).toBe(null);
+    expect(getCustomColorInputValidationError("abc")).toBe(null);
+    expect(getCustomColorInputValidationError("red")).toBe(null);
+    expect(getCustomColorInputValidationError("rgb(255, 0, 0)")).toBe(null);
+  });
+
+  it("returns hexLength for wrong digit counts", () => {
+    expect(getCustomColorInputValidationError("1")).toBe("hexLength");
+    expect(getCustomColorInputValidationError("12")).toBe("hexLength");
+    expect(getCustomColorInputValidationError("12345")).toBe("hexLength");
+    expect(getCustomColorInputValidationError("1234567")).toBe("hexLength");
+    expect(getCustomColorInputValidationError("123456789")).toBe("hexLength");
+    expect(getCustomColorInputValidationError("#")).toBe("hexLength");
+  });
+
+  it("returns hexInvalidChars for non-hex letters and garbage strings", () => {
+    expect(getCustomColorInputValidationError("zzzzzz")).toBe(
+      "hexInvalidChars",
+    );
+    expect(getCustomColorInputValidationError("notacolor")).toBe(
+      "hexInvalidChars",
+    );
+    expect(getCustomColorInputValidationError("rgb(")).toBe("hexInvalidChars");
+  });
+
+  it("does not flag named colors accepted by normalizeInputColor", () => {
+    expect(getCustomColorInputValidationError("blue")).toBe(null);
   });
 });

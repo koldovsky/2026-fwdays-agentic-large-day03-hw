@@ -576,6 +576,9 @@
     "colors": "Warna",
     "shades": "Nuansa",
     "hexCode": "Kode hexa",
+    "hexErrorLength": "Kode hexa harus terdiri dari 3, 4, 6, atau 8 karakter (tanpa #).",
+    "hexErrorInvalidChars": "Karakter tidak valid dalam kode hexa.",
+    "hexErrorInvalid": "Bukan warna hexa yang valid.",
     "noShades": "Tidak ada nuansa untuk warna ini"
   },
   "overwriteConfirm": {

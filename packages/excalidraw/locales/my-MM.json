@@ -576,6 +576,9 @@
     "colors": "",
     "shades": "",
     "hexCode": "",
+    "hexErrorLength": "Hex ကုဒ်တွင် # မပါဘဲ ၃၊ ၄၊ ၆ သို့မဟုတ် ၈ လုံးရှိရမည်။",
+    "hexErrorInvalidChars": "Hex ကုဒ်တွင် မမှန်ကန်သော အက္ခရာများ။",
+    "hexErrorInvalid": "မှန်ကန်သော hex အရောင်မဟုတ်ပါ။",
     "noShades": ""
   },
   "overwriteConfirm": {

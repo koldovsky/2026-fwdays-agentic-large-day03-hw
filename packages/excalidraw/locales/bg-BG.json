@@ -576,6 +576,9 @@
     "colors": "Цветове",
     "shades": "Нюанси",
     "hexCode": "Шестнадесетичен код",
+    "hexErrorLength": "Шестнадесетичният код трябва да е с 3, 4, 6 или 8 знака (без #).",
+    "hexErrorInvalidChars": "Невалидни знаци в шестнадесетичния код.",
+    "hexErrorInvalid": "Невалиден шестнадесетичен цвят.",
     "noShades": ""
   },
   "overwriteConfirm": {

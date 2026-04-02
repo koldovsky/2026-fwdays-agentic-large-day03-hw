@@ -576,6 +576,9 @@
     "colors": "Kolory",
     "shades": "Odcienie",
     "hexCode": "Kod HEX",
+    "hexErrorLength": "Kod HEX musi mieć 3, 4, 6 lub 8 znaków (bez #).",
+    "hexErrorInvalidChars": "Nieprawidłowe znaki w kodzie HEX.",
+    "hexErrorInvalid": "To nie jest prawidłowy kolor HEX.",
     "noShades": "Brak dostępnych odcieni dla tego koloru"
   },
   "overwriteConfirm": {

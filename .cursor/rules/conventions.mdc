@@ -1,0 +1,33 @@
+---
+description: "Code conventions for Excalidraw components and utilities"
+globs: packages/**/*.ts,packages/**/*.tsx
+alwaysApply: true
+---
+
+# Code Conventions
+
+## Components
+
+- Functional components + hooks ONLY (no class components)
+- Props interface: `{ComponentName}Props`
+- Named exports only (no default exports)
+- Colocated tests: `ComponentName.test.tsx`
+
+## TypeScript
+
+- Strict mode — no `any`, no `@ts-ignore`
+- Prefer `type` over `interface` for simple types
+- Import types: `import type { X } from "..."`
+
+## Files
+
+- kebab-case for files: `element-utils.ts`
+- PascalCase for components: `LayerUI.tsx`
+
+## How to verify
+- Search changed files for class components (`extends React.Component` or `class ... extends Component`) and confirm none were introduced.
+- Search changed files for `export default` and confirm only named exports are used.
+- Confirm `.ts` utility filenames use kebab-case (for example, `element-utils.ts`).
+- Confirm `.tsx` component filenames use PascalCase (for example, `LayerUI.tsx`).
+- Confirm new/updated components use `{ComponentName}Props` naming for props types.
+- Confirm type-only imports use `import type { ... } from "..."` where applicable.

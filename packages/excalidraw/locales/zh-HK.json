@@ -576,6 +576,9 @@
     "colors": "",
     "shades": "",
     "hexCode": "",
+    "hexErrorLength": "Hex 碼必須為 3、4、6 或 8 個字元（不包括 #）。",
+    "hexErrorInvalidChars": "Hex 碼含有無效字元。",
+    "hexErrorInvalid": "不是有效的 Hex 顏色。",
     "noShades": ""
   },
   "overwriteConfirm": {

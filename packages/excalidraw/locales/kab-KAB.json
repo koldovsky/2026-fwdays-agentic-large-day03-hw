@@ -576,6 +576,9 @@
     "colors": "Initen",
     "shades": "",
     "hexCode": "",
+    "hexErrorLength": "Le code hexadécimal doit comporter 3, 4, 6 ou 8 caractères (sans #).",
+    "hexErrorInvalidChars": "Caractères invalides dans le code hexadécimal.",
+    "hexErrorInvalid": "Couleur hexadécimale invalide.",
     "noShades": ""
   },
   "overwriteConfirm": {

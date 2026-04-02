@@ -1,0 +1,45 @@
+---
+description: "Security checks for Excalidraw code and dependency changes"
+globs: "packages/**/*.ts,packages/**/*.tsx,excalidraw-app/**/*.ts,excalidraw-app/**/*.tsx"
+alwaysApply: false
+---
+
+# Security Checks
+
+## Sensitive Data
+
+- Never hardcode secrets, tokens, private keys, or credentials in source, tests, examples, or snapshots.
+- Keep credentials in environment variables and local secret stores only.
+- Never log secret values or auth headers.
+
+## Untrusted Input
+
+- Treat all user-provided, file-imported, network, and URL-derived data as untrusted.
+- Validate and sanitize untrusted input before use in URL construction, rendering, persistence, import, or export logic.
+- Reject malformed input early and fail safely with non-sensitive error messages.
+
+## URL and Navigation Safety
+
+- Allow only expected URL protocols (`https:` by default, `http:` only when explicitly required by feature scope).
+- Block or guard against `javascript:`, `data:`, and malformed URLs before open/redirect/embed behavior.
+- Keep URL parsing centralized in helper utilities where practical.
+
+## HTML Injection Safety
+
+- Avoid raw HTML insertion (`dangerouslySetInnerHTML` and equivalent patterns).
+- If HTML insertion is unavoidable, use trusted sanitization and document why it is safe in a short code comment.
+
+## Dependency and Supply-Chain Hygiene
+
+- Keep `package.json` and lockfile updates intentional and minimal.
+- Run a security audit whenever dependency manifests or lockfiles change.
+- Prefer maintained dependencies and avoid adding packages without clear ownership and use-case.
+
+## How to verify
+
+- Run `corepack yarn test:code`.
+- Run `corepack yarn test:typecheck`.
+- If dependency manifests or lockfiles changed, run `corepack yarn npm audit --recursive`.
+- Search changed files for secret patterns (`token`, `secret`, `apiKey`, `BEGIN PRIVATE KEY`) and confirm no hardcoded secrets are present.
+- Review changed URL handling paths and confirm unsafe protocols (`javascript:`, `data:`) are explicitly blocked.
+- Review changed HTML rendering paths and confirm no unsafe raw HTML insertion was introduced without sanitization.

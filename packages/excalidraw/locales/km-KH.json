@@ -576,6 +576,9 @@
     "colors": "ពណ៌",
     "shades": "ស្រមោល",
     "hexCode": "លេខកូដ hex",
+    "hexErrorLength": "លេខកូដ hex ត្រូវមាន 3, 4, 6 ឬ 8 តួអក្សរ (មិនរាប់ #)។",
+    "hexErrorInvalidChars": "តួអក្សរមិនត្រឹមត្រូវក្នុងលេខកូដ hex។",
+    "hexErrorInvalid": "មិនមែនជាពណ៌ hex ត្រឹមត្រូវទេ។",
     "noShades": "មិនមានស្រមោលសម្រាប់ពណ៌នេះទេ"
   },
   "overwriteConfirm": {

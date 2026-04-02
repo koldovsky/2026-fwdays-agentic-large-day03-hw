@@ -576,6 +576,9 @@
     "colors": "Reńler",
     "shades": "",
     "hexCode": "",
+    "hexErrorLength": "Hex kod #sız 3, 4, 6 yamasa 8 háripten ibaret bolıwı kerek.",
+    "hexErrorInvalidChars": "Hex kodta náwbetli háripler.",
+    "hexErrorInvalid": "Dáwırlı hex tús emes.",
     "noShades": ""
   },
   "overwriteConfirm": {

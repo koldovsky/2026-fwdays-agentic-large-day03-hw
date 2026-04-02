@@ -1,0 +1,38 @@
+---
+description: "Testing workflow and quality gates for Excalidraw"
+globs: "packages/**/*.ts,packages/**/*.tsx,excalidraw-app/**/*.ts,excalidraw-app/**/*.tsx"
+alwaysApply: true
+---
+
+# Testing Rules
+
+## Required Before Commit
+
+- Run `corepack yarn test:update` after behavior/UI changes that affect snapshots
+- Run `corepack yarn test:typecheck` for TypeScript safety
+- Run `corepack yarn test:code` for lint validation when touching TS/TSX files
+
+## Scope-Aware Test Runs
+
+- For component/editor logic in `packages/*`: run `corepack yarn test:update` and relevant package tests first
+- For app behavior in `excalidraw-app/*`: run app tests via `corepack yarn test:app --watch=false`
+- Before merge or release-sensitive changes: run `corepack yarn test:all`
+
+## Test Quality
+
+- Keep tests colocated with implementation when practical
+- Update snapshots only for intentional UI/behavior changes
+- Do not weaken assertions just to pass tests
+- Do not skip failing tests without explicit approval
+
+## How to verify
+
+- Run `corepack yarn test:typecheck`.
+- Run `corepack yarn test:code` for changed TS/TSX paths.
+- If snapshots are affected, run `corepack yarn test:update`.
+- For app-level behavior changes, run `corepack yarn test:app --watch=false`.
+- Before merge on broad/risky changes, run `corepack yarn test:all`.
+- Confirm no `@ts-ignore`, unnecessary `any`, or assertion weakening was added to force passing tests.
+
+
+

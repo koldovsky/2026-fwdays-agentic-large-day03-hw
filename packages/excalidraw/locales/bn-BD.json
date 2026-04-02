@@ -576,6 +576,9 @@
     "colors": "",
     "shades": "",
     "hexCode": "",
+    "hexErrorLength": "হেক্স কোডে # বাদে ৩, ৪, ৬ বা ৮ অক্ষর থাকতে হবে।",
+    "hexErrorInvalidChars": "হেক্স কোডে অবৈধ অক্ষর।",
+    "hexErrorInvalid": "বৈধ হেক্স রঙ নয়।",
     "noShades": ""
   },
   "overwriteConfirm": {

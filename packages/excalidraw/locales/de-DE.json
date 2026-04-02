@@ -576,6 +576,9 @@
     "colors": "Farben",
     "shades": "Schattierungen",
     "hexCode": "Hex-Code",
+    "hexErrorLength": "Der Hex-Code muss 3, 4, 6 oder 8 Zeichen haben (ohne #).",
+    "hexErrorInvalidChars": "Ungültige Zeichen im Hex-Code.",
+    "hexErrorInvalid": "Kein gültiger Hex-Farbwert.",
     "noShades": "Keine Schattierungen für diese Farbe verfügbar"
   },
   "overwriteConfirm": {

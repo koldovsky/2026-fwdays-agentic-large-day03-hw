@@ -576,6 +576,9 @@
     "colors": "",
     "shades": "",
     "hexCode": "",
+    "hexErrorLength": "Hex kodam jābūt 3, 4, 6 vai 8 rakstzīmēm (bez #).",
+    "hexErrorInvalidChars": "Nederīgas rakstzīmes hex kodā.",
+    "hexErrorInvalid": "Nederīga hex krāsa.",
     "noShades": ""
   },
   "overwriteConfirm": {

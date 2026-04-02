@@ -576,6 +576,9 @@
     "colors": "",
     "shades": "",
     "hexCode": "",
+    "hexErrorLength": "Hex kod # olmadan 3, 4, 6 və ya 8 simvoldan ibarət olmalıdır.",
+    "hexErrorInvalidChars": "Hex kodda etibarsız simvollar.",
+    "hexErrorInvalid": "Etibarlı hex rəngi deyil.",
     "noShades": ""
   },
   "overwriteConfirm": {

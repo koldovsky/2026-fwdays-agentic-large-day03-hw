@@ -576,6 +576,9 @@
     "colors": "පාට",
     "shades": "සෙවනැලි",
     "hexCode": "හෙක්ස් කේත",
+    "hexErrorLength": "හෙක්ස් කේතය සඳහා # හැර අක්ෂර 3, 4, 6 හෝ 8 ක් විය යුතුය.",
+    "hexErrorInvalidChars": "හෙක්ස් කේතයේ සලකුණු වලංගු නොවේ.",
+    "hexErrorInvalid": "වලංගු හෙක්ස් වර්ණයක් නොවේ.",
     "noShades": "සෙවනැලි නැත"
   },
   "overwriteConfirm": {

@@ -576,6 +576,9 @@
     "colors": "ਰੰਗ",
     "shades": "ਸ਼ੇਡਾਂ",
     "hexCode": "ਹੈਕਸ ਕੋਡ",
+    "hexErrorLength": "ਹੈਕਸ ਕੋਡ ਵਿੱਚ # ਤੋਂ ਇਲਾਵਾ 3, 4, 6 ਜਾਂ 8 ਅੱਖਰ ਹੋਣੇ ਚਾਹੀਦੇ ਹਨ।",
+    "hexErrorInvalidChars": "ਹੈਕਸ ਕੋਡ ਵਿੱਚ ਅਵੈਧ ਅੱਖਰ।",
+    "hexErrorInvalid": "ਵੈਧ ਹੈਕਸ ਰੰਗ ਨਹੀਂ ਹੈ।",
     "noShades": "ਇਸ ਰੰਗ ਦੀ ਕੋਈ ਸ਼ੇਡ ਉਪਲਬਧ ਨਹੀਂ ਹੈ"
   },
   "overwriteConfirm": {

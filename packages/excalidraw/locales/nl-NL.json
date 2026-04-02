@@ -576,6 +576,9 @@
     "colors": "Kleuren",
     "shades": "Tinten",
     "hexCode": "HEX-code",
+    "hexErrorLength": "De HEX-code moet 3, 4, 6 of 8 tekens bevatten (zonder #).",
+    "hexErrorInvalidChars": "Ongeldige tekens in de HEX-code.",
+    "hexErrorInvalid": "Geen geldige hex-kleur.",
     "noShades": "Geen tinten beschikbaar voor deze kleur"
   },
   "overwriteConfirm": {

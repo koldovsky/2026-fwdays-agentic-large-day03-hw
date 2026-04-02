@@ -576,6 +576,9 @@
     "colors": "Cores",
     "shades": "Tons",
     "hexCode": "Código hexadecimal",
+    "hexErrorLength": "O código hexadecimal deve ter 3, 4, 6 ou 8 caracteres (sem #).",
+    "hexErrorInvalidChars": "Caracteres inválidos no código hexadecimal.",
+    "hexErrorInvalid": "Não é uma cor hexadecimal válida.",
     "noShades": "Sem tons disponíveis para essa cor"
   },
   "overwriteConfirm": {

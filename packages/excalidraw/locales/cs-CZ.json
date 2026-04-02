@@ -576,6 +576,9 @@
     "colors": "Barvy",
     "shades": "Stíny",
     "hexCode": "Hex kód",
+    "hexErrorLength": "Hex kód musí mít 3, 4, 6 nebo 8 znaků (bez #).",
+    "hexErrorInvalidChars": "Neplatné znaky v hex kódu.",
+    "hexErrorInvalid": "Neplatná hex barva.",
     "noShades": "Pro tuto barvu nejsou k dispozici žádné odstíny"
   },
   "overwriteConfirm": {

@@ -576,6 +576,9 @@
     "colors": "Colori",
     "shades": "Sfumature",
     "hexCode": "Codice esadecimale",
+    "hexErrorLength": "Il codice esadecimale deve avere 3, 4, 6 o 8 caratteri (escluso #).",
+    "hexErrorInvalidChars": "Caratteri non validi nel codice esadecimale.",
+    "hexErrorInvalid": "Non è un colore esadecimale valido.",
     "noShades": "Nessuna sfumatura disponibile per questo colore"
   },
   "overwriteConfirm": {

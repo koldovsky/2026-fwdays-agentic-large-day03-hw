@@ -576,6 +576,9 @@
     "colors": "رنگ‌ها",
     "shades": "جلوه‌ها",
     "hexCode": "کدِ هگز",
+    "hexErrorLength": "کد هگز باید ۳، ۴، ۶ یا ۸ کاراکتر باشد (بدون #).",
+    "hexErrorInvalidChars": "نویسه‌های نامعتبر در کد هگز.",
+    "hexErrorInvalid": "رنگ هگز معتبر نیست.",
     "noShades": "هیچ سایه ای برای این رنگ در دسترس نیست"
   },
   "overwriteConfirm": {

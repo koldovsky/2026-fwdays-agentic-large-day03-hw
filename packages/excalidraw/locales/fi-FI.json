@@ -576,6 +576,9 @@
     "colors": "Värit",
     "shades": "Varjot",
     "hexCode": "Hex koodi",
+    "hexErrorLength": "Hex-koodissa on oltava 3, 4, 6 tai 8 merkkiä (# merkkiä lukuun ottamatta).",
+    "hexErrorInvalidChars": "Virheellisiä merkkejä hex-koodissa.",
+    "hexErrorInvalid": "Ei kelvollinen hex-väri.",
     "noShades": ""
   },
   "overwriteConfirm": {

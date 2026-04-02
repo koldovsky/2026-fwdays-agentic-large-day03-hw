@@ -353,3 +353,43 @@ export const normalizeInputColor = (color: string): string | null => {
 
   return null;
 };
+
+/** Allowed hex digit counts after optional leading `#` (RGB, RGBA shorthand, RRGGBB, RRGGBBAA). */
+const CUSTOM_COLOR_HEX_LENGTHS = new Set([3, 4, 6, 8]);
+
+export type CustomColorInputValidationError =
+  | "hexLength"
+  | "hexInvalidChars"
+  | "hexInvalid";
+
+/**
+ * When {@link normalizeInputColor} rejects input, explains why for the custom
+ * hex field (hex lengths and character set). Returns null if input is empty or valid.
+ */
+export const getCustomColorInputValidationError = (
+  input: string,
+): CustomColorInputValidationError | null => {
+  const trimmed = input.trim();
+  if (trimmed === "") {
+    return null;
+  }
+  if (normalizeInputColor(trimmed) !== null) {
+    return null;
+  }
+
+  const lower = trimmed.toLowerCase();
+  const body = lower.replace(/^#+/, "");
+
+  if (body === "") {
+    return "hexLength";
+  }
+
+  if (/^[0-9a-f]+$/i.test(body)) {
+    if (!CUSTOM_COLOR_HEX_LENGTHS.has(body.length)) {
+      return "hexLength";
+    }
+    return "hexInvalid";
+  }
+
+  return "hexInvalidChars";
+};

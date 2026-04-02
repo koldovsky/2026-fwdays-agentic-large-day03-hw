@@ -576,6 +576,9 @@
     "colors": "रंग",
     "shades": "छाया",
     "hexCode": "हेक्स कोड",
+    "hexErrorLength": "हेक्स कोड में # को छोड़कर 3, 4, 6 या 8 अक्षर होने चाहिए।",
+    "hexErrorInvalidChars": "हेक्स कोड में अमान्य अक्षर।",
+    "hexErrorInvalid": "मान्य हेक्स रंग नहीं है।",
     "noShades": "इस रंग की कोई छाया उपलब्ध नहीं हैं"
   },
   "overwriteConfirm": {

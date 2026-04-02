@@ -576,6 +576,9 @@
     "colors": "Colors",
     "shades": "Ombres",
     "hexCode": "Codi hexadecimal",
+    "hexErrorLength": "El codi hexadecimal ha de tenir 3, 4, 6 o 8 caràcters (sense #).",
+    "hexErrorInvalidChars": "Caràcters no vàlids al codi hexadecimal.",
+    "hexErrorInvalid": "No és un color hexadecimal vàlid.",
     "noShades": "No hi ha ombres disponibles per a aquest color"
   },
   "overwriteConfirm": {

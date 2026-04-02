@@ -576,6 +576,9 @@
     "colors": "الألوان",
     "shades": "الدرجات",
     "hexCode": "رمز Hex",
+    "hexErrorLength": "يجب أن يكون رمز Hex من 3 أو 4 أو 6 أو 8 أحرف (بدون #).",
+    "hexErrorInvalidChars": "أحرف غير صالحة في رمز Hex.",
+    "hexErrorInvalid": "ليس لون Hex صالحًا.",
     "noShades": "لا تتوفر درجات لهذا اللون"
   },
   "overwriteConfirm": {

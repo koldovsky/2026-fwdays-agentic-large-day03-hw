@@ -576,6 +576,9 @@
     "colors": "Barve",
     "shades": "Odtenki",
     "hexCode": "Hex koda",
+    "hexErrorLength": "Hex koda mora imeti 3, 4, 6 ali 8 znakov (brez #).",
+    "hexErrorInvalidChars": "Neveljavni znaki v hex kodi.",
+    "hexErrorInvalid": "Neveljavna hex barva.",
     "noShades": "Odtenki za to barvo niso na voljo"
   },
   "overwriteConfirm": {

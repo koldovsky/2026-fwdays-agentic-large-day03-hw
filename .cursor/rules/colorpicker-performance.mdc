@@ -1,0 +1,33 @@
+---
+description: "Performance guardrails for ColorPicker component logic"
+globs: packages/excalidraw/components/ColorPicker/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# ColorPicker Performance
+
+## Render Path Cost
+
+- Keep render paths cheap in `ColorPicker` components and helpers.
+- Avoid expensive color parsing, normalization, sorting, and palette scans in render loops.
+- If derived color values are expensive, memoize by stable inputs with `useMemo`.
+
+## Handler and State Stability
+
+- Keep callbacks passed to nested controls stable (`useCallback`) when identity changes can trigger extra renders.
+- Prefer derived values over extra local state; add state only when it cannot be reliably derived.
+- Keep controlled input updates lightweight and synchronous for typing responsiveness.
+- If non-visual side effects are heavy, debounce/throttle only those side effects, not the visible input value.
+
+## Change-Safety Expectations
+
+- For changes in color parsing/normalization paths, add or update tests that cover rapid typing behavior.
+- Include malformed or partial color string cases to ensure invalid input does not create render churn or broken UX.
+
+## How to verify
+
+- Review changed `ColorPicker` render paths and confirm no expensive parsing/normalization/sorting runs during render unless memoized.
+- Confirm callback identity stability for nested controls where rerenders are sensitivity points.
+- Run `corepack yarn test:typecheck`.
+- Run relevant `ColorPicker` tests, including rapid typing and malformed/partial color input scenarios.
+- Confirm no regressions in typing responsiveness were introduced.

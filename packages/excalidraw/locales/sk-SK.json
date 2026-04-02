@@ -576,6 +576,9 @@
     "colors": "Farby",
     "shades": "Odtiene",
     "hexCode": "Hex kód",
+    "hexErrorLength": "Hex kód musí mať 3, 4, 6 alebo 8 znakov (bez #).",
+    "hexErrorInvalidChars": "Neplatné znaky v hex kóde.",
+    "hexErrorInvalid": "Neplatná hex farba.",
     "noShades": "Pre túto farbu nie sú dostupné žiadne odtiene"
   },
   "overwriteConfirm": {

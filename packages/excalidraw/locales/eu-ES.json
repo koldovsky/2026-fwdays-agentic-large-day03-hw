@@ -576,6 +576,9 @@
     "colors": "Koloreak",
     "shades": "Ñabardurak",
     "hexCode": "Hez kodea",
+    "hexErrorLength": "Hex kodeak 3, 4, 6 edo 8 karaktere izan behar ditu (# gabe).",
+    "hexErrorInvalidChars": "Karaktere baliogabeak hex kodean.",
+    "hexErrorInvalid": "Ez da hex kolore baliogarria.",
     "noShades": "Kolore honetarako ez dago ñabardurarik eskuragarri"
   },
   "overwriteConfirm": {

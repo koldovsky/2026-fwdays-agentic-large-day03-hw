@@ -576,6 +576,9 @@
     "colors": "",
     "shades": "",
     "hexCode": "",
+    "hexErrorLength": "Hex kodi # dan tashqari 3, 4, 6 yoki 8 ta belgidan iborat bo'lishi kerak.",
+    "hexErrorInvalidChars": "Hex kodda noto'g'ri belgilar.",
+    "hexErrorInvalid": "To'g'ri hex rang emas.",
     "noShades": ""
   },
   "overwriteConfirm": {

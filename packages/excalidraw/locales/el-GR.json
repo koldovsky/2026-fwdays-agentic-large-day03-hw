@@ -576,6 +576,9 @@
     "colors": "Χρώματα",
     "shades": "Αποχρώσεις",
     "hexCode": "Κωδικός Hex",
+    "hexErrorLength": "Ο κωδικός hex πρέπει να έχει 3, 4, 6 ή 8 χαρακτήρες (χωρίς #).",
+    "hexErrorInvalidChars": "Μη έγκυροι χαρακτήρες στον κωδικό hex.",
+    "hexErrorInvalid": "Δεν είναι έγκυρο χρώμα hex.",
     "noShades": "Δεν υπάρχουν διαθέσιμες αποχρώσεις για αυτό το χρώμα"
   },
   "overwriteConfirm": {

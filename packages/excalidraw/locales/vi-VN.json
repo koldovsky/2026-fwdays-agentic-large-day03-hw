@@ -576,6 +576,9 @@
     "colors": "",
     "shades": "",
     "hexCode": "",
+    "hexErrorLength": "Mã hex phải có 3, 4, 6 hoặc 8 ký tự (không tính #).",
+    "hexErrorInvalidChars": "Ký tự không hợp lệ trong mã hex.",
+    "hexErrorInvalid": "Không phải màu hex hợp lệ.",
     "noShades": ""
   },
   "overwriteConfirm": {

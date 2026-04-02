@@ -576,6 +576,9 @@
     "colors": "",
     "shades": "",
     "hexCode": "",
+    "hexErrorLength": "Hex-koden må ha 3, 4, 6 eller 8 teikn (utan #).",
+    "hexErrorInvalidChars": "Ugyldige teikn i hex-koden.",
+    "hexErrorInvalid": "Ikkje ein gyldig hex-farge.",
     "noShades": ""
   },
   "overwriteConfirm": {

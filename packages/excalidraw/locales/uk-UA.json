@@ -576,6 +576,9 @@
     "colors": "Кольори",
     "shades": "Тіні",
     "hexCode": "Hex-код",
+    "hexErrorLength": "Hex-код має містити 3, 4, 6 або 8 символів (без #).",
+    "hexErrorInvalidChars": "Неприпустимі символи в hex-коді.",
+    "hexErrorInvalid": "Неприпустимий hex-колір.",
     "noShades": "Немає доступних відтінків цього кольору"
   },
   "overwriteConfirm": {

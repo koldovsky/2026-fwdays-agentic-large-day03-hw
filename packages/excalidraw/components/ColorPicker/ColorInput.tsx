@@ -1,7 +1,19 @@
 import clsx from "clsx";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
-import { KEYS, normalizeInputColor } from "@excalidraw/common";
+import {
+  KEYS,
+  getCustomColorInputValidationError,
+  normalizeInputColor,
+  type CustomColorInputValidationError,
+} from "@excalidraw/common";
 
 import { getShortcutKey } from "../..//shortcut";
 import { useAtom } from "../../editor-jotai";
@@ -13,6 +25,17 @@ import { eyeDropperIcon } from "../icons";
 import { activeColorPickerSectionAtom } from "./colorPickerUtils";
 
 import type { ColorPickerType } from "./colorPickerUtils";
+
+const HEX_VALIDATION_ERROR_I18N: Record<
+  CustomColorInputValidationError,
+  | "colorPicker.hexErrorLength"
+  | "colorPicker.hexErrorInvalidChars"
+  | "colorPicker.hexErrorInvalid"
+> = {
+  hexLength: "colorPicker.hexErrorLength",
+  hexInvalidChars: "colorPicker.hexErrorInvalidChars",
+  hexInvalid: "colorPicker.hexErrorInvalid",
+};
 
 export const ColorInput = ({
   color,
@@ -32,6 +55,16 @@ export const ColorInput = ({
   const [activeSection, setActiveColorPickerSection] = useAtom(
     activeColorPickerSectionAtom,
   );
+  const hexErrorId = useId();
+
+  const validationError = useMemo(
+    () => getCustomColorInputValidationError(innerValue),
+    [innerValue],
+  );
+
+  const validationMessage = validationError
+    ? t(HEX_VALIDATION_ERROR_I18N[validationError])
+    : null;
 
   useEffect(() => {
     setInnerValue(color);
@@ -76,6 +109,8 @@ export const ColorInput = ({
         spellCheck={false}
         className="color-picker-input"
         aria-label={label}
+        aria-invalid={validationMessage ? true : undefined}
+        aria-describedby={validationMessage ? hexErrorId : undefined}
         onChange={(event) => {
           changeColor(event.target.value);
         }}
@@ -128,6 +163,11 @@ export const ColorInput = ({
             {eyeDropperIcon}
           </div>
         </>
+      )}
+      {validationMessage && (
+        <div className="color-picker__input-error" id={hexErrorId} role="alert">
+          {validationMessage}
+        </div>
       )}
     </div>
   );

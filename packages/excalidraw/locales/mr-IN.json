@@ -576,6 +576,9 @@
     "colors": "रंग",
     "shades": "रंगछटा",
     "hexCode": "हेक्स कोड",
+    "hexErrorLength": "हेक्स कोडमध्ये # वगळून ३, ४, ६ किंवा ८ अक्षरे असावीत.",
+    "hexErrorInvalidChars": "हेक्स कोडात अवैध अक्षरे.",
+    "hexErrorInvalid": "वैध हेक्स रंग नाही.",
     "noShades": "ह्या रंगाच्या छटा उपलब्ध नाहित"
   },
   "overwriteConfirm": {
