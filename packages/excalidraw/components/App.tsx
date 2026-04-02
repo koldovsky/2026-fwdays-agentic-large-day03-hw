@@ -39,6 +39,7 @@ import {
   LINE_CONFIRM_THRESHOLD,
   MAX_ALLOWED_FILE_BYTES,
   MIME_TYPES,
+  MIN_ZOOM,
   MQ_RIGHT_SIDEBAR_MIN_WIDTH,
   POINTER_BUTTON,
   ROUNDNESS,
@@ -596,10 +597,10 @@ let isHoldingSpace: boolean = false;
  * Each frame we integrate velocity in scene units per second: Δscroll = v * dt, same as other
  * `translateCanvas` callers that mutate scroll directly.
  *
- * Zoom: middle-button / space-drag pan converts pointer movement in CSS pixels to scene delta
- * via `Δscroll = Δclient / zoom.value`. Keyboard pan scales its speed cap by `zoom.value` so
- * perceived motion on the viewport stays in a similar range when zoom changes (device pixel
- * density does not enter here — browser reports CSS pixels).
+ * Zoom: wheel/space-drag uses `Δscroll = Δclient / zoom.value` (CSS px → scene). Visible canvas
+ * motion scales ~as `Δscroll * zoom`, so a fixed scene velocity would change viewport speed ~∝ zoom.
+ * We therefore divide the base scene-velocity cap by `zoom` so viewport pan speed stays ~stable
+ * (avoids ~zoom² error from multiplying scene speed by zoom on top of that mapping).
  *
  * Tuning (at 100% zoom):
  * - Base cap 720 scene-units/s is a comfortable read/present pace; adjust relative to wheel step.
@@ -2858,6 +2859,18 @@ class App extends React.Component<AppProps, AppState> {
     });
   });
 
+  /** Lost window focus without matching keyups (e.g. Alt-Tab) — drop stuck arrow keys (#6688). */
+  private onWindowBlurClearViewModeKeyboardPan = () => {
+    this.clearViewModeArrowPan();
+  };
+
+  /** Tab hidden / browser minimized — same as blur for keyboard pan state (#6688). */
+  private onDocumentVisibilityChangeClearViewModeKeyboardPan = () => {
+    if (document.visibilityState === "hidden") {
+      this.clearViewModeArrowPan();
+    }
+  };
+
   private onUnload = () => {
     this.onBlur();
   };
@@ -3333,6 +3346,18 @@ class App extends React.Component<AppProps, AppState> {
           this.triggerRender(true);
         },
         { passive: false },
+      ),
+      addEventListener(
+        window,
+        EVENT.BLUR,
+        this.onWindowBlurClearViewModeKeyboardPan,
+        false,
+      ),
+      addEventListener(
+        document,
+        EVENT.VISIBILITY_CHANGE,
+        this.onDocumentVisibilityChangeClearViewModeKeyboardPan,
+        false,
       ),
     );
 
@@ -4550,8 +4575,8 @@ class App extends React.Component<AppProps, AppState> {
     }
 
     const maxSceneVelocityPerSec =
-      VIEW_MODE_KEYBOARD_PAN_BASE_MAX_SCENE_VELOCITY_PER_SEC *
-      this.state.zoom.value;
+      VIEW_MODE_KEYBOARD_PAN_BASE_MAX_SCENE_VELOCITY_PER_SEC /
+      Math.max(this.state.zoom.value, MIN_ZOOM);
     const targetVx = tx * maxSceneVelocityPerSec;
     const targetVy = ty * maxSceneVelocityPerSec;
 
