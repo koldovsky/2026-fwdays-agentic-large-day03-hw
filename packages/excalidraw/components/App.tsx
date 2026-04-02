@@ -588,6 +588,11 @@ let didTapTwice: boolean = false;
 let tappedTwiceTimer = 0;
 let firstTapPosition: { x: number; y: number } | null = null;
 let isHoldingSpace: boolean = false;
+
+/** View-mode keyboard pan (#6688) — scene units/sec and easing */
+const VIEW_MODE_ARROW_PAN_MAX_SPEED = 720;
+const VIEW_MODE_ARROW_PAN_ACCEL = 10;
+const VIEW_MODE_ARROW_PAN_FRICTION = 9;
 let isPanning: boolean = false;
 let isDraggingScrollBar: boolean = false;
 let currentScrollBars: ScrollBars = { horizontal: null, vertical: null };
@@ -704,6 +709,13 @@ class App extends React.Component<AppProps, AppState> {
   laserTrails = new LaserTrails(this.animationFrameHandler, this);
   eraserTrail = new EraserTrail(this.animationFrameHandler, this);
   lassoTrail = new LassoTrail(this.animationFrameHandler, this);
+
+  /** Arrow keys held for view-mode canvas pan (#6688) */
+  private viewModeArrowPanKeys = new Set<string>();
+  private viewModeArrowPanVelX = 0;
+  private viewModeArrowPanVelY = 0;
+  private viewModeArrowPanRafId: number | null = null;
+  private viewModeArrowPanLastTs = 0;
 
   onChangeEmitter = new Emitter<
     [
@@ -3198,6 +3210,7 @@ class App extends React.Component<AppProps, AppState> {
     selectGroupsForSelectedElements.clearCache();
     touchTimeout = 0;
     document.documentElement.style.overscrollBehaviorX = "";
+    this.clearViewModeArrowPan();
   }
 
   private onResize = withBatchedUpdates(() => {
@@ -3459,6 +3472,10 @@ class App extends React.Component<AppProps, AppState> {
     if (prevState.viewModeEnabled !== this.state.viewModeEnabled) {
       this.addEventListeners();
       this.deselectElements();
+    }
+
+    if (prevState.viewModeEnabled && !this.state.viewModeEnabled) {
+      this.clearViewModeArrowPan();
     }
 
     // cleanup
@@ -4454,6 +4471,108 @@ class App extends React.Component<AppProps, AppState> {
     this.setState(state);
   };
 
+  private clearViewModeArrowPan = () => {
+    this.viewModeArrowPanKeys.clear();
+    this.viewModeArrowPanVelX = 0;
+    this.viewModeArrowPanVelY = 0;
+    this.viewModeArrowPanLastTs = 0;
+    if (this.viewModeArrowPanRafId != null) {
+      cancelAnimationFrame(this.viewModeArrowPanRafId);
+      this.viewModeArrowPanRafId = null;
+    }
+  };
+
+  private stepViewModeArrowPan = (now: number) => {
+    this.viewModeArrowPanRafId = null;
+
+    if (this.unmounted) {
+      this.clearViewModeArrowPan();
+      return;
+    }
+
+    if (
+      !this.state.viewModeEnabled ||
+      this.state.activeTool.type === "laser" ||
+      this.state.editingTextElement
+    ) {
+      this.clearViewModeArrowPan();
+      return;
+    }
+
+    const dt = this.viewModeArrowPanLastTs
+      ? Math.min(0.064, (now - this.viewModeArrowPanLastTs) / 1000)
+      : 1 / 60;
+    this.viewModeArrowPanLastTs = now;
+
+    let tx = 0;
+    let ty = 0;
+    if (this.viewModeArrowPanKeys.has(KEYS.ARROW_LEFT)) {
+      tx -= 1;
+    }
+    if (this.viewModeArrowPanKeys.has(KEYS.ARROW_RIGHT)) {
+      tx += 1;
+    }
+    if (this.viewModeArrowPanKeys.has(KEYS.ARROW_UP)) {
+      ty -= 1;
+    }
+    if (this.viewModeArrowPanKeys.has(KEYS.ARROW_DOWN)) {
+      ty += 1;
+    }
+
+    const len = Math.hypot(tx, ty);
+    const hasKeys = len > 0;
+    if (hasKeys) {
+      tx /= len;
+      ty /= len;
+    }
+
+    const targetVx = tx * VIEW_MODE_ARROW_PAN_MAX_SPEED;
+    const targetVy = ty * VIEW_MODE_ARROW_PAN_MAX_SPEED;
+
+    if (hasKeys) {
+      const k = Math.min(1, VIEW_MODE_ARROW_PAN_ACCEL * dt);
+      this.viewModeArrowPanVelX += (targetVx - this.viewModeArrowPanVelX) * k;
+      this.viewModeArrowPanVelY += (targetVy - this.viewModeArrowPanVelY) * k;
+    } else {
+      const decay = Math.exp(-VIEW_MODE_ARROW_PAN_FRICTION * dt);
+      this.viewModeArrowPanVelX *= decay;
+      this.viewModeArrowPanVelY *= decay;
+      if (Math.hypot(this.viewModeArrowPanVelX, this.viewModeArrowPanVelY) < 0.5) {
+        this.viewModeArrowPanVelX = 0;
+        this.viewModeArrowPanVelY = 0;
+      }
+    }
+
+    const dx = this.viewModeArrowPanVelX * dt;
+    const dy = this.viewModeArrowPanVelY * dt;
+
+    if (dx !== 0 || dy !== 0) {
+      this.translateCanvas((state) => ({
+        scrollX: state.scrollX - dx,
+        scrollY: state.scrollY - dy,
+      }));
+    }
+
+    const keepGoing =
+      this.viewModeArrowPanKeys.size > 0 ||
+      Math.hypot(this.viewModeArrowPanVelX, this.viewModeArrowPanVelY) > 0.5;
+
+    if (keepGoing) {
+      this.viewModeArrowPanRafId = requestAnimationFrame(this.stepViewModeArrowPan);
+    } else {
+      this.viewModeArrowPanVelX = 0;
+      this.viewModeArrowPanVelY = 0;
+      this.viewModeArrowPanLastTs = 0;
+    }
+  };
+
+  private ensureViewModeArrowPanLoop = () => {
+    if (this.viewModeArrowPanRafId == null) {
+      this.viewModeArrowPanLastTs = 0;
+      this.viewModeArrowPanRafId = requestAnimationFrame(this.stepViewModeArrowPan);
+    }
+  };
+
   setToast = (toast: AppState["toast"]) => {
     this.setState({ toast });
   };
@@ -5001,6 +5120,25 @@ class App extends React.Component<AppProps, AppState> {
         return;
       }
 
+      if (
+        this.state.viewModeEnabled &&
+        this.state.activeTool.type !== "laser" &&
+        !this.state.editingTextElement &&
+        isArrowKey(event.key) &&
+        !event[KEYS.CTRL_OR_CMD] &&
+        !event.altKey &&
+        !isWritableElement(event.target) &&
+        (event.key === KEYS.ARROW_LEFT ||
+          event.key === KEYS.ARROW_RIGHT ||
+          event.key === KEYS.ARROW_UP ||
+          event.key === KEYS.ARROW_DOWN)
+      ) {
+        this.viewModeArrowPanKeys.add(event.key);
+        event.preventDefault();
+        this.ensureViewModeArrowPanLoop();
+        return;
+      }
+
       // view mode hardcoded from upstream -> disable tool switching for now
       const shouldPreventToolSwitching = this.props.viewModeEnabled === true;
 
@@ -5294,6 +5432,21 @@ class App extends React.Component<AppProps, AppState> {
   );
 
   private onKeyUp = withBatchedUpdates((event: KeyboardEvent) => {
+    if (
+      this.state.viewModeEnabled &&
+      this.state.activeTool.type !== "laser" &&
+      isArrowKey(event.key) &&
+      !event[KEYS.CTRL_OR_CMD] &&
+      !event.altKey &&
+      (event.key === KEYS.ARROW_LEFT ||
+        event.key === KEYS.ARROW_RIGHT ||
+        event.key === KEYS.ARROW_UP ||
+        event.key === KEYS.ARROW_DOWN)
+    ) {
+      this.viewModeArrowPanKeys.delete(event.key);
+      this.ensureViewModeArrowPanLoop();
+    }
+
     if (event.key === KEYS.SPACE) {
       if (
         (this.state.viewModeEnabled &&
