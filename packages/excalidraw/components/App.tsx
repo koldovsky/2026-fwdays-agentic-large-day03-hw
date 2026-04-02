@@ -429,7 +429,7 @@ import { EraserTrail } from "../eraser";
 
 import { getShortcutKey } from "../shortcut";
 
-import { tryParseSpreadsheet } from "../charts";
+import { parseDelimitedGrid, tryParseCells } from "../charts";
 
 import ConvertElementTypePopup, {
   getConversionTypeFromElements,
@@ -3688,16 +3688,35 @@ class App extends React.Component<AppProps, AppState> {
     // ------------------- Spreadsheet -------------------
 
     if (!isPlainPaste && data.text) {
-      const result = tryParseSpreadsheet(data.text);
-      if (result.ok) {
-        this.setState({
-          openDialog: {
-            name: "charts",
-            data: result.data,
-            rawText: data.text,
-          },
-        });
-        return;
+      const gridResult = parseDelimitedGrid(data.text);
+      if (gridResult.ok) {
+        const { lines } = gridResult;
+        const textTableEligible =
+          lines.length >= 2 && lines[0].length >= 2;
+        const cellsResult = tryParseCells(lines);
+
+        if (cellsResult.ok && textTableEligible) {
+          this.setState({
+            openDialog: {
+              name: "charts",
+              data: cellsResult.data,
+              textGrid: lines,
+              rawText: data.text,
+            },
+          });
+          return;
+        }
+        if (!cellsResult.ok && textTableEligible) {
+          this.setState({
+            openDialog: {
+              name: "charts",
+              data: null,
+              textGrid: lines,
+              rawText: data.text,
+            },
+          });
+          return;
+        }
       }
     }
 

@@ -1,4 +1,65 @@
-import { tryParseSpreadsheet } from "../charts";
+import {
+  parseDelimitedGrid,
+  renderRoughTable,
+  tryParseSpreadsheet,
+  tryParseTextTable,
+} from "../charts";
+
+describe("parseDelimitedGrid", () => {
+  it("returns the same grid as spreadsheet paste for TSV", () => {
+    const text = `a\tb\nc\td`;
+    expect(parseDelimitedGrid(text)).toEqual({
+      ok: true,
+      lines: [
+        ["a", "b"],
+        ["c", "d"],
+      ],
+    });
+  });
+});
+
+describe("tryParseTextTable", () => {
+  it("accepts 2×2 text-only cells", () => {
+    const result = tryParseTextTable(`Name\tRole
+Alice\tDev
+Bob\tDesign`);
+    expect(result).toEqual({
+      ok: true,
+      lines: [
+        ["Name", "Role"],
+        ["Alice", "Dev"],
+        ["Bob", "Design"],
+      ],
+    });
+  });
+
+  it("rejects a single row", () => {
+    const result = tryParseTextTable("a\tb");
+    expect(result.ok).toBe(false);
+  });
+
+  it("rejects a single column", () => {
+    const result = tryParseTextTable("a\nb");
+    expect(result.ok).toBe(false);
+  });
+});
+
+describe("renderRoughTable", () => {
+  it("returns lines and text for a small grid", () => {
+    const elements = renderRoughTable(
+      [
+        ["a", "b"],
+        ["c", "d"],
+      ],
+      0,
+      0,
+      0,
+    );
+    const types = elements.map((el) => el.type);
+    expect(types.filter((t) => t === "line").length).toBe(6);
+    expect(types.filter((t) => t === "text").length).toBe(4);
+  });
+});
 
 describe("tryParseSpreadsheet", () => {
   it("works for numbers with comma in them", () => {

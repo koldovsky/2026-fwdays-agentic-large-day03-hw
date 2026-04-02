@@ -3,11 +3,14 @@ import type { ChartType } from "@excalidraw/element/types";
 import { renderBarChart } from "./charts.bar";
 import { renderLineChart } from "./charts.line";
 import {
+  parseDelimitedGrid,
   tryParseCells,
   tryParseNumber,
   tryParseSpreadsheet,
+  tryParseTextTable,
 } from "./charts.parse";
 import { renderRadarChart } from "./charts.radar";
+import { renderRoughTable } from "./charts.table";
 
 import type { ChartElements, Spreadsheet } from "./charts.types";
 
@@ -19,7 +22,15 @@ export {
 } from "./charts.types";
 
 export { isSpreadsheetValidForChartType } from "./charts.helpers";
-export { tryParseCells, tryParseNumber, tryParseSpreadsheet };
+export {
+  parseDelimitedGrid,
+  tryParseCells,
+  tryParseNumber,
+  tryParseSpreadsheet,
+  tryParseTextTable,
+};
+export type { ParseDelimitedGridResult } from "./charts.parse";
+export { renderRoughTable };
 
 export const renderSpreadsheet = (
   chartType: ChartType,

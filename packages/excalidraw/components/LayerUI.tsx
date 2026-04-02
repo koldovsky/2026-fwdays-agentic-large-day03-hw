@@ -560,6 +560,7 @@ const LayerUI = ({
       {appState.openDialog?.name === "charts" && (
         <PasteChartDialog
           data={appState.openDialog.data}
+          textGrid={appState.openDialog.textGrid}
           rawText={appState.openDialog.rawText}
           onClose={() =>
             setAppState({
