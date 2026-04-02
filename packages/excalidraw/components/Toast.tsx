@@ -7,7 +7,8 @@ import "./Toast.scss";
 
 import type { CSSProperties, ReactNode } from "react";
 
-const DEFAULT_TOAST_TIMEOUT = 5000;
+/** Default auto-dismiss duration for toasts (ms). Exported for callers that set `appState.toast`. */
+export const DEFAULT_TOAST_TIMEOUT = 5000;
 
 const ProgressBar = ({ progress }: { progress: number }) => (
   <div className="Toast__progress-bar">

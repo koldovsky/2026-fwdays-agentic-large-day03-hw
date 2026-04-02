@@ -7,11 +7,12 @@
     min-width: 220px;
     max-width: min(360px, calc(100vw - 32px));
     border-radius: var(--border-radius-lg);
-    border: 1px solid var(--default-border-color);
-    background-color: var(--island-bg-color);
+    border: 1px solid var(--color-gray-40);
+    background-color: var(--popup-secondary-bg-color);
     color: var(--text-primary-color);
     padding: 0.5rem 0.75rem;
-    box-shadow: 0 0 0 1px var(--color-surface-lowest);
+    box-shadow: var(--shadow-island),
+      0 0 0 1px rgb(0 0 0 / 0.06);
     box-sizing: border-box;
     cursor: default;
     pointer-events: none;

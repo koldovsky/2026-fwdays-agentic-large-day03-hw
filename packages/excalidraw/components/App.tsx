@@ -360,6 +360,11 @@ import { restoreAppState, restoreElements } from "../data/restore";
 import { getCenter, getDistance } from "../gesture";
 import { History } from "../history";
 import { defaultLang, getLanguage, languages, setLanguage, t } from "../i18n";
+import {
+  isDrawableShapeLikeToolType,
+  shouldArmShapeDrawFeedbackForToolChange,
+  shouldShowShapeToolDrawFeedback,
+} from "../shapeToolDrawFeedback";
 
 import {
   calculateScrollCenter,
@@ -431,6 +436,7 @@ import { getShortcutKey } from "../shortcut";
 
 import { tryParseSpreadsheet } from "../charts";
 
+import { DEFAULT_TOAST_TIMEOUT } from "./Toast";
 import ConvertElementTypePopup, {
   getConversionTypeFromElements,
   convertElementTypePopupAtom,
@@ -697,6 +703,13 @@ class App extends React.Component<AppProps, AppState> {
   private lastCompletedCanvasClicks: { x: number; y: number }[] = [];
   /** previous frame pointer coords */
   previousPointerMoveCoords: { x: number; y: number } | null = null;
+  /** Ensures at most one "select shape tool" toast per pointer gesture. */
+  private shapeToolDrawFeedbackShownForGesture = false;
+  /**
+   * After switching from a drawable shape tool to selection/lasso (e.g. Esc),
+   * the next qualifying empty-canvas drag may show draw-hint toast once.
+   */
+  private shapeDrawFeedbackArmedAfterShapeToolSwitch = false;
   lastViewportPosition = { x: 0, y: 0 };
 
   animationFrameHandler = new AnimationFrameHandler();
@@ -3446,6 +3459,17 @@ class App extends React.Component<AppProps, AppState> {
     }
     if (prevProps.langCode !== this.props.langCode) {
       this.updateLanguage();
+    }
+
+    const prevToolType = prevState.activeTool.type;
+    const nextToolType = this.state.activeTool.type;
+    if (prevToolType !== nextToolType) {
+      if (shouldArmShapeDrawFeedbackForToolChange(prevToolType, nextToolType)) {
+        this.shapeDrawFeedbackArmedAfterShapeToolSwitch = true;
+      }
+      if (isDrawableShapeLikeToolType(nextToolType)) {
+        this.shapeDrawFeedbackArmedAfterShapeToolSwitch = false;
+      }
     }
 
     if (isEraserActive(prevState) && !isEraserActive(this.state)) {
@@ -10111,6 +10135,32 @@ class App extends React.Component<AppProps, AppState> {
       if (this.state.selectionElement) {
         pointerDownState.lastCoords.x = pointerCoords.x;
         pointerDownState.lastCoords.y = pointerCoords.y;
+        // Toasts are not rendered on phone (see LayerUI); avoid setting invisible state.
+        if (
+          this.editorInterface.formFactor !== "phone" &&
+          shouldShowShapeToolDrawFeedback({
+            mode: "selection-marquee",
+            activeToolType: this.state.activeTool.type,
+            selectionElement: this.state.selectionElement,
+            pointerDownHitElement: pointerDownState.hit.element,
+            originX: pointerDownState.origin.x,
+            originY: pointerDownState.origin.y,
+            currentX: pointerCoords.x,
+            currentY: pointerCoords.y,
+            alreadyShownForGesture: this.shapeToolDrawFeedbackShownForGesture,
+            selectedLinearElementIsEditing:
+              !!this.state.selectedLinearElement?.isEditing,
+            armedAfterShapeToolSwitch:
+              this.shapeDrawFeedbackArmedAfterShapeToolSwitch,
+          })
+        ) {
+          this.shapeToolDrawFeedbackShownForGesture = true;
+          this.shapeDrawFeedbackArmedAfterShapeToolSwitch = false;
+          this.setToast({
+            message: t("toast.selectShapeToolToDraw"),
+            duration: DEFAULT_TOAST_TIMEOUT,
+          });
+        }
         if (event.altKey) {
           this.setActiveTool(
             { type: "lasso", fromSelection: true },
@@ -10141,6 +10191,32 @@ class App extends React.Component<AppProps, AppState> {
             pointerCoords.y,
             event.shiftKey,
           );
+          if (
+            this.editorInterface.formFactor !== "phone" &&
+            !this.state.activeTool.fromSelection &&
+            shouldShowShapeToolDrawFeedback({
+              mode: "lasso-empty",
+              activeToolType: this.state.activeTool.type,
+              selectionElement: null,
+              pointerDownHitElement: pointerDownState.hit.element,
+              originX: pointerDownState.origin.x,
+              originY: pointerDownState.origin.y,
+              currentX: pointerCoords.x,
+              currentY: pointerCoords.y,
+              alreadyShownForGesture: this.shapeToolDrawFeedbackShownForGesture,
+              selectedLinearElementIsEditing:
+                !!this.state.selectedLinearElement?.isEditing,
+              armedAfterShapeToolSwitch:
+                this.shapeDrawFeedbackArmedAfterShapeToolSwitch,
+            })
+          ) {
+            this.shapeToolDrawFeedbackShownForGesture = true;
+            this.shapeDrawFeedbackArmedAfterShapeToolSwitch = false;
+            this.setToast({
+              message: t("toast.selectShapeToolToDraw"),
+              duration: DEFAULT_TOAST_TIMEOUT,
+            });
+          }
         }
       } else {
         // It is very important to read this.state within each move event,
@@ -10366,6 +10442,8 @@ class App extends React.Component<AppProps, AppState> {
   ): (event: PointerEvent) => void {
     return withBatchedUpdates((childEvent: PointerEvent) => {
       const elementsMap = this.scene.getNonDeletedElementsMap();
+
+      this.shapeToolDrawFeedbackShownForGesture = false;
 
       this.removePointer(childEvent);
       pointerDownState.drag.blockDragging = false;

@@ -90,5 +90,8 @@
   },
   "resolutions": {
     "strip-ansi": "6.0.1"
+  },
+  "dependencies": {
+    "@fission-ai/openspec": "1.2.0"
   }
 }
