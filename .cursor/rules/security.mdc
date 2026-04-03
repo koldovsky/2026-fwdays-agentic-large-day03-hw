@@ -1,0 +1,41 @@
+---
+description: "Vite env, secrets, network/collab, crypto, DOM — app + excalidraw + scripts"
+globs: "excalidraw-app/**/*.{ts,tsx},packages/excalidraw/**/*.{ts,tsx},scripts/**/*.{js,cjs,mjs},packages/excalidraw/env.cjs"
+alwaysApply: false
+---
+
+# Security (Excalidraw monorepo)
+
+## Context
+`VITE_*` / `import.meta.env` in shipped code is **public**. Collab (WS), Firebase (`excalidraw-app/data/firebase.ts`), backends (`excalidraw-app/data/index.ts`), encryption (`packages/excalidraw/data/encryption.ts`), root `.env.*` via `excalidraw-app/vite.config.mts` `envDir: "../"` and `scripts/buildPackage.js`. Applies to **agents and humans** in globs; for `examples/**` with network/secrets, same rules manually.
+
+## Scope
+`excalidraw-app/**` (env, collab, sentry), `packages/excalidraw/**` + `env.cjs`, `scripts/**`. Not `alwaysApply`: avoids noise on `docs/`, `packages/math`, etc.
+
+## Rule
+- No real keys, DB passwords, long-lived tokens, or service JSON in git; locals → `.gitignore` paths (`.env.local`, `.env.*.local`). New env vars → type in `excalidraw-app/vite-env.d.ts` and/or `packages/excalidraw/vite-env.d.ts`.
+- No server-only secrets in `VITE_*` or client bundles. Don’t put private backend fields into Firebase client config.
+- URLs: follow existing patterns in `excalidraw-app/data/index.ts` and `excalidraw-app/collab/`.
+- URLs: prefer `import.meta.env` over new hardcoded production hosts.
+- URLs: keep origin/protocol checks unless a task explicitly justifies removal.
+- New fetch endpoints: validate URL with `new URL()` and verify protocol is `https:` (allow `http:` in dev only) before sending requests.
+- CSP: for app/network/security changes, require explicit Content Security Policy review; verify header/meta policy blocks unsafe script execution and limits `connect-src`/`img-src`/`frame-src` to approved origins. If CSP-related behavior changes, note expected header values and checks in `security.mdc`.
+- SVG/XSS: treat user-provided SVG as untrusted input in canvas/import/export paths; do not render unsanitized markup. Strip/deny scripts, event handler attrs, foreignObject/scriptable URLs, and unsafe external references before any DOM/canvas usage.
+- `.excalidraw` / `.excalidrawlib` import safety: enforce JSON/schema validation, reject unknown or malformed structures, and apply recursion depth/file-size/element-count limits before processing imported data.
+- Firebase security: review data access controls beyond client config; any Firebase-touching change must check Firestore and Storage Security Rules are present and restrictive (not only `excalidraw-app/data/firebase.ts` config wiring).
+- Don’t weaken `encryption.ts` / `ENCRYPTION_KEY_BITS` (@excalidraw/common)—AES-GCM, IV, key length. Don’t log full room keys in prod.
+- No new `dangerouslySetInnerHTML` / `innerHTML` from user or network data without strict allowlist/sanitize; no `eval` / dynamic `Function` on untrusted input (except existing isolated areas like `subset/woff2`).
+- New deps: `AGENTS.md` approval; mind postinstall/network for security-relevant libs.
+- **NEVER:** commit `.env*.local` secrets; log full tokens/passwords/keys; `fetch` **any** URL without protocol/origin validation.
+
+## How to verify
+1. `test -f excalidraw-app/vite-env.d.ts && test -f packages/excalidraw/vite-env.d.ts && test -f excalidraw-app/data/firebase.ts && test -f packages/excalidraw/data/encryption.ts && test -f packages/excalidraw/env.cjs && test -f excalidraw-app/collab/Portal.tsx`
+2. Env/type edits: `yarn test:typecheck`
+3. `git diff --name-only` — no new tracked `.env.local` / `.env.*.local`; `git diff | rg -i 'api[_-]?key|secret|password|private[_-]?key|BEGIN (RSA |OPENSSH )?PRIVATE'` — no real creds
+4. New `import.meta.env.*` → matching `vite-env.d.ts` updated (step 2)
+5. Agent: re-read diff for leaked secrets in logs; URLs from env not redundant literals
+6. CSP checks: confirm effective CSP headers/meta for changed app surfaces (script-src/connect-src/img-src/frame-src) and verify no new unsafe allowances; document/verify expected policy in `security.mdc`.
+7. SVG safety checks: run or add sanitizer tests/fuzzing for user-provided SVG render/import/export flows; verify blocked payloads (script/event handlers/foreignObject/javascript: URLs) cannot execute.
+8. Import validation checks: run/add tests for `.excalidraw` / `.excalidrawlib` schema validation, malformed JSON rejection, and recursion/size/element-count limits.
+9. Firebase rules checks: verify Firestore and Storage Security Rules exist and are locked down for the change scope; do not treat `excalidraw-app/data/firebase.ts` client config as sufficient proof.
+10. Crypto touchpoints: for security-sensitive data path changes, cross-check expectations against `packages/excalidraw/data/encryption.ts`.

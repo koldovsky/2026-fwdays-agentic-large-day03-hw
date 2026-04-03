@@ -1,0 +1,48 @@
+---
+description: "Architecture constraints: state, rendering, package deps — for all internal packages"
+globs: "packages/**/*.ts,packages/**/*.tsx"
+alwaysApply: false
+---
+
+# Excalidraw Architecture
+
+## Context
+Monorepo: `common → math → element → excalidraw` + `utils` (standalone) + `excalidraw-app/` (hosted app). Custom action-based state and Canvas 2D rendering — no external state managers, no DOM-based drawing libs.
+
+## Scope
+`packages/**/*.{ts,tsx}` — all TS sources across packages, because dependency-order and import-direction rules span every package, not just `excalidraw`.
+
+## Rule
+
+### State
+- State updates that affect user-facing behavior should prefer `actionManager` (`packages/excalidraw/actions/manager.tsx`); direct/low-level `AppState` mutations are allowed only for internal or performance-critical cases with documented justification
+- Canonical type: `AppState` in `packages/excalidraw/types.ts`
+- NEVER add Redux / Zustand / MobX
+- Jotai atoms: UI signals only (e.g. `isOfflineAtom`), NOT a state-management replacement
+
+### Rendering
+- Canvas 2D on `HTMLCanvasElement` — NOT React DOM
+- Path: `Scene` → `Renderer.getRenderableElements()` (viewport-culled `elementsMap` / `visibleElements`) → App / `StaticCanvas` / `InteractiveCanvas` assemble a scene `renderConfig` (canvas, `rc`, `scale`, `appState` with scrollX/scrollY/zoom and related fields, element maps, nested options such as `imageCache` for file-backed images, theme, grid / collab UI) → `renderStaticScene()` / `renderInteractiveScene()` each receive that full `renderConfig` object (`StaticSceneRenderConfig` / `InteractiveSceneRenderConfig`), not a raw element list → canvas context
+- Key files: `scene/Renderer.ts`, `renderer/staticScene.ts`, `renderer/interactiveScene.ts`
+- NEVER add react-konva / fabric.js / pixi.js
+- NEVER bypass viewport culling (`Renderer.getRenderableElements`)
+
+### Package dependency order (no cycles)
+    common → math → element → excalidraw
+- NEVER import `@excalidraw/excalidraw` from `element`, `math`, or `common`, except for type-only imports (`import type ...` or `import { type ... }` / inline `type` in the named-import list)
+- `utils` may import from `excalidraw` (embedder helper)
+
+### Dependencies
+- No new npm packages without approval
+- Check `packages/utils/` and `packages/common/` first
+
+### Collaboration boundary
+- Collab (rooms, sockets, Firebase) lives in `excalidraw-app/collab/` — NEVER in `packages/excalidraw/`
+
+## How to verify
+**Agent:** repo root. For `rg`, **PASS = zero lines on stdout** (ignore exit code). For `test`, **PASS = exit 0**.
+
+1. `rg "from ['\"](?:redux|zustand|mobx|@reduxjs|react-konva|fabric|pixi)" packages/ -g "*.{ts,tsx}"` → PASS: empty stdout
+2. `rg -P "^\s*import(?!\s+type\b)(?!\s+\{[^}]*\btype\b[^}]*\}).*from\s+['\"]@excalidraw/excalidraw(?:/[^'\"]+)?['\"]" packages/element/ packages/math/ packages/common/ -g "*.{ts,tsx}"` → PASS: empty stdout (flags runtime/value imports only; the module tail is anchored to the closing quote with an optional `/…` subpath so it catches both `from '…@excalidraw/excalidraw'…` and `from '…@excalidraw/excalidraw/<subpath>'…`; re-run this same command to confirm neither root nor subpath runtime imports appear; permits `import type ...` and `import { type ... }` / named-list `type` specifiers)
+3. `test -f packages/excalidraw/actions/manager.tsx && test -f packages/excalidraw/scene/Renderer.ts && test -f packages/excalidraw/types.ts` → PASS: exit 0
+4. If `git diff --name-only HEAD~1 | rg -q package.json` succeeds → re-check **Dependencies** rule on that diff before merge; else skip
