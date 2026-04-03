@@ -33,6 +33,6 @@
 
 - [x] 4.1 Run `yarn test` and `yarn test:typecheck` — all must pass with no new errors.
 - [x] 4.2 Run `yarn test:code` (ESLint) — zero new warnings.
-- [ ] 4.3 Manually verify on a real mobile device or browser DevTools mobile emulation (iPhone SE, Pixel 5): create a text element, confirm it appears within the visible canvas area immediately after committing.
-- [ ] 4.4 Manually verify on desktop (1440 px wide) that text element creation behaviour is unchanged.
-- [ ] 4.5 Verify that editing an existing (desktop-created) text element on mobile does not reposition it.
+- [x] 4.3 Manually verify on a real mobile device or browser DevTools mobile emulation (iPhone SE, Pixel 5): create a text element, confirm it appears within the visible canvas area immediately after committing.
+- [x] 4.4 Manually verify on desktop (1440 px wide) that text element creation behaviour is unchanged.
+- [x] 4.5 Verify that editing an existing (desktop-created) text element on mobile does not reposition it.
