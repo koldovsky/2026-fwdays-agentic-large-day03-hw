@@ -409,6 +409,13 @@ import {
 } from "../snapping";
 import { Renderer } from "../scene/Renderer";
 import {
+  createEdgeScrollState,
+  updateEdgeScrollPointer,
+  startEdgeScroll,
+  stopEdgeScroll,
+  getEdgeScrollDelta,
+} from "../edgeScrolling";
+import {
   setEraserCursor,
   setCursor,
   resetCursor,
@@ -737,6 +744,8 @@ class App extends React.Component<AppProps, AppState> {
     [event: PointerEvent | null]
   >();
   onRemoveEventListenersEmitter = new Emitter<[]>();
+
+  edgeScrollState = createEdgeScrollState();
 
   api: ExcalidrawImperativeAPI;
 
@@ -3166,6 +3175,8 @@ class App extends React.Component<AppProps, AppState> {
         };
       }
     }
+
+    stopEdgeScroll(this.edgeScrollState);
 
     this.editorLifecycleEvents.emit("editor:unmount");
     this.props.onUnmount?.();
@@ -9797,8 +9808,14 @@ class App extends React.Component<AppProps, AppState> {
           this.state.activeEmbeddable?.state !== "active"
         ) {
           const dragOffset = {
-            x: pointerCoords.x - pointerDownState.drag.origin.x,
-            y: pointerCoords.y - pointerDownState.drag.origin.y,
+            x:
+              pointerCoords.x -
+              pointerDownState.drag.origin.x +
+              this.edgeScrollState.scrollDeltaX,
+            y:
+              pointerCoords.y -
+              pointerDownState.drag.origin.y +
+              this.edgeScrollState.scrollDeltaY,
           };
 
           const originalElements = [
@@ -9956,6 +9973,81 @@ class App extends React.Component<AppProps, AppState> {
             // should be removed
             selectionElement: null,
           });
+
+          // Edge scrolling: auto-pan when pointer is near viewport edges
+          {
+            const viewportX = event.clientX - this.state.offsetLeft;
+            const viewportY = event.clientY - this.state.offsetTop;
+            updateEdgeScrollPointer(
+              this.edgeScrollState,
+              viewportX,
+              viewportY,
+            );
+            this.edgeScrollState.lastScenePointerX = pointerCoords.x;
+            this.edgeScrollState.lastScenePointerY = pointerCoords.y;
+            const { dx, dy } = getEdgeScrollDelta(
+              viewportX,
+              viewportY,
+              this.state.width,
+              this.state.height,
+              this.state.zoom.value,
+            );
+            if (dx !== 0 || dy !== 0) {
+              if (!this.edgeScrollState.active) {
+                startEdgeScroll(
+                  this.edgeScrollState,
+                  (scrollDx, scrollDy) => {
+                    this.translateCanvas((prevState) => ({
+                      scrollX: prevState.scrollX - scrollDx,
+                      scrollY: prevState.scrollY - scrollDy,
+                    }));
+                    // Update dragged element positions to follow the pan
+                    const edgeDragOffset = {
+                      x:
+                        this.edgeScrollState.lastScenePointerX -
+                        pointerDownState.drag.origin.x +
+                        this.edgeScrollState.scrollDeltaX,
+                      y:
+                        this.edgeScrollState.lastScenePointerY -
+                        pointerDownState.drag.origin.y +
+                        this.edgeScrollState.scrollDeltaY,
+                    };
+                    const edgeSelectedElements =
+                      this.scene.getSelectedElements({
+                        selectedElementIds: this.state.selectedElementIds,
+                        includeBoundTextElement: true,
+                      });
+                    if (
+                      edgeSelectedElements.length > 0 &&
+                      !this.state.editingFrame
+                    ) {
+                      // Note: snap offset and shift-axis lock are not applied
+                      // during the RAF auto-pan tick because they depend on
+                      // the pointer event (event.shiftKey, snap caching) which
+                      // is unavailable here. The next pointermove will re-apply
+                      // the full constrained-drag pipeline. Grid snapping is
+                      // applied to keep elements aligned during auto-pan.
+                      dragSelectedElements(
+                        pointerDownState,
+                        edgeSelectedElements,
+                        edgeDragOffset,
+                        this.scene,
+                        { x: 0, y: 0 },
+                        this.getEffectiveGridSize(),
+                      );
+                    }
+                  },
+                  () => ({
+                    width: this.state.width,
+                    height: this.state.height,
+                    zoom: this.state.zoom.value,
+                  }),
+                );
+              }
+            } else {
+              stopEdgeScroll(this.edgeScrollState);
+            }
+          }
 
           // We duplicate the selected element if alt is pressed on pointer move
           if (event.altKey && !pointerDownState.hit.hasBeenDuplicated) {
@@ -10453,6 +10545,8 @@ class App extends React.Component<AppProps, AppState> {
       if (getFeatureFlag("COMPLEX_BINDINGS")) {
         this.resetDelayedBindMode();
       }
+
+      stopEdgeScroll(this.edgeScrollState);
 
       this.setState({
         selectedElementsAreBeingDragged: false,
