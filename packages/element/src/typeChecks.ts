@@ -184,6 +184,8 @@ export const isBindableElement = (
     (element.type === "rectangle" ||
       element.type === "diamond" ||
       element.type === "ellipse" ||
+      element.type === "triangle" ||
+      element.type === "triangle_outline" ||
       element.type === "image" ||
       element.type === "iframe" ||
       element.type === "embeddable" ||
@@ -255,6 +257,8 @@ export const isExcalidrawElement = (
     case "iframe":
     case "embeddable":
     case "ellipse":
+    case "triangle":
+    case "triangle_outline":
     case "arrow":
     case "freedraw":
     case "line":

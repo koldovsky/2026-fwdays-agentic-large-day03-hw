@@ -34,7 +34,10 @@ import {
   type LocalPoint,
 } from "@excalidraw/math";
 
-import { getElementAbsoluteCoords } from "@excalidraw/element";
+import {
+  getElementAbsoluteCoords,
+  getTrianglePoints,
+} from "@excalidraw/element";
 
 import type {
   ElementsMap,
@@ -51,6 +54,8 @@ import type {
   ExcalidrawRectangleElement,
   ExcalidrawSelectionElement,
   ExcalidrawTextElement,
+  ExcalidrawTriangleElement,
+  ExcalidrawTriangleOutlineElement,
 } from "@excalidraw/element/types";
 import type { Curve, LineSegment, Polygon, Radians } from "@excalidraw/math";
 
@@ -105,6 +110,8 @@ export type GeometricShape<Point extends GlobalPoint | LocalPoint> =
 type RectangularElement =
   | ExcalidrawRectangleElement
   | ExcalidrawDiamondElement
+  | ExcalidrawTriangleElement
+  | ExcalidrawTriangleOutlineElement
   | ExcalidrawFrameLikeElement
   | ExcalidrawEmbeddableElement
   | ExcalidrawImageElement
@@ -132,6 +139,19 @@ export const getPolygonShape = <Point extends GlobalPoint | LocalPoint>(
       pointRotateRads(pointFrom(cx, y + height), center, angle),
       pointRotateRads(pointFrom(x, cy), center, angle),
     );
+  } else if (
+    element.type === "triangle" ||
+    element.type === "triangle_outline"
+  ) {
+    const [tx, ty, rx, ry, lx, ly] = getTrianglePoints(element);
+    const top = pointFrom(x + tx, y + ty);
+    const br = pointFrom(x + rx, y + ry);
+    const bl = pointFrom(x + lx, y + ly);
+    data = polygon(
+      pointRotateRads(top, center, angle),
+      pointRotateRads(br, center, angle),
+      pointRotateRads(bl, center, angle),
+    ) as typeof data;
   } else {
     data = polygon(
       pointRotateRads(pointFrom(x, y), center, angle),

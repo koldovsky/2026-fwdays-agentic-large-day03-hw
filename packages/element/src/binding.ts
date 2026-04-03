@@ -14,6 +14,7 @@ import {
   pointFrom,
   pointFromVector,
   pointRotateRads,
+  pointTranslate,
   pointsEqual,
   vectorFromPoint,
   vectorNormalize,
@@ -55,7 +56,11 @@ import {
   isTextElement,
 } from "./typeChecks";
 
-import { aabbForElement, elementCenterPoint } from "./bounds";
+import {
+  aabbForElement,
+  elementCenterPoint,
+  getTrianglePoints,
+} from "./bounds";
 import { updateElbowArrowPoints } from "./elbowArrow";
 import {
   deconstructDiamondElement,
@@ -1660,6 +1665,26 @@ export const snapToMid = (
       center,
       angle,
     );
+  } else if (
+    bindTarget.type === "triangle" ||
+    bindTarget.type === "triangle_outline"
+  ) {
+    const [tx, ty, rx, ry, lx, ly] = getTrianglePoints(bindTarget);
+    const top = pointFrom<GlobalPoint>(bindTarget.x + tx, bindTarget.y + ty);
+    const br = pointFrom<GlobalPoint>(bindTarget.x + rx, bindTarget.y + ry);
+    const bl = pointFrom<GlobalPoint>(bindTarget.x + lx, bindTarget.y + ly);
+    const verts = [top, br, bl];
+    const th = Math.max(horizontalThreshold, verticalThreshold);
+    for (const v of verts) {
+      if (pointDistance(v, nonRotated) < th) {
+        const out = vectorNormalize(vectorFromPoint(center, v));
+        return pointRotateRads(
+          pointTranslate(v, vectorScale(out, bindingGap)) as GlobalPoint,
+          center,
+          angle,
+        );
+      }
+    }
   } else if (bindTarget.type === "diamond") {
     const distance = bindingGap;
     const topLeft = pointFrom<GlobalPoint>(
@@ -2517,10 +2542,13 @@ type Side =
   | "bottom-left"
   | "left"
   | "top-left";
-type ShapeType = "rectangle" | "ellipse" | "diamond";
+type ShapeType = "rectangle" | "ellipse" | "diamond" | "triangle";
 const getShapeType = (element: ExcalidrawBindableElement): ShapeType => {
   if (element.type === "ellipse" || element.type === "diamond") {
     return element.type;
+  }
+  if (element.type === "triangle" || element.type === "triangle_outline") {
+    return "triangle";
   }
   return "rectangle";
 };
@@ -2569,6 +2597,14 @@ const SHAPE_CONFIGS: Record<ShapeType, SectorConfig[]> = {
     { centerAngle: 225, sectorWidth: 75, side: "top-left" },
     { centerAngle: 270, sectorWidth: 15, side: "top" },
     { centerAngle: 315, sectorWidth: 75, side: "top-right" },
+  ],
+
+  // up-pointing triangle in bbox: apex top, base bottom
+  triangle: [
+    { centerAngle: 90, sectorWidth: 55, side: "top" },
+    { centerAngle: 270, sectorWidth: 55, side: "bottom" },
+    { centerAngle: 200, sectorWidth: 55, side: "left" },
+    { centerAngle: 340, sectorWidth: 55, side: "right" },
   ],
 };
 
@@ -2828,6 +2864,82 @@ export const getBindingSideMidPoint = (
     }
 
     return pointRotateRads(pointFrom(x, y), center, bindableElement.angle);
+  }
+
+  if (
+    bindableElement.type === "triangle" ||
+    bindableElement.type === "triangle_outline"
+  ) {
+    const { x, y } = bindableElement;
+    const [tx, ty, rx, ry, lx, ly] = getTrianglePoints(bindableElement);
+    const top = pointFrom<GlobalPoint>(x + tx, y + ty);
+    const br = pointFrom<GlobalPoint>(x + rx, y + ry);
+    const bl = pointFrom<GlobalPoint>(x + lx, y + ly);
+    const baseMid = getMidPoint(bl, br);
+    const centroidTri = pointFrom<GlobalPoint>(
+      (top[0] + br[0] + bl[0]) / 3,
+      (top[1] + br[1] + bl[1]) / 3,
+    );
+    const apexOut = vectorNormalize(vectorFromPoint(centroidTri, top));
+
+    let gx: number;
+    let gy: number;
+    switch (side) {
+      case "top": {
+        gx = top[0] + apexOut[0] * OFFSET;
+        gy = top[1] + apexOut[1] * OFFSET;
+        break;
+      }
+      case "bottom": {
+        const outward = vectorScale(apexOut, -OFFSET);
+        gx = baseMid[0] + outward[0];
+        gy = baseMid[1] + outward[1];
+        break;
+      }
+      case "left": {
+        const mid = getMidPoint(bl, top);
+        const n = vectorNormalize(vectorFromPoint(mid as GlobalPoint, br));
+        const o = vectorScale(n, OFFSET);
+        gx = mid[0] + o[0];
+        gy = mid[1] + o[1];
+        break;
+      }
+      case "right": {
+        const mid = getMidPoint(top, br);
+        const n = vectorNormalize(vectorFromPoint(mid as GlobalPoint, bl));
+        const o = vectorScale(n, OFFSET);
+        gx = mid[0] + o[0];
+        gy = mid[1] + o[1];
+        break;
+      }
+      case "bottom-left": {
+        const mid = getMidPoint(bl, top);
+        const n = vectorNormalize(vectorFromPoint(mid as GlobalPoint, br));
+        const o = vectorScale(n, OFFSET * 0.707);
+        gx = mid[0] + o[0];
+        gy = mid[1] + o[1];
+        break;
+      }
+      case "bottom-right": {
+        const mid = getMidPoint(top, br);
+        const n = vectorNormalize(vectorFromPoint(mid as GlobalPoint, bl));
+        const o = vectorScale(n, OFFSET * 0.707);
+        gx = mid[0] + o[0];
+        gy = mid[1] + o[1];
+        break;
+      }
+      case "top-left":
+      case "top-right": {
+        gx = top[0] + apexOut[0] * OFFSET * 0.707;
+        gy = top[1] + apexOut[1] * OFFSET * 0.707;
+        break;
+      }
+      default: {
+        return null;
+      }
+    }
+
+    return pointRotateRads(pointFrom(gx, gy), center, bindableElement.angle);
   }
 
   if (isRectangularElement(bindableElement)) {

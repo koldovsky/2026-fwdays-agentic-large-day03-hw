@@ -7,6 +7,8 @@ import {
   updateElbowArrowPoints,
 } from "@excalidraw/element";
 
+import { isTransparent } from "@excalidraw/common";
+
 import { pointFrom, pointRotateRads, type LocalPoint } from "@excalidraw/math";
 
 import {
@@ -70,6 +72,8 @@ import type {
   ExcalidrawSelectionElement,
   ExcalidrawTextContainer,
   ExcalidrawTextElementWithContainer,
+  ExcalidrawTriangleElement,
+  ExcalidrawTriangleOutlineElement,
   FixedSegment,
 } from "@excalidraw/element/types";
 
@@ -88,6 +92,7 @@ import {
   RectangleIcon,
   roundArrowIcon,
   sharpArrowIcon,
+  TriangleIcon,
 } from "./icons";
 
 import type App from "./App";
@@ -101,10 +106,12 @@ type ExcalidrawConvertibleElement =
   | ExcalidrawRectangleElement
   | ExcalidrawDiamondElement
   | ExcalidrawEllipseElement
+  | ExcalidrawTriangleElement
+  | ExcalidrawTriangleOutlineElement
   | ExcalidrawLinearElement;
 
 // indicates order of switching
-const GENERIC_TYPES = ["rectangle", "diamond", "ellipse"] as const;
+const GENERIC_TYPES = ["rectangle", "diamond", "ellipse", "triangle"] as const;
 // indicates order of switching
 const LINEAR_TYPES = [
   "line",
@@ -113,9 +120,13 @@ const LINEAR_TYPES = [
   "elbowArrow",
 ] as const;
 
-const CONVERTIBLE_GENERIC_TYPES: ReadonlySet<ConvertibleGenericTypes> = new Set(
-  GENERIC_TYPES,
-);
+const CONVERTIBLE_GENERIC_TYPES: ReadonlySet<ConvertibleGenericTypes> =
+  new Set<ConvertibleGenericTypes>([...GENERIC_TYPES, "triangle_outline"]);
+
+const GENERIC_ELEMENT_TYPES = new Set<string>([
+  ...GENERIC_TYPES,
+  "triangle_outline",
+]);
 
 const CONVERTIBLE_LINEAR_TYPES: ReadonlySet<ConvertibleLinearTypes> = new Set(
   LINEAR_TYPES,
@@ -125,6 +136,9 @@ const isConvertibleGenericType = (
   elementType: string,
 ): elementType is ConvertibleGenericTypes =>
   CONVERTIBLE_GENERIC_TYPES.has(elementType as ConvertibleGenericTypes);
+
+const isGenericShapeElementType = (elementType: string) =>
+  GENERIC_ELEMENT_TYPES.has(elementType);
 
 const isConvertibleLinearType = (
   elementType: string,
@@ -303,6 +317,7 @@ const Panel = ({
           ["rectangle", RectangleIcon],
           ["diamond", DiamondIcon],
           ["ellipse", EllipseIcon],
+          ["triangle", TriangleIcon],
         ]
       : [];
 
@@ -325,7 +340,10 @@ const Panel = ({
       {SHAPES.map(([type, icon]) => {
         const isSelected =
           sameType &&
-          ((conversionType === "generic" && genericElements[0].type === type) ||
+          ((conversionType === "generic" &&
+            (genericElements[0].type === type ||
+              (type === "triangle" &&
+                genericElements[0].type === "triangle_outline"))) ||
             (conversionType === "linear" &&
               getLinearElementSubType(linearElements[0]) === type));
 
@@ -441,8 +459,15 @@ export const convertElementTypes = (
       (element) => element.type === convertibleGenericElements[0].type,
     );
 
+    const cycleKey = (t: ExcalidrawElement["type"]) =>
+      t === "triangle_outline" ? "triangle" : t;
+
     const index = sameType
-      ? GENERIC_TYPES.indexOf(convertibleGenericElements[0].type)
+      ? GENERIC_TYPES.indexOf(
+          cycleKey(
+            convertibleGenericElements[0].type,
+          ) as typeof GENERIC_TYPES[number],
+        )
       : -1;
 
     nextType =
@@ -668,10 +693,14 @@ const toCacheKey = (
 };
 
 const filterGenericConvetibleElements = (elements: ExcalidrawElement[]) =>
-  elements.filter((element) => isConvertibleGenericType(element.type)) as Array<
+  elements.filter((element) =>
+    isGenericShapeElementType(element.type),
+  ) as Array<
     | ExcalidrawRectangleElement
     | ExcalidrawDiamondElement
     | ExcalidrawEllipseElement
+    | ExcalidrawTriangleElement
+    | ExcalidrawTriangleOutlineElement
   >;
 
 const filterLinearConvertibleElements = (elements: ExcalidrawElement[]) =>
@@ -820,24 +849,46 @@ const convertElementType = <
     return element;
   }
 
-  if (element.type === targetType) {
+  if (targetType === "triangle") {
+    const desiredTriangleType = isTransparent(element.backgroundColor)
+      ? "triangle_outline"
+      : "triangle";
+    if (element.type === desiredTriangleType) {
+      return element;
+    }
+  } else if (targetType === "triangle_outline") {
+    if (element.type === "triangle_outline") {
+      return element;
+    }
+  } else if (element.type === targetType) {
     return element;
   }
 
   ShapeCache.delete(element);
 
   if (isConvertibleGenericType(targetType)) {
+    const resolvedType =
+      targetType === "triangle"
+        ? isTransparent(element.backgroundColor)
+          ? "triangle_outline"
+          : "triangle"
+        : targetType === "triangle_outline"
+        ? "triangle_outline"
+        : targetType;
+
     const nextElement = bumpVersion(
       newElement({
         ...element,
-        type: targetType,
+        type: resolvedType,
         roundness:
-          targetType === "diamond" && element.roundness
+          resolvedType === "diamond" && element.roundness
             ? {
-                type: isUsingAdaptiveRadius(targetType)
+                type: isUsingAdaptiveRadius(resolvedType)
                   ? ROUNDNESS.ADAPTIVE_RADIUS
                   : ROUNDNESS.PROPORTIONAL_RADIUS,
               }
+            : resolvedType === "triangle" || resolvedType === "triangle_outline"
+            ? null
             : element.roundness,
       }),
     ) as typeof element;
@@ -907,8 +958,9 @@ const isValidConversion = (
   targetType: ConvertibleTypes,
 ): startType is ConvertibleTypes => {
   if (
-    isConvertibleGenericType(startType) &&
-    isConvertibleGenericType(targetType)
+    isGenericShapeElementType(startType) &&
+    (isConvertibleGenericType(targetType) ||
+      isGenericShapeElementType(targetType))
   ) {
     return true;
   }

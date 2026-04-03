@@ -537,6 +537,18 @@ export const getDiamondPoints = (element: ExcalidrawElement) => {
   return [topX, topY, rightX, rightY, bottomX, bottomY, leftX, leftY];
 };
 
+/** Up-pointing triangle in element-local coords (same +1 tweak as diamond). */
+export const getTrianglePoints = (element: ExcalidrawElement) => {
+  const topX = Math.floor(element.width / 2) + 1;
+  const topY = 0;
+  const rightX = element.width;
+  const rightY = element.height;
+  const leftX = 0;
+  const leftY = element.height;
+
+  return [topX, topY, rightX, rightY, leftX, leftY];
+};
+
 // reference: https://eliot-jones.com/2019/12/cubic-bezier-curve-bounding-boxes
 const getBezierValueForT = (
   t: number,

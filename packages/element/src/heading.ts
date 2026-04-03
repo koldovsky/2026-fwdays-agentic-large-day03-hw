@@ -6,6 +6,8 @@ import {
 } from "@excalidraw/common";
 
 import {
+  distanceToLineSegment,
+  lineSegment,
   pointFrom,
   pointFromVector,
   pointRotateRads,
@@ -24,7 +26,7 @@ import type {
   Vector,
 } from "@excalidraw/math";
 
-import { getCenterForBounds } from "./bounds";
+import { getCenterForBounds, getTrianglePoints } from "./bounds";
 
 import type { ExcalidrawBindableElement } from "./types";
 
@@ -225,6 +227,58 @@ const headingForPointFromDiamondElement = (
   return headingForPoint(p, midPoint);
 };
 
+const headingForPointFromTriangleElement = <Point extends GlobalPoint>(
+  element: Readonly<ExcalidrawBindableElement>,
+  _aabb: Readonly<Bounds>,
+  point: Readonly<Point>,
+): Heading => {
+  const cx = element.x + element.width / 2;
+  const cy = element.y + element.height / 2;
+  const center = pointFrom<GlobalPoint>(cx, cy);
+  const [tx, ty, rx, ry, lx, ly] = getTrianglePoints(element);
+  const top = pointRotateRads(
+    pointFrom<GlobalPoint>(element.x + tx, element.y + ty),
+    center,
+    element.angle,
+  );
+  const br = pointRotateRads(
+    pointFrom<GlobalPoint>(element.x + rx, element.y + ry),
+    center,
+    element.angle,
+  );
+  const bl = pointRotateRads(
+    pointFrom<GlobalPoint>(element.x + lx, element.y + ly),
+    center,
+    element.angle,
+  );
+  const centroid = pointFrom<Point>(
+    (top[0] + br[0] + bl[0]) / 3,
+    (top[1] + br[1] + bl[1]) / 3,
+  );
+  const s0 = lineSegment(top, br);
+  const s1 = lineSegment(br, bl);
+  const s2 = lineSegment(bl, top);
+  const d0 = distanceToLineSegment(point, s0);
+  const d1 = distanceToLineSegment(point, s1);
+  const d2 = distanceToLineSegment(point, s2);
+  if (d0 <= d1 && d0 <= d2) {
+    return headingForPoint(
+      pointFrom((top[0] + br[0]) / 2, (top[1] + br[1]) / 2),
+      centroid,
+    );
+  }
+  if (d1 <= d2) {
+    return headingForPoint(
+      pointFrom((br[0] + bl[0]) / 2, (br[1] + bl[1]) / 2),
+      centroid,
+    );
+  }
+  return headingForPoint(
+    pointFrom((bl[0] + top[0]) / 2, (bl[1] + top[1]) / 2),
+    centroid,
+  );
+};
+
 // Gets the heading for the point by creating a bounding box around the rotated
 // close fitting bounding box, then creating 4 search cones around the center of
 // the external bbox.
@@ -239,6 +293,10 @@ export const headingForPointFromElement = <Point extends GlobalPoint>(
 
   if (element.type === "diamond") {
     return headingForPointFromDiamondElement(element, aabb, p);
+  }
+
+  if (element.type === "triangle" || element.type === "triangle_outline") {
+    return headingForPointFromTriangleElement(element, aabb, p);
   }
 
   const topLeft = pointScaleFromOrigin(
