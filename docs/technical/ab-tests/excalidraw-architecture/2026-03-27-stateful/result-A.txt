@@ -1,0 +1,74 @@
+## Understanding
+You want a small React component that tracks the currently selected shape on the canvas and displays its x, y, width, and height, updating whenever the selection changes.
+
+## Approach
+Keep it simple with local React state:
+
+1. Get an `excalidrawAPI` ref from `<Excalidraw onExcalidrawAPI={(api) => ...} />`.
+2. Whenever the scene changes, read `api.getAppState().selectedElementIds` and `api.getSceneElements()`.
+3. Find selected non-deleted elements; if exactly one is selected, use its `x`, `y`, `width`, `height`. If multiple are selected, you can show the axis-aligned bounding box using `getCommonBounds` from `@excalidraw/element`.
+4. Store `{ x, y, width, height } | null` in `useState` and update it from `api.onChange` (or from Excalidraw’s `onChange` prop if you already use it).
+
+### Example (sketch)
+
+```tsx
+import { useCallback, useState } from "react";
+import { Excalidraw } from "@excalidraw/excalidraw";
+import { getCommonBounds } from "@excalidraw/element";
+
+export function SelectedElementCoordinatesPanel() {
+  const [rect, setRect] = useState<{
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
+  const recompute = useCallback((api: ExcalidrawImperativeAPI) => {
+    const appState = api.getAppState();
+    const selected = api
+      .getSceneElements()
+      .filter((el) => !el.isDeleted && appState.selectedElementIds[el.id]);
+
+    if (selected.length === 0) {
+      setRect(null);
+      return;
+    }
+    if (selected.length === 1) {
+      const e = selected[0];
+      setRect({ x: e.x, y: e.y, width: e.width, height: e.height });
+      return;
+    }
+    const [x1, y1, x2, y2] = getCommonBounds(selected);
+    setRect({ x: x1, y: y1, width: x2 - x1, height: y2 - y1 });
+  }, []);
+
+  return (
+    <>
+      <Excalidraw
+        onExcalidrawAPI={(api) => recompute(api)}
+        onChange={() => {
+          /* capture api via ref in parent */
+        }}
+      />
+      {rect && (
+        <dl>
+          <dt>x</dt><dd>{rect.x}</dd>
+          <dt>y</dt><dd>{rect.y}</dd>
+          <dt>width</dt><dd>{rect.width}</dd>
+          <dt>height</dt><dd>{rect.height}</dd>
+        </dl>
+      )}
+    </>
+  );
+}
+```
+
+Wire `onChange`/`onExcalidrawAPI` so `recompute` runs whenever elements or selection change (store `api` in a ref).
+
+## File names
+- Component: `SelectedElementCoordinatesPanel.tsx` (or `SelectionBoundsReadout.tsx`)
+- Test: `SelectedElementCoordinatesPanel.test.tsx`
+
+## Notes
+- If you need live updates while dragging, ensure your update path runs on the same callbacks Excalidraw fires during interaction (usually `onChange`).

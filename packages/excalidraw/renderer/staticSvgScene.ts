@@ -22,10 +22,13 @@ import { LinearElementEditor } from "@excalidraw/element";
 import { getBoundTextElement, getContainerElement } from "@excalidraw/element";
 import { getLineHeightInPx } from "@excalidraw/element";
 import {
+  getTextHyperlinkRenderState,
+  getTextHyperlinkUrl,
   isArrowElement,
   isIframeLikeElement,
   isInitializedImageElement,
   isTextElement,
+  TEXT_HYPERLINK_COLOR,
 } from "@excalidraw/element";
 
 import { getContainingFrame } from "@excalidraw/element";
@@ -645,7 +648,8 @@ const renderElementToSvg = (
             offsetY || 0
           }) rotate(${degree} ${cx} ${cy})`,
         );
-        const lines = element.text.replace(/\r\n?/g, "\n").split("\n");
+        const { lines, styleAsHyperlink } =
+          getTextHyperlinkRenderState(element);
         const lineHeightPx = getLineHeightInPx(
           element.fontSize,
           element.lineHeight,
@@ -661,13 +665,36 @@ const renderElementToSvg = (
           element.fontSize,
           lineHeightPx,
         );
-        const direction = isRTL(element.text) ? "rtl" : "ltr";
+        const rtlSource = styleAsHyperlink
+          ? lines.join("\n")
+          : element.text;
+        const direction = isRTL(rtlSource) ? "rtl" : "ltr";
         const textAnchor =
           element.textAlign === "center"
             ? "middle"
             : element.textAlign === "right" || direction === "rtl"
             ? "end"
             : "start";
+        const fillColor = styleAsHyperlink
+          ? renderConfig.theme === THEME.DARK
+            ? applyDarkModeFilter(TEXT_HYPERLINK_COLOR)
+            : TEXT_HYPERLINK_COLOR
+          : renderConfig.theme === THEME.DARK
+          ? applyDarkModeFilter(element.strokeColor)
+          : element.strokeColor;
+
+        const hyperlinkUrl = getTextHyperlinkUrl(element);
+        let lineContainer: SVGElement = node;
+        // `element.link` already wraps the whole node in an outer `<a>` above.
+        if (hyperlinkUrl && !element.link) {
+          const anchor = svgRoot.ownerDocument.createElementNS(SVG_NS, "a");
+          anchor.setAttribute("href", normalizeLink(hyperlinkUrl));
+          anchor.setAttribute("target", "_blank");
+          anchor.setAttribute("rel", "noopener noreferrer");
+          node.appendChild(anchor);
+          lineContainer = anchor;
+        }
+
         for (let i = 0; i < lines.length; i++) {
           const text = svgRoot.ownerDocument.createElementNS(SVG_NS, "text");
           text.textContent = lines[i];
@@ -675,17 +702,15 @@ const renderElementToSvg = (
           text.setAttribute("y", `${i * lineHeightPx + verticalOffset}`);
           text.setAttribute("font-family", getFontFamilyString(element));
           text.setAttribute("font-size", `${element.fontSize}px`);
-          text.setAttribute(
-            "fill",
-            renderConfig.theme === THEME.DARK
-              ? applyDarkModeFilter(element.strokeColor)
-              : element.strokeColor,
-          );
+          text.setAttribute("fill", fillColor);
+          if (styleAsHyperlink) {
+            text.setAttribute("text-decoration", "underline");
+          }
           text.setAttribute("text-anchor", textAnchor);
           text.setAttribute("style", "white-space: pre;");
           text.setAttribute("direction", direction);
           text.setAttribute("dominant-baseline", "alphabetic");
-          node.appendChild(text);
+          lineContainer.appendChild(text);
         }
 
         const g = maybeWrapNodesInFrameClipPath(

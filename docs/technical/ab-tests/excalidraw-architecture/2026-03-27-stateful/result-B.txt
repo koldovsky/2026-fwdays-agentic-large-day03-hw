@@ -1,0 +1,62 @@
+## Understanding
+You want a React component inside the Excalidraw editor that shows x, y, width, and height for the current selection, and re-renders when selection changes—without inventing a parallel global store.
+
+## Findings (Excalidraw architecture)
+- Editor state lives in `AppState` (`packages/excalidraw/types.ts`). Selection is `appState.selectedElementIds`.
+- Do **not** add Redux/Zustand/MobX for editor state; mutations elsewhere should go through `actionManager.dispatch()`. For a read-only coordinates display you only need to **subscribe** to app state and read the scene via the imperative API.
+- Prefer existing hooks: `useAppStateValue("selectedElementIds")` (from `packages/excalidraw/hooks/useAppStateValue.ts`) plus `useExcalidrawAPI()` so you re-render when selection changes but not on every unrelated `appState` field.
+- Derive geometry from `api.getSceneElements()` (or scene APIs if you are inside `Stats`-style code). For one selected element use `element.x/y/width/height`; for several, use `getCommonBounds` from `@excalidraw/element`.
+- Do not add new npm dependencies for this.
+
+## Plan
+1. Add a thin wrapper component colocated under `components/Stats/` next to other readouts.
+2. `useAppStateValue("selectedElementIds")` → compute bounds → render a presentational fragment or reuse a small `ElementCoordinates` display.
+3. Test with `ExcalidrawAPIContext.Provider` + `AppStateObserver` mock (same pattern as `packages/excalidraw/tests/appStateHooks.test.tsx`).
+
+## Suggested implementation sketch
+
+```tsx
+import { getCommonBounds } from "@excalidraw/element";
+import { useMemo } from "react";
+import { useExcalidrawAPI } from "../App";
+import { useAppStateValue } from "../../hooks/useAppStateValue";
+
+export const SelectedElementCoordinates = () => {
+  const api = useExcalidrawAPI();
+  const selectedElementIds = useAppStateValue("selectedElementIds");
+
+  const coords = useMemo(() => {
+    if (!api || api.isDestroyed) return null;
+    const selected = api
+      .getSceneElements()
+      .filter((el) => !el.isDeleted && selectedElementIds[el.id]);
+    if (selected.length === 0) return null;
+    if (selected.length === 1) {
+      const e = selected[0];
+      return { x: e.x, y: e.y, width: e.width, height: e.height };
+    }
+    const [x1, y1, x2, y2] = getCommonBounds(selected);
+    return { x: x1, y: y1, width: x2 - x1, height: y2 - y1 };
+  }, [api, selectedElementIds]);
+
+  if (!coords) return null;
+  return (
+    <dl data-testid="selected-element-coordinates">
+      <dt>x</dt><dd>{coords.x}</dd>
+      <dt>y</dt><dd>{coords.y}</dd>
+      <dt>width</dt><dd>{coords.width}</dd>
+      <dt>height</dt><dd>{coords.height}</dd>
+    </dl>
+  );
+};
+```
+
+If you later need to **change** selection or element geometry from UI controls, route those edits through actions / `actionManager.dispatch(...)`—never a side store.
+
+## Suggested file names
+- Component: `packages/excalidraw/components/Stats/SelectedElementCoordinates.tsx`
+- Test: `packages/excalidraw/components/Stats/SelectedElementCoordinates.test.tsx`
+
+## Validation
+- Unit test: render inside `ExcalidrawAPIContext.Provider` with a mocked API + `AppStateObserver`, update `selectedElementIds`, assert the four numbers update.
+- No new packages; typecheck with strict TS.

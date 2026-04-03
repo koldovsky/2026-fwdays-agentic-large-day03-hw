@@ -1,0 +1,4 @@
+We confirmed that snapshot update logic is a hidden state machine and that clipboard handling has same-tick timing constraints.
+
+Update our understanding and explain how project docs should change.
+Do not change code.

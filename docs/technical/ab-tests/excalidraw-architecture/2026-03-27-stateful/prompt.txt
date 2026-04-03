@@ -1,0 +1,8 @@
+Add state management for selected element coordinates in a React component.
+
+Requirements:
+- the component should update whenever selection changes
+- show x, y, width, and height
+- keep the implementation simple
+- suggest the file name
+- suggest the test file name

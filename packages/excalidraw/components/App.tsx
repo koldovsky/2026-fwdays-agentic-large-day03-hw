@@ -156,6 +156,7 @@ import {
   isFlowchartNodeElement,
   isBindableElement,
   isTextElement,
+  getTextHyperlinkUrl,
   getNormalizedDimensions,
   isElementCompletelyInViewport,
   isElementInViewport,
@@ -420,6 +421,7 @@ import { withBatchedUpdates, withBatchedUpdatesThrottled } from "../reactUtils";
 import { isPointHittingTextAutoResizeHandle } from "../textAutoResizeHandle";
 import { textWysiwyg } from "../wysiwyg/textWysiwyg";
 import { isOverScrollBars } from "../scene/scrollbars";
+import { parseMarkdownLink } from "../utils/markdownLink";
 
 import { isMaybeMermaidDefinition } from "../mermaid";
 
@@ -5677,12 +5679,16 @@ class App extends React.Component<AppProps, AppState> {
   ) {
     const elementsMap = this.scene.getElementsMapIncludingDeleted();
 
-    const updateElement = (nextOriginalText: string, isDeleted: boolean) => {
+    const updateElement = (
+      nextOriginalText: string,
+      isDeleted: boolean,
+      linkFromMarkdown?: string,
+    ) => {
       this.scene.replaceAllElements([
         // Not sure why we include deleted elements as well hence using deleted elements map
         ...this.scene.getElementsIncludingDeleted().map((_element) => {
           if (_element.id === element.id && isTextElement(_element)) {
-            return newElementWith(_element, {
+            const updates = {
               originalText: nextOriginalText,
               isDeleted: isDeleted ?? _element.isDeleted,
               // returns (wrapped) text and new dimensions
@@ -5692,7 +5698,11 @@ class App extends React.Component<AppProps, AppState> {
                 elementsMap,
                 nextOriginalText,
               ),
-            });
+              ...(linkFromMarkdown !== undefined
+                ? { link: linkFromMarkdown }
+                : {}),
+            };
+            return newElementWith(_element, updates);
           }
           return _element;
         }),
@@ -5722,8 +5732,21 @@ class App extends React.Component<AppProps, AppState> {
         }
       }),
       onSubmit: withBatchedUpdates(({ viaKeyboard, nextOriginalText }) => {
-        const isDeleted = !nextOriginalText.trim();
-        updateElement(nextOriginalText, isDeleted);
+        const parsedLink = parseMarkdownLink(nextOriginalText);
+        const resolvedText = parsedLink ? parsedLink.label : nextOriginalText;
+        const isDeleted = !resolvedText.trim();
+        updateElement(
+          resolvedText,
+          isDeleted,
+          parsedLink ? parsedLink.url : undefined,
+        );
+
+        if (parsedLink) {
+          this.setToast({
+            message: t("toast.markdownLinkDetected"),
+            closable: true,
+          });
+        }
 
         // keyboard-submit keeps focus on the edited object. For bound text, keep
         // the container selected even if the text becomes empty and is deleted.
@@ -6585,7 +6608,6 @@ class App extends React.Component<AppProps, AppState> {
         hitElementIndex = index;
       }
       if (
-        element.link &&
         index >= hitElementIndex &&
         isPointHittingLink(
           element,
@@ -6641,7 +6663,9 @@ class App extends React.Component<AppProps, AppState> {
     );
     if (lastPointerDownHittingLinkIcon && lastPointerUpHittingLinkIcon) {
       hideHyperlinkToolip();
-      let url = this.hitLinkElement.link;
+      let url = isTextElement(this.hitLinkElement)
+        ? getTextHyperlinkUrl(this.hitLinkElement)
+        : this.hitLinkElement.link;
       if (url) {
         url = normalizeLink(url);
         let customEvent;

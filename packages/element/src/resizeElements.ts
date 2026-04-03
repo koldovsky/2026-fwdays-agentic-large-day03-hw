@@ -41,6 +41,7 @@ import {
   getBoundTextMaxWidth,
   computeBoundTextPosition,
 } from "./textElement";
+import { getPlainTextForMeasurement } from "./textHyperlink";
 import {
   getMinTextElementWidth,
   measureText,
@@ -367,7 +368,7 @@ export const resizeSingleTextElement = (
       Math.abs(newWidth),
     );
     const metrics = measureText(
-      text,
+      getPlainTextForMeasurement(element, text),
       getFontString(element),
       element.lineHeight,
     );

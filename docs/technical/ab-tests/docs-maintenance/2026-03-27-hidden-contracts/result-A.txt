@@ -1,0 +1,29 @@
+## Response (rule OFF — `docs-maintenance.mdc` disabled)
+
+You’ve established two important behavioral facts: **CaptureUpdateAction / snapshot updates** behave like a small state machine (not a single on/off flag), and **clipboard paste** is sensitive to **same-tick / same-frame** timing in the browser.
+
+### How understanding should evolve
+
+- Treat snapshot-related changes as **high-risk refactors**: undo/redo, collaboration diffs, and store scheduling can all depend on the current semantics.
+- Treat clipboard work as **event-order sensitive**: deferring work to the next macrotask can invalidate assumptions about clipboard APIs.
+
+### How project docs should change (general guidance)
+
+1. **Architecture / technical overview**  
+   Add or extend a section in the main architecture document (or a dedicated “Store & history” page) summarizing:
+   - that capture modes are **not equivalent** to “record this update vs skip”
+   - that paste must stay on the “hot path” of the user gesture when reading clipboard data
+
+2. **Contributor / refactor notes**  
+   Document that anyone touching `CaptureUpdateAction`, `Store` snapshot advancement, or paste handlers should manually regression-test **undo/redo** and **paste**.
+
+3. **Optional deep-dive**  
+   If you already maintain an “undocumented behaviors” or internal engineering handbook, mirror the same facts there with file references so future readers can trace to code.
+
+### What I’m not specifying here
+
+- Exact file paths under `docs/memory/*` vs `docs/technical/*`
+- Whether to add a formal ADR for “confirmed hidden contracts”
+- A required wrap-up template (e.g. explicitly listing “code vs docs delta” in every task completion)
+
+No code changes requested — only documentation alignment and clearer communication of these constraints to future maintainers.

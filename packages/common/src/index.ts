@@ -9,6 +9,7 @@ export * from "./points";
 export * from "./promise-pool";
 export * from "./random";
 export * from "./url";
+export * from "./markdownLink";
 export * from "./utils";
 export * from "./emitter";
 export * from "./appEventBus";

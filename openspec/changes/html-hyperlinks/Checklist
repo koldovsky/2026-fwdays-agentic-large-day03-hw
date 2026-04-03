@@ -1,0 +1,14 @@
+# Tasks: HTML Hyperlinks in Text Elements
+
+## Implementation Checklist
+
+- [ ] Create markdown link parser utility (regex for [label](url))
+- [ ] Add URL validation (allow http/https, reject javascript:)
+- [ ] Modify text rendering to detect and style links
+- [ ] Add click handler for link regions in text elements
+- [ ] Open links in new tab on click
+- [ ] Add visual styling (underline + link color)
+- [ ] Write unit tests for link parser
+- [ ] Write unit tests for URL validation
+- [ ] Verify existing text rendering tests pass
+- [ ] Verify build passes

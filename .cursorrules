@@ -1,0 +1,24 @@
+# Legacy Cursor Rules
+
+Follow these baseline rules for this repository:
+
+- Use Yarn (not npm) for install/build/test commands.
+- Preserve Excalidraw architecture boundaries:
+  - no Redux/Zustand/MobX for editor state
+  - state mutations via existing action pipeline patterns
+  - keep canvas rendering model (do not introduce alternative render stacks)
+- Do not add dependencies without explicit approval.
+- Treat hidden contracts (state transitions, event ordering, timing, undo/history, caches) as high risk.
+- Before non-trivial edits, read Memory Bank context:
+  - `docs/memory/systemPatterns.md`
+  - `docs/memory/activeContext.md`
+- When new shared truth is found, update docs in the same effort:
+  - memory summaries in `docs/memory/*`
+  - deep details in `docs/technical/*`
+  - avoid duplicate canonical explanations across files
+- Keep non-trivial outputs structured: Understanding, Findings, Plan, Changes, Validation, Follow-up.
+- Protected files require explicit approval and extra verification:
+  - `packages/excalidraw/scene/renderer.ts`
+  - `packages/excalidraw/data/restore.ts`
+  - `packages/excalidraw/actions/manager.ts`
+  - `packages/excalidraw/types.ts`

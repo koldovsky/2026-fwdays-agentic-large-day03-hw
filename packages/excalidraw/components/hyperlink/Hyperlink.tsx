@@ -10,13 +10,16 @@ import {
 
 import { EVENT, HYPERLINK_TOOLTIP_DELAY, KEYS } from "@excalidraw/common";
 
-import { getElementAbsoluteCoords } from "@excalidraw/element";
-
-import { hitElementBoundingBox } from "@excalidraw/element";
-
-import { isElementLink } from "@excalidraw/element";
-
-import { getEmbedLink, embeddableURLValidator } from "@excalidraw/element";
+import {
+  getElementAbsoluteCoords,
+  getEmbedLink,
+  embeddableURLValidator,
+  getTextHyperlinkUrl,
+  hitElementBoundingBox,
+  isElementLink,
+  isEmbeddableElement,
+  isTextElement,
+} from "@excalidraw/element";
 
 import {
   sceneCoordsToViewportCoords,
@@ -25,8 +28,6 @@ import {
   isLocalLink,
   normalizeLink,
 } from "@excalidraw/common";
-
-import { isEmbeddableElement } from "@excalidraw/element";
 
 import type { Scene } from "@excalidraw/element";
 
@@ -401,7 +402,11 @@ const renderTooltip = (
   appState: AppState,
   elementsMap: ElementsMap,
 ) => {
-  if (!element.link) {
+  const textUrl = isTextElement(element)
+    ? getTextHyperlinkUrl(element)
+    : null;
+  const linkForTooltip = element.link ?? textUrl;
+  if (!linkForTooltip) {
     return;
   }
 
@@ -409,17 +414,25 @@ const renderTooltip = (
 
   tooltipDiv.classList.add("excalidraw-tooltip--visible");
   tooltipDiv.style.maxWidth = "20rem";
-  tooltipDiv.textContent = isElementLink(element.link)
+  tooltipDiv.textContent = isElementLink(linkForTooltip)
     ? t("labels.link.goToElement")
-    : element.link;
+    : linkForTooltip;
 
   const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
 
-  const [linkX, linkY, linkWidth, linkHeight] = getLinkHandleFromCoords(
-    [x1, y1, x2, y2],
-    element.angle,
-    appState,
-  );
+  const [linkX, linkY, linkWidth, linkHeight] =
+    element.link || !isTextElement(element)
+      ? getLinkHandleFromCoords(
+          [x1, y1, x2, y2],
+          element.angle,
+          appState,
+        )
+      : [
+          x1,
+          y1,
+          Math.max(1, x2 - x1),
+          Math.max(1, y2 - y1),
+        ];
 
   const linkViewportCoords = sceneCoordsToViewportCoords(
     { sceneX: linkX, sceneY: linkY },

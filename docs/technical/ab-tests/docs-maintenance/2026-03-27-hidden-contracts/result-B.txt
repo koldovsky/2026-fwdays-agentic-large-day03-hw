@@ -1,0 +1,45 @@
+## Response (rule ON — `docs-maintenance.mdc` enabled)
+
+You confirmed **two hidden runtime contracts**:
+
+1. **Snapshot update logic** (`CaptureUpdateAction` and related store/history flow) is effectively a **state machine** (modes like `IMMEDIATELY` / `NEVER` / `EVENTUALLY` are not interchangeable, and snapshot advancement + retained elements are part of the contract).
+2. **Clipboard / paste** has **same-tick / same-frame** constraints: deferring clipboard reads can break assumptions in real browsers.
+
+Under the documentation maintenance rule, that confirmation is exactly when docs must be updated—not left as chat-only context.
+
+### Update our understanding (shared truth)
+
+- **Operational layer (short, stable)**: `docs/memory/systemPatterns.md` should continue to hold the **durable summary** (what must not be “simplified away”, refactor boundaries, pointers to deep write-ups).
+- **Technical evidence layer (detailed)**: `docs/technical/undocumented-behaviors.md` should remain the **canonical** place for anchored descriptions (e.g. snapshot state machine, paste timing), with cross-links from memory—not a second competing narrative.
+- **Reusable analysis guidance**: when the finding implies “how to safely archaeology/refactor”, add or tighten guidance in `docs/technical/code-archaeology-patterns.md` rather than embedding long methodology into memory files.
+
+### How project docs should change (concrete targets)
+
+Trigger: **hidden runtime contract confirmed** and **architecture understanding changes** (per `docs-maintenance.mdc`).
+
+| Intent | Primary targets |
+|--------|-----------------|
+| Reflect that these are **now validated** focus items | `docs/memory/activeContext.md` — update **Active Investigation** / “promote validated findings” bullets so snapshot + clipboard timing are not still framed as unverified guesses if you’ve confirmed them |
+| Keep the Memory Bank accurate without duplicating proofs | `docs/memory/systemPatterns.md` — ensure **Snapshot behavior** + **Timing-sensitive behavior** summaries match the confirmed model; link out, don’t paste the whole proof |
+| Keep deep contracts centralized | `docs/technical/undocumented-behaviors.md` — ensure sections/anchors for snapshot + clipboard are current; add missing edges only if newly discovered |
+| Architecture narrative | `docs/technical/architecture.md` — only adjust if the high-level story would mislead someone without mentioning capture modes / paste timing assumptions |
+| If this confirmation changes product-facing risk/comms | `docs/memory/productContext.md` / `docs/product/*` (only if user-observable or workflow-critical) |
+| If it implies future intentional behavior change | `docs/decisions/*` + `docs/memory/decisionLog.md` (not required for “confirmed as-is”, but required if you decide to change semantics) |
+| Status/backlog hygiene | `docs/memory/progress.md` if you track doc debt / verification work there |
+
+### Required completion semantics (for any follow-up work)
+
+When someone actually applies edits after this confirmation, their task completion should explicitly state:
+
+- **what code changed** (here: none, per instruction)
+- **what docs changed**
+- **what docs should still change but weren’t updated yet**
+- **what remains uncertain**
+
+### Anti-patterns (explicitly per rule)
+
+- Don’t leave the confirmation only in chat or PR commentary.
+- Don’t create **duplicate truths** (same contract fully explained in two “canonical” places). Prefer **one technical anchor + short memory summary + links**.
+- Don’t move **deep implementation detail** into `docs/memory/*` unless it is **operationally critical** to day-to-day decisions.
+
+No code changes requested.

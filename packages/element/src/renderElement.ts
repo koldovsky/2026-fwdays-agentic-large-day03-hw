@@ -54,6 +54,10 @@ import {
 } from "./textElement";
 import { getLineHeightInPx } from "./textMeasurements";
 import {
+  getTextHyperlinkRenderState,
+  TEXT_HYPERLINK_COLOR,
+} from "./textHyperlink";
+import {
   isTextElement,
   isLinearElement,
   isFreeDrawElement,
@@ -555,14 +559,18 @@ const drawElementOnCanvas = (
         context.canvas.setAttribute("dir", rtl ? "rtl" : "ltr");
         context.save();
         context.font = getFontString(element);
-        context.fillStyle =
+        const defaultFill =
           renderConfig.theme === THEME.DARK
             ? applyDarkModeFilter(element.strokeColor)
             : element.strokeColor;
+        const hyperlinkFill =
+          renderConfig.theme === THEME.DARK
+            ? applyDarkModeFilter(TEXT_HYPERLINK_COLOR)
+            : TEXT_HYPERLINK_COLOR;
         context.textAlign = element.textAlign as CanvasTextAlign;
 
-        // Canvas does not support multiline text by default
-        const lines = element.text.replace(/\r\n?/g, "\n").split("\n");
+        const { lines, styleAsHyperlink } =
+          getTextHyperlinkRenderState(element);
 
         const horizontalOffset =
           element.textAlign === "center"
@@ -583,11 +591,26 @@ const drawElementOnCanvas = (
         );
 
         for (let index = 0; index < lines.length; index++) {
-          context.fillText(
-            lines[index],
-            horizontalOffset,
-            index * lineHeightPx + verticalOffset,
-          );
+          const line = lines[index];
+          context.fillStyle = styleAsHyperlink ? hyperlinkFill : defaultFill;
+          const y = index * lineHeightPx + verticalOffset;
+          context.fillText(line, horizontalOffset, y);
+          if (styleAsHyperlink) {
+            const metrics = context.measureText(line);
+            const underlineY = y + element.fontSize * 0.15;
+            context.beginPath();
+            context.strokeStyle = hyperlinkFill;
+            context.lineWidth = Math.max(1, element.fontSize / 14);
+            let startX = horizontalOffset;
+            if (element.textAlign === "center") {
+              startX = horizontalOffset - metrics.width / 2;
+            } else if (element.textAlign === "right") {
+              startX = horizontalOffset - metrics.width;
+            }
+            context.moveTo(startX, underlineY);
+            context.lineTo(startX + metrics.width, underlineY);
+            context.stroke();
+          }
         }
         context.restore();
         if (shouldTemporarilyAttach) {

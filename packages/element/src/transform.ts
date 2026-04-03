@@ -29,6 +29,7 @@ import {
   newTextElement,
   type ElementConstructorOpts,
 } from "./newElement";
+import { getPlainTextForMeasurement } from "./textHyperlink";
 import { measureText, normalizeText } from "./textMeasurements";
 import { isArrowElement } from "./typeChecks";
 
@@ -583,7 +584,10 @@ export const convertToExcalidrawElements = (
         const text = element.text ?? "";
         const normalizedText = normalizeText(text);
         const metrics = measureText(
-          normalizedText,
+          getPlainTextForMeasurement(
+            { link: element.link ?? null },
+            normalizedText,
+          ),
           getFontString({ fontFamily, fontSize }),
           lineHeight,
         );

@@ -22,6 +22,7 @@ import {
 } from "./bounds";
 import { newElementWith } from "./mutateElement";
 import { getBoundTextMaxWidth } from "./textElement";
+import { getPlainTextForMeasurement } from "./textHyperlink";
 import { normalizeText, measureText } from "./textMeasurements";
 import { wrapText } from "./textWrapping";
 
@@ -254,7 +255,7 @@ export const newTextElement = (
   const lineHeight = opts.lineHeight || getLineHeight(fontFamily);
   const text = normalizeText(opts.text);
   const metrics = measureText(
-    text,
+    getPlainTextForMeasurement({ link: opts.link ?? null }, text),
     getFontString({ fontFamily, fontSize }),
     lineHeight,
   );
@@ -301,7 +302,7 @@ const getAdjustedDimensions = (
   height: number;
 } => {
   let { width: nextWidth, height: nextHeight } = measureText(
-    nextText,
+    getPlainTextForMeasurement(element, nextText),
     getFontString(element),
     element.lineHeight,
   );
@@ -321,7 +322,7 @@ const getAdjustedDimensions = (
     element.autoResize
   ) {
     const prevMetrics = measureText(
-      element.text,
+      getPlainTextForMeasurement(element, element.text),
       getFontString(element),
       element.lineHeight,
     );

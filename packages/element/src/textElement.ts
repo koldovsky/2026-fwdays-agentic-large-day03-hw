@@ -23,6 +23,7 @@ import {
 import { LinearElementEditor } from "./linearElementEditor";
 
 import { measureText } from "./textMeasurements";
+import { getPlainTextForMeasurement } from "./textHyperlink";
 import { wrapText } from "./textWrapping";
 import {
   isBoundToContainer,
@@ -86,7 +87,7 @@ export const redrawTextBoundingBox = (
   }
 
   const metrics = measureText(
-    boundTextUpdates.text,
+    getPlainTextForMeasurement(textElement, boundTextUpdates.text),
     getFontString(textElement),
     textElement.lineHeight,
   );
@@ -175,7 +176,7 @@ export const handleBindTextResize = (
         );
       }
       const metrics = measureText(
-        text,
+        getPlainTextForMeasurement(textElement, text),
         getFontString(textElement),
         textElement.lineHeight,
       );
