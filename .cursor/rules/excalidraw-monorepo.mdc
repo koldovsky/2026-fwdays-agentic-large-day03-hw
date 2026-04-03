@@ -1,0 +1,30 @@
+---
+description: Excalidraw monorepo layout, workflows, and Yarn commands
+alwaysApply: true
+---
+
+# Excalidraw monorepo
+
+## Layout
+
+- **`packages/excalidraw/`** — React library published as `@excalidraw/excalidraw`
+- **`excalidraw-app/`** — Full web app (excalidraw.com) consuming the library
+- **`packages/`** — `@excalidraw/common`, `@excalidraw/element`, `@excalidraw/math`, `@excalidraw/utils`
+- **`examples/`** — Next.js and browser script examples
+
+## Where to work
+
+- Editor/library features → `packages/*`
+- App-only behavior → `excalidraw-app/`
+
+## Commands (Yarn 1 workspaces, repo root)
+
+- `yarn test:typecheck` — TypeScript check
+- `yarn test:update` — Tests (with snapshot updates); run before commits when tests change
+- `yarn fix` — Format and lint auto-fix
+
+## Stack notes
+
+- Yarn workspaces; path aliases in `vitest.config.mts`
+- Packages: esbuild; app: Vite
+- TypeScript strict project-wide
