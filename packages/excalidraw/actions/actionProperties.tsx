@@ -15,6 +15,7 @@ import {
   STROKE_WIDTH,
   VERTICAL_ALIGN,
   KEYS,
+  CODES,
   randomInteger,
   arrayToMap,
   getFontFamilyString,
@@ -656,6 +657,15 @@ export const actionChangeSloppiness = register<ExcalidrawElement["roughness"]>({
   ),
 });
 
+const STROKE_STYLES = ["solid", "dashed", "dotted"] as const;
+
+const getNextStrokeStyle = (
+  current: ExcalidrawElement["strokeStyle"],
+): ExcalidrawElement["strokeStyle"] => {
+  const idx = STROKE_STYLES.indexOf(current);
+  return STROKE_STYLES[(idx + 1) % STROKE_STYLES.length];
+};
+
 export const actionChangeStrokeStyle = register<
   ExcalidrawElement["strokeStyle"]
 >({
@@ -663,16 +673,25 @@ export const actionChangeStrokeStyle = register<
   label: "labels.strokeStyle",
   trackEvent: false,
   perform: (elements, appState, value) => {
+    const nextStyle =
+      value != null
+        ? value
+        : getNextStrokeStyle(appState.currentItemStrokeStyle);
     return {
       elements: changeProperty(elements, appState, (el) =>
         newElementWith(el, {
-          strokeStyle: value,
+          strokeStyle: nextStyle,
         }),
       ),
-      appState: { ...appState, currentItemStrokeStyle: value },
+      appState: { ...appState, currentItemStrokeStyle: nextStyle },
       captureUpdate: CaptureUpdateAction.IMMEDIATELY,
     };
   },
+  keyTest: (event) =>
+    event.shiftKey &&
+    !event.altKey &&
+    !event[KEYS.CTRL_OR_CMD] &&
+    event.code === CODES.NINE,
   PanelComponent: ({ elements, appState, updateData, app, data }) => (
     <fieldset>
       <legend>{t("labels.strokeStyle")}</legend>

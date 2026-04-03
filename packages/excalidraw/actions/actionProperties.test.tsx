@@ -1,6 +1,8 @@
 import { queryByTestId } from "@testing-library/react";
+import { act } from "react";
 
 import {
+  CODES,
   COLOR_PALETTE,
   DEFAULT_ELEMENT_BACKGROUND_PICKS,
   FONT_FAMILY,
@@ -11,6 +13,10 @@ import { Excalidraw } from "../index";
 import { API } from "../tests/helpers/api";
 import { UI } from "../tests/helpers/ui";
 import { render } from "../tests/test-utils";
+
+import { actionChangeStrokeStyle } from "./actionProperties";
+
+const { h } = window;
 
 describe("element locking", () => {
   beforeEach(async () => {
@@ -168,6 +174,130 @@ describe("element locking", () => {
       expect(queryByTestId(document.body, `font-family-code`)).toHaveClass(
         "active",
       );
+    });
+  });
+});
+
+describe("actionChangeStrokeStyle", () => {
+  beforeEach(async () => {
+    await render(<Excalidraw />);
+  });
+
+  describe("keyTest", () => {
+    const createKeyEvent = (overrides: Record<string, unknown> = {}) =>
+      ({
+        code: CODES.NINE,
+        shiftKey: true,
+        altKey: false,
+        ctrlKey: false,
+        metaKey: false,
+        ...overrides,
+      } as unknown as KeyboardEvent);
+
+    it("should match Shift+9", () => {
+      expect(
+        actionChangeStrokeStyle.keyTest!(
+          createKeyEvent(),
+          h.state,
+          h.elements,
+          h.app,
+        ),
+      ).toBe(true);
+    });
+
+    it("should not match bare 9", () => {
+      expect(
+        actionChangeStrokeStyle.keyTest!(
+          createKeyEvent({ shiftKey: false }),
+          h.state,
+          h.elements,
+          h.app,
+        ),
+      ).toBe(false);
+    });
+
+    it("should not match Ctrl+Shift+9", () => {
+      expect(
+        actionChangeStrokeStyle.keyTest!(
+          createKeyEvent({ ctrlKey: true }),
+          h.state,
+          h.elements,
+          h.app,
+        ),
+      ).toBe(false);
+    });
+
+    it("should not match Alt+Shift+9", () => {
+      expect(
+        actionChangeStrokeStyle.keyTest!(
+          createKeyEvent({ altKey: true }),
+          h.state,
+          h.elements,
+          h.app,
+        ),
+      ).toBe(false);
+    });
+
+    it("should not match Shift+S", () => {
+      expect(
+        actionChangeStrokeStyle.keyTest!(
+          createKeyEvent({ code: CODES.S }),
+          h.state,
+          h.elements,
+          h.app,
+        ),
+      ).toBe(false);
+    });
+  });
+
+  describe("perform cycle", () => {
+    it("should cycle solid → dashed → dotted → solid with no selection", () => {
+      expect(h.state.currentItemStrokeStyle).toBe("solid");
+
+      API.executeAction(actionChangeStrokeStyle);
+      expect(h.state.currentItemStrokeStyle).toBe("dashed");
+
+      API.executeAction(actionChangeStrokeStyle);
+      expect(h.state.currentItemStrokeStyle).toBe("dotted");
+
+      API.executeAction(actionChangeStrokeStyle);
+      expect(h.state.currentItemStrokeStyle).toBe("solid");
+    });
+
+    it("should update selected elements stroke style", () => {
+      const rect = API.createElement({
+        type: "rectangle",
+        strokeStyle: "solid",
+      });
+      API.setElements([rect]);
+      API.setSelectedElements([rect]);
+
+      API.executeAction(actionChangeStrokeStyle);
+
+      expect(h.state.currentItemStrokeStyle).toBe("dashed");
+      expect(h.elements[0].strokeStyle).toBe("dashed");
+    });
+  });
+
+  describe("perform direct value (panel path)", () => {
+    it("should set value directly when provided", () => {
+      const rect = API.createElement({
+        type: "rectangle",
+        strokeStyle: "solid",
+      });
+      API.setElements([rect]);
+      API.setSelectedElements([rect]);
+
+      act(() => {
+        h.app.actionManager.executeAction(
+          actionChangeStrokeStyle,
+          "api",
+          "dotted",
+        );
+      });
+
+      expect(h.elements[0].strokeStyle).toBe("dotted");
+      expect(h.state.currentItemStrokeStyle).toBe("dotted");
     });
   });
 });
