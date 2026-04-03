@@ -24,6 +24,7 @@ import {
   invariant,
   applyDarkModeFilter,
   isSafari,
+  COLOR_INLINE_LINK,
 } from "@excalidraw/common";
 
 import type {
@@ -52,7 +53,8 @@ import {
   getBoundTextMaxHeight,
   getBoundTextMaxWidth,
 } from "./textElement";
-import { getLineHeightInPx } from "./textMeasurements";
+import { getLineHeightInPx, getLineWidth } from "./textMeasurements";
+import { parseMarkdownLinks } from "./markdownLinks";
 import {
   isTextElement,
   isLinearElement,
@@ -582,12 +584,57 @@ const drawElementOnCanvas = (
           lineHeightPx,
         );
 
+        const baseColor = context.fillStyle as string;
+
         for (let index = 0; index < lines.length; index++) {
-          context.fillText(
-            lines[index],
-            horizontalOffset,
-            index * lineHeightPx + verticalOffset,
-          );
+          const y = index * lineHeightPx + verticalOffset;
+          const segments = parseMarkdownLinks(lines[index]);
+          const hasLinks = segments.some((s) => s.type === "link");
+
+          if (!hasLinks) {
+            // Fast path: no markdown links in this line
+            context.fillText(lines[index], horizontalOffset, y);
+          } else {
+            // Segment-aware rendering with link styling
+            const fontString = getFontString(element);
+            let rawX = 0; // x offset measured in raw text characters
+
+            // For left-aligned text, we start from 0 and walk right.
+            // For center/right-aligned we need the full raw line width
+            // so we can compute where each segment starts relative to
+            // the alignment anchor (horizontalOffset).
+            const rawLineWidth = getLineWidth(lines[index], fontString);
+            let segmentStartX =
+              element.textAlign === "right"
+                ? horizontalOffset - rawLineWidth
+                : element.textAlign === "center"
+                ? horizontalOffset - rawLineWidth / 2
+                : horizontalOffset;
+
+            for (const segment of segments) {
+              const segWidth = getLineWidth(segment.content, fontString);
+              const drawX = segmentStartX + rawX;
+
+              if (segment.type === "link") {
+                context.fillStyle = COLOR_INLINE_LINK;
+                context.fillText(segment.content, drawX, y);
+
+                // Underline: 1px at current scale, placed 2px below baseline
+                const underlineThickness = Math.max(1, element.fontSize / 20);
+                context.fillRect(
+                  drawX,
+                  y + 2,
+                  segWidth,
+                  underlineThickness,
+                );
+                context.fillStyle = baseColor;
+              } else {
+                context.fillText(segment.content, drawX, y);
+              }
+
+              rawX += segWidth;
+            }
+          }
         }
         context.restore();
         if (shouldTemporarilyAttach) {

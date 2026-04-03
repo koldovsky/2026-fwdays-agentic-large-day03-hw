@@ -226,6 +226,8 @@ export const DEFAULT_COLLISION_THRESHOLD =
 
 export const COLOR_WHITE = "#ffffff";
 export const COLOR_CHARCOAL_BLACK = "#1e1e1e";
+/** Blue used for inline markdown hyperlinks rendered on the canvas. */
+export const COLOR_INLINE_LINK = "#2563EB";
 // keep this in sync with CSS
 export const COLOR_VOICE_CALL = "#a2f1a6";
 
