@@ -113,6 +113,10 @@ For example:
 import { exportToSvg } from "@excalidraw/excalidraw";
 ```
 
+## Bundled canvas fonts
+
+Some text fonts ship with the package under the [SIL Open Font License](https://openfontlicense.org/) (or compatible terms), including **Lexend** ([Google Fonts](https://fonts.google.com/specimen/Lexend), by Bonnie Shaver-Troup, Thomas Jockin, et al.).
+
 ## Self-hosting fonts
 
 By default, Excalidraw downloads the fonts it needs from the [CDN](https://esm.run/@excalidraw/excalidraw/dist/prod).

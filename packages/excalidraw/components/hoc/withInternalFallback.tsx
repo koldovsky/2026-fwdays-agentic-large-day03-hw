@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useRef } from "react";
 
+import type { TunnelsContextValue } from "../../context/tunnels";
 import { useTunnels } from "../../context/tunnels";
 import { atom } from "../../editor-jotai";
 
@@ -9,14 +10,16 @@ export const withInternalFallback = <P,>(
 ) => {
   const renderAtom = atom(0);
 
-  const WrapperComponent: React.FC<
+  const TunnelBoundInner: React.FC<
     P & {
       __fallback?: boolean;
+      tunnels: TunnelsContextValue;
     }
   > = (props) => {
+    const { tunnels, ...rest } = props;
     const {
       tunnelsJotai: { useAtom },
-    } = useTunnels();
+    } = tunnels;
     // for rerenders
     const [, setCounter] = useAtom(renderAtom);
     // for initial & subsequent renders. Tracked as component state
@@ -50,7 +53,7 @@ export const withInternalFallback = <P,>(
       };
     }, [setCounter]);
 
-    if (!props.__fallback) {
+    if (!rest.__fallback) {
       metaRef.current.preferHost = true;
     }
 
@@ -58,16 +61,30 @@ export const withInternalFallback = <P,>(
     if (
       // either before the counters are initialized
       (!metaRef.current.counter &&
-        props.__fallback &&
+        rest.__fallback &&
         metaRef.current.preferHost) ||
       // or after the counters are initialized, and both are rendered
       // (this is the default when host renders as well)
-      (metaRef.current.counter > 1 && props.__fallback)
+      (metaRef.current.counter > 1 && rest.__fallback)
     ) {
       return null;
     }
 
-    return <Component {...props} />;
+    return <Component {...(rest as P & { __fallback?: boolean })} />;
+  };
+
+  TunnelBoundInner.displayName = `${componentName}TunnelBound`;
+
+  const WrapperComponent: React.FC<
+    P & {
+      __fallback?: boolean;
+    }
+  > = (props) => {
+    const tunnels = useTunnels();
+    if (!tunnels) {
+      return null;
+    }
+    return <TunnelBoundInner {...props} tunnels={tunnels} />;
   };
 
   WrapperComponent.displayName = componentName;

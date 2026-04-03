@@ -17,10 +17,13 @@ import {
   updateObject,
 } from "@excalidraw/common";
 
-import { useUIAppState } from "../../context/ui-appState";
 import { atom, useSetAtom } from "../../editor-jotai";
 import { useOutsideClick } from "../../hooks/useOutsideClick";
-import { useEditorInterface, useExcalidrawSetAppState } from "../App";
+import {
+  useEditorInterface,
+  useExcalidrawAppState,
+  useExcalidrawSetAppState,
+} from "../App";
 import { Island } from "../Island";
 
 import { SidebarHeader } from "./SidebarHeader";
@@ -161,7 +164,10 @@ SidebarInner.displayName = "SidebarInner";
 
 export const Sidebar = Object.assign(
   forwardRef((props: SidebarProps, ref: React.ForwardedRef<HTMLDivElement>) => {
-    const appState = useUIAppState();
+    // Use full app state: UIAppStateContext can be unset on the first paint
+    // before LayerUI mounts its provider, which broke sidebar tests and could
+    // throw when reading openSidebar.
+    const appState = useExcalidrawAppState();
 
     const { onStateChange } = props;
 
