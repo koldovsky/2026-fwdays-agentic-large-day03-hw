@@ -10,6 +10,7 @@ import * as InteractiveScene from "../renderer/interactiveScene";
 import * as StaticScene from "../renderer/staticScene";
 
 import {
+  act,
   render,
   fireEvent,
   mockBoundingClientRect,
@@ -355,6 +356,38 @@ describe("Test dragCreate", () => {
           isDeleted: true,
         }),
       ]);
+    });
+  });
+
+  describe("feedback after Esc tool deactivation", () => {
+    it("shows one toast after Esc from shape tool and does not spam on next drag", async () => {
+      const { getByToolName, container } = await render(
+        <Excalidraw handleKeyboardGlobally={true} />,
+      );
+      fireEvent.click(getByToolName("rectangle"));
+
+      fireEvent.keyDown(document, { key: KEYS.ESCAPE });
+      expect(h.state.activeTool.type).toBe("selection");
+
+      const canvas = container.querySelector("canvas.interactive")!;
+
+      fireEvent.pointerDown(canvas, { clientX: 30, clientY: 20 });
+      fireEvent.pointerMove(canvas, { clientX: 60, clientY: 70 });
+      fireEvent.pointerUp(canvas);
+
+      expect(h.state.toast?.message).toBe(
+        "No shape tool is active. Select a shape tool to draw.",
+      );
+
+      act(() => {
+        h.app.setToast(null);
+      });
+
+      fireEvent.pointerDown(canvas, { clientX: 100, clientY: 100 });
+      fireEvent.pointerMove(canvas, { clientX: 140, clientY: 160 });
+      fireEvent.pointerUp(canvas);
+
+      expect(h.state.toast).toBeNull();
     });
   });
 });

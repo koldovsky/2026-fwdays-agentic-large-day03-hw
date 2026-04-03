@@ -495,6 +495,14 @@ import type {
   NullableGridSize,
   Offsets,
 } from "../types";
+
+const ESC_DEACTIVATION_SHAPE_TOOLS = [
+  TOOL_TYPE.rectangle,
+  TOOL_TYPE.diamond,
+  TOOL_TYPE.ellipse,
+  TOOL_TYPE.arrow,
+  TOOL_TYPE.line,
+] as const;
 import type { RoughCanvas } from "roughjs/bin/canvas";
 import type { Action, ActionResult } from "../actions/types";
 
@@ -695,6 +703,8 @@ class App extends React.Component<AppProps, AppState> {
   /** current frame pointer cords */
   lastPointerMoveCoords: { x: number; y: number } | null = null;
   private lastCompletedCanvasClicks: { x: number; y: number }[] = [];
+  private pendingEscShapeToolDeactivationFeedback = false;
+  private showShapeToolDeactivationFeedbackOnNextPointerDown = false;
   /** previous frame pointer coords */
   previousPointerMoveCoords: { x: number; y: number } | null = null;
   lastViewportPosition = { x: 0, y: 0 };
@@ -3364,6 +3374,7 @@ class App extends React.Component<AppProps, AppState> {
     }
 
     this.appStateObserver.flush(prevState);
+    this.updateShapeToolDeactivationFeedbackState(prevState);
 
     this.updateEmbeddables();
     const elements = this.scene.getElementsIncludingDeleted();
@@ -4730,6 +4741,10 @@ class App extends React.Component<AppProps, AppState> {
           },
         });
       }
+
+      this.pendingEscShapeToolDeactivationFeedback =
+        event.key === KEYS.ESCAPE &&
+        this.isEscDeactivationShapeTool(this.state.activeTool.type);
 
       if (!isInputLike(event.target)) {
         if (
@@ -7726,6 +7741,8 @@ class App extends React.Component<AppProps, AppState> {
       return;
     }
 
+    this.maybeShowShapeToolDeactivationToast(pointerDownState);
+
     if (this.state.activeTool.type === "lasso") {
       const hitSelectedElement =
         pointerDownState.hit.element &&
@@ -7920,6 +7937,60 @@ class App extends React.Component<AppProps, AppState> {
       pointerDownState.eventListeners.onKeyDown = onKeyDown;
     }
   };
+
+  private isEscDeactivationShapeTool = (
+    toolType: AppState["activeTool"]["type"],
+  ) => {
+    return oneOf(toolType, ESC_DEACTIVATION_SHAPE_TOOLS);
+  };
+
+  private updateShapeToolDeactivationFeedbackState(prevState: AppState) {
+    if (this.pendingEscShapeToolDeactivationFeedback) {
+      const switchedToPreferredSelectionTool =
+        prevState.activeTool.type !== this.state.activeTool.type &&
+        this.state.activeTool.type === this.state.preferredSelectionTool.type;
+
+      if (
+        switchedToPreferredSelectionTool &&
+        this.isEscDeactivationShapeTool(prevState.activeTool.type)
+      ) {
+        this.showShapeToolDeactivationFeedbackOnNextPointerDown = true;
+      }
+
+      this.pendingEscShapeToolDeactivationFeedback = false;
+    }
+
+    if (
+      prevState.activeTool.type !== this.state.activeTool.type &&
+      this.state.activeTool.type !== this.state.preferredSelectionTool.type
+    ) {
+      this.showShapeToolDeactivationFeedbackOnNextPointerDown = false;
+    }
+  }
+
+  private maybeShowShapeToolDeactivationToast(pointerDownState: PointerDownState) {
+    if (!this.showShapeToolDeactivationFeedbackOnNextPointerDown) {
+      return;
+    }
+
+    if (this.state.activeTool.type !== this.state.preferredSelectionTool.type) {
+      return;
+    }
+
+    if (
+      pointerDownState.hit.element ||
+      pointerDownState.resize.handleType ||
+      pointerDownState.hit.hasHitCommonBoundingBoxOfSelectedElements
+    ) {
+      return;
+    }
+
+    this.showShapeToolDeactivationFeedbackOnNextPointerDown = false;
+    this.setToast({
+      message: t("toast.noShapeToolActive"),
+      duration: 2200,
+    });
+  }
 
   private handleCanvasPointerUp = (
     event: React.PointerEvent<HTMLCanvasElement>,
