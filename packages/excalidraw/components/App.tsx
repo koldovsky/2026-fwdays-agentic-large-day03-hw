@@ -110,6 +110,7 @@ import {
   setDesktopUIMode,
   isSelectionLikeTool,
   oneOf,
+  isMobileBreakpoint,
 } from "@excalidraw/common";
 
 import {
@@ -5724,6 +5725,38 @@ class App extends React.Component<AppProps, AppState> {
       onSubmit: withBatchedUpdates(({ viaKeyboard, nextOriginalText }) => {
         const isDeleted = !nextOriginalText.trim();
         updateElement(nextOriginalText, isDeleted);
+
+        // On mobile viewports, reposition newly created standalone text elements
+        // so they fit within the visible viewport width.
+        if (
+          !isDeleted &&
+          !isExistingElement &&
+          element.containerId === null &&
+          isMobileBreakpoint(this.state.width, this.state.height)
+        ) {
+          const MARGIN_PX = 16;
+          const [vx1, , vx2] = getVisibleSceneBounds(this.state);
+          const margin = MARGIN_PX / this.state.zoom.value;
+          const targetX = vx1 + margin;
+          const targetWidth = vx2 - vx1 - 2 * margin;
+
+          const updatedEl = this.scene
+            .getElementsMapIncludingDeleted()
+            .get(element.id) as ExcalidrawTextElement | undefined;
+
+          if (updatedEl && targetWidth > 0) {
+            mutateElement(
+              updatedEl,
+              this.scene.getElementsMapIncludingDeleted(),
+              {
+                x: targetX,
+                width: targetWidth,
+                autoResize: false,
+              },
+            );
+            updateElement(nextOriginalText, false);
+          }
+        }
 
         // keyboard-submit keeps focus on the edited object. For bound text, keep
         // the container selected even if the text becomes empty and is deleted.
