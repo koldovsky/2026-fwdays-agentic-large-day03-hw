@@ -341,6 +341,7 @@ import { ActionManager } from "../actions/manager";
 import { actions } from "../actions/register";
 import { getShortcutFromShortcutName } from "../actions/shortcuts";
 import { trackEvent } from "../analytics";
+import { parseMarkdownLinks } from "../utils/markdownLink";
 import { AnimationFrameHandler } from "../animation-frame-handler";
 import {
   getDefaultAppState,
@@ -5677,7 +5678,11 @@ class App extends React.Component<AppProps, AppState> {
   ) {
     const elementsMap = this.scene.getElementsMapIncludingDeleted();
 
-    const updateElement = (nextOriginalText: string, isDeleted: boolean) => {
+    const updateElement = (
+      nextOriginalText: string,
+      isDeleted: boolean,
+      link?: string | null,
+    ) => {
       this.scene.replaceAllElements([
         // Not sure why we include deleted elements as well hence using deleted elements map
         ...this.scene.getElementsIncludingDeleted().map((_element) => {
@@ -5685,6 +5690,7 @@ class App extends React.Component<AppProps, AppState> {
             return newElementWith(_element, {
               originalText: nextOriginalText,
               isDeleted: isDeleted ?? _element.isDeleted,
+              ...(link !== undefined && { link }),
               // returns (wrapped) text and new dimensions
               ...refreshTextDimensions(
                 _element,
@@ -5722,8 +5728,11 @@ class App extends React.Component<AppProps, AppState> {
         }
       }),
       onSubmit: withBatchedUpdates(({ viaKeyboard, nextOriginalText }) => {
-        const isDeleted = !nextOriginalText.trim();
-        updateElement(nextOriginalText, isDeleted);
+        const parsed = parseMarkdownLinks(nextOriginalText);
+        const resolvedText = parsed ? parsed.resolvedText : nextOriginalText;
+        const link = parsed ? parsed.links[0]?.url ?? null : undefined;
+        const isDeleted = !resolvedText.trim();
+        updateElement(resolvedText, isDeleted, link);
 
         // keyboard-submit keeps focus on the edited object. For bound text, keep
         // the container selected even if the text becomes empty and is deleted.
