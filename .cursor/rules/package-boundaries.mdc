@@ -1,0 +1,58 @@
+---
+description: Package Boundary Rules
+globs: "packages/**"
+alwaysApply: false
+---
+
+
+# Package Boundary Rules
+
+## Dependency Chain
+
+Packages must only import **downward** in this chain:
+
+```
+@excalidraw/common
+  ↓
+@excalidraw/math
+  ↓
+@excalidraw/element
+  ↓
+@excalidraw/excalidraw
+  ↓
+excalidraw-app
+```
+
+`@excalidraw/utils` is a leaf utility package — any package may import from it.
+
+## Rules
+
+- **`@excalidraw/common`** — no imports from `@excalidraw/element`, `@excalidraw/excalidraw`, or `excalidraw-app`.
+- **`@excalidraw/math`** — may import from `@excalidraw/common` only.
+- **`@excalidraw/element`** — may import from `@excalidraw/common`, `@excalidraw/math`, and `@excalidraw/utils`. Importing from `@excalidraw/excalidraw` is **forbidden for new code** (existing `import type` from `@excalidraw/excalidraw/types` is known tech debt — do not add more).
+- **`@excalidraw/excalidraw`** — may import from all packages above. Must NOT import from `excalidraw-app`.
+- **`excalidraw-app`** — may import from all packages. Nothing imports from `excalidraw-app`.
+
+## Known Tech Debt
+
+`packages/element/src/` contains `import type { AppState, ... } from "@excalidraw/excalidraw/types"` in several files. These are type-only upward imports and are tracked as tech debt. **Do not add new ones.** If you need a type from `excalidraw`, move it to `packages/element/src/types.ts` or `packages/common/src/` instead.
+
+## How to Verify
+
+```bash
+# Detect new upward imports from element → excalidraw (value imports, not just types)
+grep -rn "^import [^t].*from \"@excalidraw/excalidraw" packages/element/src/ --include="*.ts" --include="*.tsx"
+# Expected: no output (type-only imports with `import type` are tolerated as existing debt)
+
+# Detect any imports from excalidraw-app inside packages
+grep -rn "from \".*excalidraw-app" packages/ --include="*.ts" --include="*.tsx"
+# Expected: no output
+
+# Detect imports from element or excalidraw inside common
+grep -rn "from \"@excalidraw/element\|from \"@excalidraw/excalidraw" packages/common/src/ --include="*.ts" --include="*.tsx"
+# Expected: no output
+
+# Detect imports from element or excalidraw inside math
+grep -rn "from \"@excalidraw/element\|from \"@excalidraw/excalidraw" packages/math/src/ --include="*.ts" --include="*.tsx"
+# Expected: no output
+```

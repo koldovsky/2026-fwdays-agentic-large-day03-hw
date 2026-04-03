@@ -1,0 +1,148 @@
+---
+description: "Excalidraw Security Rules"
+globs: packages/excalidraw/**
+alwaysApply: false
+---
+
+# Excalidraw Security Rules
+
+## XSS Prevention
+
+### SVG & HTML Rendering
+- **Never** use `dangerouslySetInnerHTML` with user-supplied or imported SVG/HTML content.
+  The only permitted use is `QRCode.tsx` where SVG comes from a controlled library (`uqr`).
+- Embedded content (videos, iframes) must use `srcDoc` or `src` attributes — not innerHTML.
+- All iframes must include a `sandbox` attribute. The allowed set is:
+  ```
+  sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-presentation allow-downloads"
+  ```
+- Add `referrerPolicy="no-referrer-when-downgrade"` to every `<iframe>`.
+
+### Link & URL Handling
+- Always pass user-provided links through `normalizeLink()` from `packages/common/src/url.ts`
+  before rendering. It calls `@braintree/sanitize-url` under the hood.
+- Use `toValidURL(link)` when constructing hrefs or `window.open()` targets — it returns
+  `"about:blank"` for malformed or dangerous URLs.
+- Never construct `javascript:` or `data:` URIs from user input.
+
+---
+
+## Safe Handling of Imported Files (.excalidraw, libraries)
+
+### Validation pipeline — always call in order:
+1. `parseFileContents(blob)` — converts raw bytes to JSON
+2. `isValidExcalidrawData(data)` — schema check: `type === "excalidraw"`, elements array,
+   appState object (defined in `packages/excalidraw/data/json.ts`)
+3. `restoreElements(elements, { repairBindings: true, deleteInvisibleElements: true })`
+
+For library files: `isValidLibrary(data)` — checks `type === "excalidrawLibrary"` and
+`version ∈ {1, 2}`.
+
+### Library URL allowlist
+- External library URLs must pass `validateLibraryUrl()` from
+  `packages/excalidraw/data/library.ts`.
+- Allowed origins are defined in `ALLOWED_LIBRARY_URLS`. Do **not** bypass this check or
+  add new origins without security review.
+- Never fetch an arbitrary user-supplied URL as a library source.
+
+---
+
+## End-to-End Encryption (Collaboration)
+
+All collaboration data **must** be encrypted before leaving the client.
+
+| What                        | How                                                             | Where                                    |
+|:----------------------------|:----------------------------------------------------------------|:-----------------------------------------|
+| Key generation              | `generateEncryptionKey()` → AES-GCM 128-bit via `crypto.subtle` | `packages/excalidraw/data/encryption.ts` |
+| Encrypt payload             | `encryptData(key, data)` → returns `{ encryptedBuffer, iv }`    | same file                                |
+| Decrypt payload             | `decryptData(iv, encrypted, key)`                               | same file                                |
+| Encrypt scene for Firebase  | `encryptElements(key, elements)`                                | `excalidraw-app/data/firebase.ts`        |
+| Decrypt scene from Firebase | `decryptElements(data, roomKey)`                                | same file                                |
+
+Rules:
+- **Never** transmit raw (plaintext) element data via Socket.IO or Firebase.
+- **Never** log, persist to `localStorage`, or include the room encryption key in the URL
+  path or query string. It belongs **only** in the URL fragment (`#key=…`) so it is never
+  sent to the server.
+- Always generate a fresh IV per encryption call — `createIV()` uses `crypto.getRandomValues`.
+  Never reuse IVs with the same key.
+- Use `generateRoomId()` (from `excalidraw-app/data/index.ts`) for room identifiers — it
+  calls `crypto.getRandomValues` internally. Never use `Math.random()`.
+
+---
+
+## Firebase Security Rules
+
+The Firebase rules in `firebase-project/` are intentionally permissive (`allow get, write: if true`)
+because real confidentiality is guaranteed by client-side encryption, not server ACLs.
+
+Implications when modifying Firebase integration:
+- Any data written to Firestore or Firebase Storage **must** be encrypted with `encryptData()`
+  before the write call. Never store plaintext elements.
+- The `FirebaseStoredScene` shape is `{ sceneVersion, iv: Bytes, ciphertext: Bytes }` — always
+  maintain this contract.
+- `allow list: if false` in `firestore.rules` is intentional — it prevents document enumeration.
+  Do not change this to `true`.
+- If adding new Firestore collections, evaluate whether they need stricter access rules and
+  document the decision in `docs/memory/decisionLog.md`.
+
+---
+
+## Content Security Policy
+
+Excalidraw has **no explicit CSP** today. Mitigations in place:
+- `sandbox` on all iframes (see above)
+- URL sanitization via `normalizeLink()` / `toValidURL()`
+
+When modifying `excalidraw-app/index.html` or Vite config:
+- Do **not** add `unsafe-eval` or `unsafe-inline` to a CSP without a documented, reviewed
+  justification.
+- Any inline `<script>` or dynamic `eval()` usage is forbidden.
+
+---
+
+## How to Verify
+
+### XSS
+```bash
+# Search for unguarded dangerouslySetInnerHTML
+grep -rn "dangerouslySetInnerHTML" packages/ excalidraw-app/ --include="*.tsx" --include="*.ts"
+# Every hit must use SVG from a controlled source (library output), never user data
+
+# Verify all link rendering goes through normalizeLink
+grep -rn "normalizeLink\|sanitizeUrl\|toValidURL" packages/common/src/url.ts
+```
+
+### File Import Validation
+```bash
+# Confirm validation chain is called before any element is used
+grep -rn "isValidExcalidrawData\|isValidLibrary\|validateLibraryUrl" \
+  packages/excalidraw/data/
+```
+
+### Encryption
+```bash
+# Confirm no plaintext write to Firebase
+grep -rn "setDoc\|updateDoc\|uploadBytes" excalidraw-app/data/firebase.ts
+# Every call should be preceded by encryptData / encryptElements
+
+# Confirm key never appears in URL path/query
+grep -rn "roomKey\|encryptionKey" excalidraw-app/collab/ excalidraw-app/App.tsx
+# Key must only flow through URL fragment (#)
+
+# Confirm IV is always freshly generated
+grep -rn "createIV\|getRandomValues" packages/excalidraw/data/encryption.ts
+```
+
+### Firebase Rules
+```bash
+# Confirm list is denied
+grep -n "allow list" firebase-project/firestore.rules
+# Expected output: allow list: if false;
+```
+
+### Iframe Sandboxing
+```bash
+# Find all iframes and confirm sandbox attribute is present
+grep -rn "<iframe" packages/ excalidraw-app/ --include="*.tsx" --include="*.html"
+```
