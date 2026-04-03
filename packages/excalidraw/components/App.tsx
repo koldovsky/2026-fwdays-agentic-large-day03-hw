@@ -207,6 +207,8 @@ import {
   getApproxMinLineWidth,
   getApproxMinLineHeight,
   getMinTextElementWidth,
+  getTextHyperlinkHitAtPoint,
+  sanitizeTextHyperlink,
   ShapeCache,
   getRenderOpacity,
   editGroupForSelectedElement,
@@ -614,6 +616,11 @@ const gesture: Gesture = {
   initialScale: null,
 };
 
+type HitTextHyperlink = {
+  element: ExcalidrawTextElement;
+  url: string;
+};
+
 class App extends React.Component<AppProps, AppState> {
   canvas: AppClassProperties["canvas"];
   interactiveCanvas: AppClassProperties["interactiveCanvas"] = null;
@@ -683,6 +690,7 @@ class App extends React.Component<AppProps, AppState> {
   bindModeHandler: ReturnType<typeof setTimeout> | null = null;
 
   hitLinkElement?: NonDeletedExcalidrawElement;
+  hitTextLink?: HitTextHyperlink;
   lastPointerDownEvent: React.PointerEvent<HTMLElement> | null = null;
   lastPointerUpEvent: React.PointerEvent<HTMLElement> | PointerEvent | null =
     null;
@@ -6600,6 +6608,76 @@ class App extends React.Component<AppProps, AppState> {
     }
   };
 
+  private getTextElementLinkAtPosition = (
+    scenePointer: Readonly<{ x: number; y: number }>,
+    hitElementMightBeLocked: NonDeletedExcalidrawElement | null,
+    shouldActivateLink: boolean,
+  ): HitTextHyperlink | undefined => {
+    if (!shouldActivateLink || this.state.editingTextElement) {
+      return undefined;
+    }
+
+    if (hitElementMightBeLocked && hitElementMightBeLocked.locked) {
+      return undefined;
+    }
+
+    const elements = this.scene.getNonDeletedElements();
+    let hitElementIndex = -1;
+    const pointer = pointFrom<GlobalPoint>(scenePointer.x, scenePointer.y);
+
+    for (let index = elements.length - 1; index >= 0; index--) {
+      const element = elements[index];
+      if (
+        hitElementMightBeLocked &&
+        element.id === hitElementMightBeLocked.id
+      ) {
+        hitElementIndex = index;
+      }
+      if (index < hitElementIndex || !isTextElement(element)) {
+        continue;
+      }
+      if (this.state.selectedElementIds[element.id]) {
+        continue;
+      }
+      const linkHit = getTextHyperlinkHitAtPoint(element, pointer);
+      if (linkHit) {
+        return { element, url: linkHit.url };
+      }
+    }
+  };
+
+  private openHyperlink = (
+    element: NonDeletedExcalidrawElement,
+    url: string,
+    event: React.PointerEvent<HTMLCanvasElement>,
+  ) => {
+    const normalizedUrl = sanitizeTextHyperlink(url) ?? normalizeLink(url);
+    if (!normalizedUrl) {
+      return;
+    }
+
+    let customEvent;
+    if (this.props.onLinkOpen) {
+      customEvent = wrapEvent(EVENT.EXCALIDRAW_LINK, event.nativeEvent);
+      this.props.onLinkOpen(
+        {
+          ...element,
+          link: normalizedUrl,
+        },
+        customEvent,
+      );
+    }
+    if (!customEvent?.defaultPrevented) {
+      const target = isLocalLink(normalizedUrl) ? "_self" : "_blank";
+      const newWindow = window.open(undefined, target);
+      // https://mathiasbynens.github.io/rel-noopener/
+      if (newWindow) {
+        newWindow.opener = null;
+        newWindow.location = normalizedUrl;
+      }
+    }
+  };
+
   private handleElementLinkClick = (
     event: React.PointerEvent<HTMLCanvasElement>,
   ) => {
@@ -6641,30 +6719,71 @@ class App extends React.Component<AppProps, AppState> {
     );
     if (lastPointerDownHittingLinkIcon && lastPointerUpHittingLinkIcon) {
       hideHyperlinkToolip();
-      let url = this.hitLinkElement.link;
-      if (url) {
-        url = normalizeLink(url);
-        let customEvent;
-        if (this.props.onLinkOpen) {
-          customEvent = wrapEvent(EVENT.EXCALIDRAW_LINK, event.nativeEvent);
-          this.props.onLinkOpen(
-            {
-              ...this.hitLinkElement,
-              link: url,
-            },
-            customEvent,
-          );
-        }
-        if (!customEvent?.defaultPrevented) {
-          const target = isLocalLink(url) ? "_self" : "_blank";
-          const newWindow = window.open(undefined, target);
-          // https://mathiasbynens.github.io/rel-noopener/
-          if (newWindow) {
-            newWindow.opener = null;
-            newWindow.location = url;
-          }
-        }
+      if (this.hitLinkElement.link) {
+        this.openHyperlink(this.hitLinkElement, this.hitLinkElement.link, event);
       }
+    }
+  };
+
+  private handleTextElementLinkClick = (
+    event: React.PointerEvent<HTMLCanvasElement>,
+  ) => {
+    const draggedDistance = pointDistance(
+      pointFrom(
+        this.lastPointerDownEvent!.clientX,
+        this.lastPointerDownEvent!.clientY,
+      ),
+      pointFrom(
+        this.lastPointerUpEvent!.clientX,
+        this.lastPointerUpEvent!.clientY,
+      ),
+    );
+
+    if (!this.hitTextLink || draggedDistance > DRAGGING_THRESHOLD) {
+      return;
+    }
+
+    const shouldActivateLink = this.state.viewModeEnabled || event[KEYS.CTRL_OR_CMD];
+    if (!shouldActivateLink) {
+      return;
+    }
+
+    const pointerDownCoords = viewportCoordsToSceneCoords(
+      this.lastPointerDownEvent!,
+      this.state,
+    );
+    const pointerUpCoords = viewportCoordsToSceneCoords(
+      this.lastPointerUpEvent!,
+      this.state,
+    );
+    const pointerDownHitElement = this.getElementAtPosition(
+      pointerDownCoords.x,
+      pointerDownCoords.y,
+      { includeLockedElements: true },
+    );
+    const pointerUpHitElement = this.getElementAtPosition(
+      pointerUpCoords.x,
+      pointerUpCoords.y,
+      { includeLockedElements: true },
+    );
+    const pointerDownLinkHit = this.getTextElementLinkAtPosition(
+      pointerDownCoords,
+      pointerDownHitElement,
+      shouldActivateLink,
+    );
+    const pointerUpLinkHit = this.getTextElementLinkAtPosition(
+      pointerUpCoords,
+      pointerUpHitElement,
+      shouldActivateLink,
+    );
+
+    if (
+      pointerDownLinkHit &&
+      pointerUpLinkHit &&
+      pointerDownLinkHit.element.id === pointerUpLinkHit.element.id &&
+      pointerDownLinkHit.url === pointerUpLinkHit.url
+    ) {
+      this.openHyperlink(pointerDownLinkHit.element, pointerDownLinkHit.url, event);
     }
   };
 
@@ -7208,6 +7327,11 @@ class App extends React.Component<AppProps, AppState> {
         scenePointer,
         hitElementMightBeLocked,
       );
+      this.hitTextLink = this.getTextElementLinkAtPosition(
+        scenePointer,
+        hitElementMightBeLocked,
+        this.state.viewModeEnabled || event[KEYS.CTRL_OR_CMD],
+      );
     }
 
     if (
@@ -7221,6 +7345,12 @@ class App extends React.Component<AppProps, AppState> {
         this.state,
         this.scene.getNonDeletedElementsMap(),
       );
+    } else if (
+      this.hitTextLink &&
+      !this.state.selectedElementIds[this.hitTextLink.element.id]
+    ) {
+      hideHyperlinkToolip();
+      setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
     } else {
       hideHyperlinkToolip();
       if (isLaserTool) {
@@ -7968,6 +8098,11 @@ class App extends React.Component<AppProps, AppState> {
         scenePointer,
         hitElement,
       );
+      this.hitTextLink = this.getTextElementLinkAtPosition(
+        scenePointer,
+        hitElement,
+        this.state.viewModeEnabled,
+      );
     }
 
     if (
@@ -7975,6 +8110,11 @@ class App extends React.Component<AppProps, AppState> {
       !this.state.selectedElementIds[this.hitLinkElement.id]
     ) {
       this.handleElementLinkClick(event);
+    } else if (
+      this.hitTextLink &&
+      !this.state.selectedElementIds[this.hitTextLink.element.id]
+    ) {
+      this.handleTextElementLinkClick(event);
     } else if (this.state.viewModeEnabled) {
       this.setState({
         activeEmbeddable: null,
@@ -8470,8 +8610,13 @@ class App extends React.Component<AppProps, AppState> {
           pointerDownState.origin,
           hitElementMightBeLocked,
         );
+        this.hitTextLink = this.getTextElementLinkAtPosition(
+          pointerDownState.origin,
+          hitElementMightBeLocked,
+          this.state.viewModeEnabled || event[KEYS.CTRL_OR_CMD],
+        );
 
-        if (this.hitLinkElement) {
+        if (this.hitLinkElement || this.hitTextLink) {
           return true;
         }
 
@@ -8491,7 +8636,15 @@ class App extends React.Component<AppProps, AppState> {
             },
             pointerDownState.hit.element,
           );
-          if (hitLinkElement) {
+          const hitTextLink = this.getTextElementLinkAtPosition(
+            {
+              x: pointerDownState.origin.x,
+              y: pointerDownState.origin.y,
+            },
+            pointerDownState.hit.element,
+            this.state.viewModeEnabled || event[KEYS.CTRL_OR_CMD],
+          );
+          if (hitLinkElement || hitTextLink) {
             return false;
           }
         }

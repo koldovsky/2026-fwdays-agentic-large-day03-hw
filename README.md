@@ -65,6 +65,7 @@ The Excalidraw editor (npm package) supports:
 - 💾&nbsp;Open format - export drawings as an `.excalidraw` json file.
 - ⚒️&nbsp;Wide range of tools - rectangle, circle, diamond, arrow, line, free-draw, eraser...
 - ➡️&nbsp;Arrow-binding & labeled arrows.
+- 🔗&nbsp;Hyperlinks for elements and markdown-style text links (`[label](https://example.com)`).
 - 🔙&nbsp;Undo / Redo.
 - 🔍&nbsp;Zoom and panning support.
 

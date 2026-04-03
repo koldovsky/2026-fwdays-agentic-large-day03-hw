@@ -53,6 +53,7 @@ import {
   getBoundTextMaxWidth,
 } from "./textElement";
 import { getLineHeightInPx } from "./textMeasurements";
+import { getLineWidth } from "./textMeasurements";
 import {
   isTextElement,
   isLinearElement,
@@ -78,7 +79,9 @@ import type {
   ExcalidrawFrameLikeElement,
   NonDeletedSceneElementsMap,
   ElementsMap,
+  FontString,
 } from "./types";
+import { parseTextHyperlinkLines } from "./textHyperlink";
 
 import type { RoughCanvas } from "roughjs/bin/canvas";
 
@@ -390,6 +393,11 @@ const drawElementOnCanvas = (
   context: CanvasRenderingContext2D,
   renderConfig: StaticCanvasRenderConfig,
 ) => {
+  const linkTextColor =
+    renderConfig.theme === THEME.DARK
+      ? applyDarkModeFilter("#4dabf7")
+      : "#1971c2";
+
   switch (element.type) {
     case "rectangle":
     case "iframe":
@@ -555,14 +563,14 @@ const drawElementOnCanvas = (
         context.canvas.setAttribute("dir", rtl ? "rtl" : "ltr");
         context.save();
         context.font = getFontString(element);
-        context.fillStyle =
+        const defaultTextColor =
           renderConfig.theme === THEME.DARK
             ? applyDarkModeFilter(element.strokeColor)
             : element.strokeColor;
+        context.fillStyle = defaultTextColor;
         context.textAlign = element.textAlign as CanvasTextAlign;
 
-        // Canvas does not support multiline text by default
-        const lines = element.text.replace(/\r\n?/g, "\n").split("\n");
+        const parsedLines = parseTextHyperlinkLines(element.text);
 
         const horizontalOffset =
           element.textAlign === "center"
@@ -582,12 +590,58 @@ const drawElementOnCanvas = (
           lineHeightPx,
         );
 
-        for (let index = 0; index < lines.length; index++) {
-          context.fillText(
-            lines[index],
-            horizontalOffset,
-            index * lineHeightPx + verticalOffset,
+        for (let index = 0; index < parsedLines.length; index++) {
+          const line = parsedLines[index];
+          const hasHyperlinks = line.hasHyperlinks && !rtl;
+
+          if (!hasHyperlinks) {
+            context.fillStyle = defaultTextColor;
+            context.textAlign = element.textAlign as CanvasTextAlign;
+            context.fillText(
+              line.renderedText,
+              horizontalOffset,
+              index * lineHeightPx + verticalOffset,
+            );
+            continue;
+          }
+
+          const lineWidth = getLineWidth(
+            line.renderedText,
+            context.font as FontString,
           );
+          const lineStartX =
+            element.textAlign === "center"
+              ? (element.width - lineWidth) / 2
+              : element.textAlign === "right"
+              ? element.width - lineWidth
+              : 0;
+
+          let cursorX = lineStartX;
+          const baselineY = index * lineHeightPx + verticalOffset;
+          context.textAlign = "left";
+
+          for (const segment of line.segments) {
+            const segmentWidth = getLineWidth(
+              segment.text,
+              context.font as FontString,
+            );
+
+            context.fillStyle = segment.url ? linkTextColor : defaultTextColor;
+            context.fillText(segment.text, cursorX, baselineY);
+
+            if (segment.url && segmentWidth > 0) {
+              context.save();
+              context.strokeStyle = linkTextColor;
+              context.lineWidth = Math.max(1, element.fontSize / 16);
+              context.beginPath();
+              context.moveTo(cursorX, baselineY + 1.5);
+              context.lineTo(cursorX + segmentWidth, baselineY + 1.5);
+              context.stroke();
+              context.restore();
+            }
+
+            cursorX += segmentWidth;
+          }
         }
         context.restore();
         if (shouldTemporarilyAttach) {
