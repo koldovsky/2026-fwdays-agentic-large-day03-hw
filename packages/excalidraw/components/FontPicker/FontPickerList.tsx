@@ -19,7 +19,7 @@ import {
 import type { ValueOf } from "@excalidraw/common/utility-types";
 
 import { Fonts } from "../../fonts";
-import { t } from "../../i18n";
+import { useI18n } from "../../i18n";
 import {
   useApp,
   useAppProps,
@@ -91,11 +91,19 @@ const getFontFamilyIcon = (fontFamily: FontFamilyValues): JSX.Element => {
 const getFontFamilyLabel = (
   fontFamily: FontFamilyValues,
   fontFaces: ExcalidrawFontFace[],
-) =>
-  // prefer our config as the browser resolved names may be wrapped in quotes and such
-  Object.entries(FONT_FAMILY).find(([, id]) => id === fontFamily)?.[0] ??
-  fontFaces[0]?.fontFace?.family ??
-  "Unknown";
+  translate: ReturnType<typeof useI18n>["t"],
+) => {
+  const rawName =
+    Object.entries(FONT_FAMILY).find(([, id]) => id === fontFamily)?.[0] ??
+    fontFaces[0]?.fontFace?.family ??
+    "Unknown";
+
+  if (fontFamily === FONT_FAMILY.Lexend) {
+    return translate("labels.lexend", null, rawName);
+  }
+
+  return rawName;
+};
 
 export const FontPickerList = React.memo(
   ({
@@ -107,6 +115,7 @@ export const FontPickerList = React.memo(
     onOpen,
     onClose,
   }: FontPickerListProps) => {
+    const { t, langCode } = useI18n();
     const { container } = useExcalidrawContainer();
     const app = useApp();
     const { fonts } = app;
@@ -125,7 +134,7 @@ export const FontPickerList = React.memo(
             const fontDescriptor = {
               value: familyId,
               icon: getFontFamilyIcon(familyId),
-              text: getFontFamilyLabel(familyId, fontFaces),
+              text: getFontFamilyLabel(familyId, fontFaces, t),
             };
 
             if (metadata.deprecated) {
@@ -143,7 +152,7 @@ export const FontPickerList = React.memo(
           .sort((a, b) =>
             a.text.toLowerCase() > b.text.toLowerCase() ? 1 : -1,
           ),
-      [],
+      [langCode],
     );
 
     const sceneFamilies = useMemo(

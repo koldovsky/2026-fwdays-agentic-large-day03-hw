@@ -74,6 +74,12 @@ describe("exportToSvg", () => {
     );
 
     expect(svgElement).toMatchSnapshot();
+
+    const exported = svgElement.outerHTML;
+    expect(exported).toContain(
+      "font-family: Lexend; src: url(data:font/woff2",
+    );
+    expect(exported).toMatch(/font-family="Lexend,\s*sans-serif/);
   });
 
   it("with a CJK font", async () => {

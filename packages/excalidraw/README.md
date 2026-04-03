@@ -115,7 +115,7 @@ import { exportToSvg } from "@excalidraw/excalidraw";
 
 ## Bundled canvas fonts
 
-Some text fonts ship with the package under the [SIL Open Font License](https://openfontlicense.org/) (or compatible terms), including **Lexend** ([Google Fonts](https://fonts.google.com/specimen/Lexend), by Bonnie Shaver-Troup, Thomas Jockin, et al.).
+Multiple canvas font families ship with this package under the [SIL Open Font License](https://openfontlicense.org/) (or compatible terms), including **Lexend**, **Virgil**, **Nunito**, **Excalifont**, **Cascadia**, **Comic Shanns**, **Helvetica**, **Liberation Sans**, **Lilita One**, **Xiaolai**, and bundled emoji fonts. **Lexend** is also published on [Google Fonts](https://fonts.google.com/specimen/Lexend) (Bonnie Shaver-Troup, Thomas Jockin, et al.).
 
 ## Self-hosting fonts
 
