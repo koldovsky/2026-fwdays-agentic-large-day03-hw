@@ -1,12 +1,14 @@
 import {
   curvePointDistance,
   distanceToLineSegment,
+  lineSegment,
+  pointFrom,
   pointRotateRads,
 } from "@excalidraw/math";
 
 import { ellipse, ellipseDistanceFromPoint } from "@excalidraw/math/ellipse";
 
-import type { GlobalPoint, Radians } from "@excalidraw/math";
+import type { GlobalPoint, LineSegment, Radians } from "@excalidraw/math";
 
 import {
   deconstructDiamondElement,
@@ -14,7 +16,7 @@ import {
   deconstructRectanguloidElement,
 } from "./utils";
 
-import { elementCenterPoint } from "./bounds";
+import { elementCenterPoint, getTrianglePoints } from "./bounds";
 
 import type {
   ElementsMap,
@@ -43,6 +45,9 @@ export const distanceToElement = (
       return distanceToRectanguloidElement(element, elementsMap, p);
     case "diamond":
       return distanceToDiamondElement(element, elementsMap, p);
+    case "triangle":
+    case "triangle_outline":
+      return distanceToTriangleElement(element, elementsMap, p);
     case "ellipse":
       return distanceToEllipseElement(element, elementsMap, p);
     case "line":
@@ -108,6 +113,25 @@ const distanceToDiamondElement = (
       .map((a) => curvePointDistance(a, rotatedPoint))
       .filter((d): d is number => d !== null),
   );
+};
+
+const distanceToTriangleElement = (
+  element: ExcalidrawElement,
+  elementsMap: ElementsMap,
+  p: GlobalPoint,
+): number => {
+  const center = elementCenterPoint(element, elementsMap);
+  const rotatedPoint = pointRotateRads(p, center, -element.angle as Radians);
+  const [tx, ty, rx, ry, lx, ly] = getTrianglePoints(element);
+  const top = pointFrom<GlobalPoint>(element.x + tx, element.y + ty);
+  const br = pointFrom<GlobalPoint>(element.x + rx, element.y + ry);
+  const bl = pointFrom<GlobalPoint>(element.x + lx, element.y + ly);
+  const sides: LineSegment<GlobalPoint>[] = [
+    lineSegment(top, br),
+    lineSegment(br, bl),
+    lineSegment(bl, top),
+  ];
+  return Math.min(...sides.map((s) => distanceToLineSegment(rotatedPoint, s)));
 };
 
 /**

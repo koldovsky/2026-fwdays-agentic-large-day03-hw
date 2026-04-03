@@ -24,6 +24,7 @@ import {
   deconstructDiamondElement,
   deconstructRectanguloidElement,
   elementCenterPoint,
+  getTrianglePoints,
   getDiamondBaseCorners,
   FOCUS_POINT_SIZE,
   getOmitSidesForEditorInterface,
@@ -365,6 +366,19 @@ const renderBindingHighlightForBindableElement_simple = (
           }
 
           break;
+        case "triangle":
+        case "triangle_outline": {
+          const [tx, ty, rx, ry, lx, ly] = getTrianglePoints(
+            suggestedBinding.element,
+          );
+          context.beginPath();
+          context.moveTo(tx, ty);
+          context.lineTo(rx, ry);
+          context.lineTo(lx, ly);
+          context.closePath();
+          context.stroke();
+          break;
+        }
         default:
           {
             const [segments, curves] = deconstructRectanguloidElement(
@@ -707,6 +721,17 @@ const renderBindingHighlightForBindableElement_complex = (
           }
 
           break;
+        case "triangle":
+        case "triangle_outline": {
+          const [tx, ty, rx, ry, lx, ly] = getTrianglePoints(element);
+          context.beginPath();
+          context.moveTo(tx, ty);
+          context.lineTo(rx, ry);
+          context.lineTo(lx, ly);
+          context.closePath();
+          context.stroke();
+          break;
+        }
         default:
           {
             const [segments, curves] = deconstructRectanguloidElement(

@@ -307,7 +307,9 @@ const bindLinearElementToElement = (
         switch (startType) {
           case "rectangle":
           case "ellipse":
-          case "diamond": {
+          case "diamond":
+          case "triangle":
+          case "triangle_outline": {
             startBoundElement = newElement({
               x: startX,
               y: startY,
@@ -383,7 +385,9 @@ const bindLinearElementToElement = (
         switch (endType) {
           case "rectangle":
           case "ellipse":
-          case "diamond": {
+          case "diamond":
+          case "triangle":
+          case "triangle_outline": {
             endBoundElement = newElement({
               x: endX,
               y: endY,
@@ -529,7 +533,9 @@ export const convertToExcalidrawElements = (
     switch (element.type) {
       case "rectangle":
       case "ellipse":
-      case "diamond": {
+      case "diamond":
+      case "triangle":
+      case "triangle_outline": {
         const width =
           element?.label?.text && element.width === undefined
             ? 0
@@ -662,6 +668,8 @@ export const convertToExcalidrawElements = (
       case "rectangle":
       case "ellipse":
       case "diamond":
+      case "triangle":
+      case "triangle_outline":
       case "arrow": {
         if (element.label?.text) {
           let [container, text] = bindTextToContainer(

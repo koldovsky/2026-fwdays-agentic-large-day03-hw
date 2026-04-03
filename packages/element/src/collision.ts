@@ -7,6 +7,7 @@ import {
   pointFrom,
   pointFromVector,
   pointRotateRads,
+  pointTranslate,
   pointsEqual,
   vectorFromPoint,
   vectorNormalize,
@@ -35,6 +36,7 @@ import {
   getCubicBezierCurveBound,
   getDiamondPoints,
   getElementBounds,
+  getTrianglePoints,
   pointInsideBounds,
 } from "./bounds";
 import {
@@ -68,6 +70,8 @@ import type {
   ExcalidrawDiamondElement,
   ExcalidrawElement,
   ExcalidrawEllipseElement,
+  ExcalidrawTriangleElement,
+  ExcalidrawTriangleOutlineElement,
   ExcalidrawFreeDrawElement,
   ExcalidrawLinearElement,
   ExcalidrawRectanguloidElement,
@@ -455,6 +459,15 @@ export const intersectElementWithLineSegment = (
         offset,
         onlyFirst,
       );
+    case "triangle":
+    case "triangle_outline":
+      return intersectTriangleWithLineSegment(
+        element as ExcalidrawTriangleElement | ExcalidrawTriangleOutlineElement,
+        elementsMap,
+        line,
+        offset,
+        onlyFirst,
+      );
     case "ellipse":
       return intersectEllipseWithLineSegment(
         element,
@@ -686,6 +699,58 @@ const intersectDiamondWithLineSegment = (
     onlyFirst,
   );
 
+  return intersections;
+};
+
+const intersectTriangleWithLineSegment = (
+  element: ExcalidrawTriangleElement | ExcalidrawTriangleOutlineElement,
+  elementsMap: ElementsMap,
+  l: LineSegment<GlobalPoint>,
+  offset: number = 0,
+  onlyFirst = false,
+): GlobalPoint[] => {
+  const center = elementCenterPoint(element, elementsMap);
+
+  const rotatedA = pointRotateRads(l[0], center, -element.angle as Radians);
+  const rotatedB = pointRotateRads(l[1], center, -element.angle as Radians);
+  const rotatedIntersector = lineSegment(rotatedA, rotatedB);
+
+  const [tx, ty, rx, ry, lx, ly] = getTrianglePoints(element);
+  const top: GlobalPoint = pointFrom(element.x + tx, element.y + ty);
+  const bottomRight: GlobalPoint = pointFrom(element.x + rx, element.y + ry);
+  const bottomLeft: GlobalPoint = pointFrom(element.x + lx, element.y + ly);
+
+  const centroid: GlobalPoint = pointFrom(
+    (top[0] + bottomRight[0] + bottomLeft[0]) / 3,
+    (top[1] + bottomRight[1] + bottomLeft[1]) / 3,
+  );
+
+  const outwardOffset = (p: GlobalPoint): GlobalPoint =>
+    pointTranslate(
+      p,
+      vectorScale(vectorNormalize(vectorFromPoint(p, centroid)), offset),
+    ) as GlobalPoint;
+
+  const a: GlobalPoint = offset === 0 ? top : outwardOffset(top);
+  const b: GlobalPoint =
+    offset === 0 ? bottomRight : outwardOffset(bottomRight);
+  const c: GlobalPoint = offset === 0 ? bottomLeft : outwardOffset(bottomLeft);
+
+  const sides = [
+    lineSegment<GlobalPoint>(a, b),
+    lineSegment<GlobalPoint>(b, c),
+    lineSegment<GlobalPoint>(c, a),
+  ];
+
+  const intersections: GlobalPoint[] = [];
+  lineIntersections(
+    sides,
+    rotatedIntersector,
+    intersections,
+    center,
+    element.angle,
+    onlyFirst,
+  );
   return intersections;
 };
 

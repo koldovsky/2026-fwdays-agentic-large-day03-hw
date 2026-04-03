@@ -5,6 +5,7 @@ import {
   RectangleIcon,
   DiamondIcon,
   EllipseIcon,
+  TriangleIcon,
   ArrowIcon,
   LineIcon,
   FreedrawIcon,
@@ -55,6 +56,15 @@ export const SHAPES = [
     value: "ellipse",
     key: KEYS.O,
     numericKey: KEYS["4"],
+    fillable: true,
+    toolbar: true,
+  },
+  {
+    icon: TriangleIcon,
+    value: "triangle",
+    // Avoid KEYS.G: App.tsx uses G for elementBackground (and Shift+G for eye dropper).
+    key: KEYS.W,
+    numericKey: null,
     fillable: true,
     toolbar: true,
   },

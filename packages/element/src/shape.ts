@@ -61,6 +61,7 @@ import {
   getArrowheadPoints,
   getDiamondPoints,
   getElementAbsoluteCoords,
+  getTrianglePoints,
 } from "./bounds";
 import { shouldTestInside } from "./collision";
 
@@ -230,7 +231,9 @@ export const generateRoughOptions = (
     case "iframe":
     case "embeddable":
     case "diamond":
-    case "ellipse": {
+    case "ellipse":
+    case "triangle":
+    case "triangle_outline": {
       options.fillStyle = element.fillStyle;
       options.fill = isTransparent(element.backgroundColor)
         ? undefined
@@ -875,6 +878,21 @@ const _generateElementShape = (
       );
       return shape;
     }
+    case "triangle":
+    case "triangle_outline": {
+      const shape: ElementShapes[typeof element.type] = generator.polygon(
+        (() => {
+          const [tx, ty, rx, ry, lx, ly] = getTrianglePoints(element);
+          return [
+            [tx, ty],
+            [rx, ry],
+            [lx, ly],
+          ] as [number, number][];
+        })(),
+        generateRoughOptions(element, false, isDarkMode),
+      );
+      return shape;
+    }
     case "line":
     case "arrow": {
       let shape: ElementShapes[typeof element.type];
@@ -1080,6 +1098,8 @@ export const getElementShape = <Point extends GlobalPoint | LocalPoint>(
   switch (element.type) {
     case "rectangle":
     case "diamond":
+    case "triangle":
+    case "triangle_outline":
     case "frame":
     case "magicframe":
     case "embeddable":

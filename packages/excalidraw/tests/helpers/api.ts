@@ -281,8 +281,15 @@ export class API {
       case "rectangle":
       case "diamond":
       case "ellipse":
+      case "triangle":
+      case "triangle_outline":
         element = newElement({
-          type: type as "rectangle" | "diamond" | "ellipse",
+          type: type as
+            | "rectangle"
+            | "diamond"
+            | "ellipse"
+            | "triangle"
+            | "triangle_outline",
           ...base,
         });
         break;

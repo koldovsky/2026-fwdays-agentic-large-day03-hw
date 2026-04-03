@@ -9282,8 +9282,13 @@ class App extends React.Component<AppProps, AppState> {
       | "diamond"
       | "ellipse"
       | "iframe"
-      | "embeddable",
+      | "embeddable"
+      | "triangle"
+      | "triangle_outline",
   ) {
+    if (elementType === "triangle" || elementType === "triangle_outline") {
+      return null;
+    }
     return this.state.currentItemRoundness === "round"
       ? {
           type: isUsingAdaptiveRadius(elementType)
@@ -9294,7 +9299,7 @@ class App extends React.Component<AppProps, AppState> {
   }
 
   private createGenericElementOnPointerDown = (
-    elementType: ExcalidrawGenericElement["type"] | "embeddable",
+    elementType: ExcalidrawGenericElement["type"] | "embeddable" | "triangle",
     pointerDownState: PointerDownState,
   ): void => {
     const [gridX, gridY] = getGridPoint(
@@ -9320,7 +9325,6 @@ class App extends React.Component<AppProps, AppState> {
       strokeStyle: this.state.currentItemStrokeStyle,
       roughness: this.state.currentItemRoughness,
       opacity: this.state.currentItemOpacity,
-      roundness: this.getCurrentItemRoundness(elementType),
       locked: false,
       frameId: topLayerFrame ? topLayerFrame.id : null,
     } as const;
@@ -9330,11 +9334,21 @@ class App extends React.Component<AppProps, AppState> {
       element = newEmbeddableElement({
         type: "embeddable",
         ...baseElementAttributes,
+        roundness: this.getCurrentItemRoundness("embeddable"),
+      });
+    } else if (elementType === "triangle") {
+      element = newElement({
+        type: isTransparent(this.state.currentItemBackgroundColor)
+          ? "triangle_outline"
+          : "triangle",
+        ...baseElementAttributes,
+        roundness: null,
       });
     } else {
       element = newElement({
         type: elementType,
         ...baseElementAttributes,
+        roundness: this.getCurrentItemRoundness(elementType),
       });
     }
 
