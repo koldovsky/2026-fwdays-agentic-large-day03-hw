@@ -1,0 +1,88 @@
+---
+description: "Architecture constraints for Excalidraw"
+globs: packages/excalidraw/**
+alwaysApply: false
+---
+
+# Excalidraw Architecture
+
+## State Management
+
+- Custom state via actionManager — NOT Redux/Zustand/MobX
+- State updates: prefer `actionManager.executeAction()` for all `AppState` mutations — this
+  is the default path and keeps history, undo/redo, and collab sync consistent.
+- State type: AppState (`packages/excalidraw/types.ts`)
+
+### Exceptions — direct `this.setState` / `this.app.setState`
+
+The following sites use `this.setState` directly rather than going through
+`actionManager.executeAction()`. These are **known, accepted exceptions**:
+
+| Site | Reason |
+|------|--------|
+| `packages/excalidraw/components/App.tsx` (~218 calls) | `App` is the React class component that *owns* `AppState`. `actionManager.executeAction()` itself delegates to `App.syncActionResult`, which calls `this.setState` — so these calls are the canonical implementation of state management, not a bypass. Functional sub-components (`LayerUI.tsx`, `JSONExportDialog.tsx`, `ConvertElementTypePopup.tsx`) are hooks-based and have zero direct `setState` calls. |
+| `packages/excalidraw/lasso/index.ts` | Lasso selection state is transient/mid-gesture and does not belong in action history. |
+| `packages/excalidraw/data/library.ts` | Library loading is an async, multi-step operation where action lifecycle does not map cleanly. |
+
+### Introducing a new direct `setState`
+
+If you must add another direct `this.app.setState` call:
+
+1. **Add a comment** at the call site explaining why `actionManager.executeAction()` is not
+   suitable (e.g., mid-gesture transient state, async initialization).
+2. **Open a follow-up TODO** (or GitHub issue) to migrate to `actionManager.executeAction()`
+   once the action system supports the use-case.
+
+   ```ts
+   // TODO(migration): replace with actionManager.executeAction() once <reason>.
+   // Direct setState used here because <short rationale>.
+   this.app.setState({ ... });
+   ```
+
+Any new direct `setState` without this documentation should be treated as a bug in code review.
+
+## Rendering
+
+- Canvas 2D rendering — NOT React DOM for drawing
+- Render pipeline: Scene → renderScene() → canvas context
+- DO NOT use react-konva, fabric.js, pixi.js
+
+## Dependencies
+
+- No new npm packages without explicit approval
+- Check packages/utils/ before adding external helpers
+
+## How to Verify
+
+### State Management
+
+```bash
+# Confirm no forbidden state libraries are imported
+grep -rn "from ['\"]redux['\"]\|from ['\"]zustand['\"]\|from ['\"]mobx['\"]" packages/excalidraw/ --include="*.ts" --include="*.tsx"
+# Expected: no output
+
+# NOTE: Not sure that's the best way to check...
+# Confirm state mutations go through actionManager.executeAction
+grep -rn "\.executeAction(" packages/excalidraw/ --include="*.ts" --include="*.tsx"
+# Every executeAction call should target actionManager
+```
+
+### Rendering
+
+```bash
+# Confirm no forbidden rendering libraries are imported
+grep -rn "react-konva\|fabric\.js\|pixi\.js\|from ['\"]pixi['\"]" packages/excalidraw/ --include="*.ts" --include="*.tsx"
+# Expected: no output
+
+# Flag any React DOM drawing — ReactDOM.render or createRoot must NOT be used for canvas/drawing
+grep -rn "ReactDOM\.render\|createRoot\b" packages/excalidraw/ --include="*.ts" --include="*.tsx"
+# Expected: no output (react-dom helpers like flushSync/createPortal are fine; rendering-to-DOM for drawing is not)
+
+# Confirm the Scene → renderStaticScene/renderInteractiveScene pipeline exists
+grep -rn "renderStaticScene\|renderInteractiveScene" packages/excalidraw/ --include="*.ts" --include="*.tsx"
+# Expected: hits in renderer/staticScene.ts, renderer/interactiveScene.ts, and call sites in components/canvases/
+
+# Confirm renderStaticScene/renderInteractiveScene delegate to canvas.getContext
+grep -rn "getContext(" packages/excalidraw/renderer/ --include="*.ts" --include="*.tsx"
+# Expected: hits inside renderer/staticScene.ts and/or renderer/helpers.ts confirming 2D canvas context use
+```

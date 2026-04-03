@@ -1,0 +1,30 @@
+---
+description: Updates the Memory Bank with recent changes, ensuring all technical details are accurate and up to date. Use when the user asks to update the memory bank, sync documentation, or refresh project context.
+alwaysApply: true
+---
+
+# Memory Bank
+
+This project uses the **Memory Bank** pattern at @folder:docs/memory for persistent. Versioned context.
+
+After work that materially affects behaviour, structure, tooling or conventions follow **memory-bank-update**: @file:.agents/skills/memory-bank-update/SKILL.md
+
+Skip **Memory Bank** updates for trivial typos or tiny bugfixes unless they alter documented constraints or behaviour.
+
+## How to Verify
+
+### Confirm Memory Bank files are up to date
+
+```bash
+# Check that memory bank files were recently modified after a code change
+git diff --name-only HEAD | grep "docs/memory/"
+
+# Verify no memory bank file exceeds 200 lines
+wc -l docs/memory/*.md
+# Expected: all files ≤ 200 lines
+
+# Confirm updated files reference real files/symbols that exist in the codebase
+grep -rn "activeContext\|systemPatterns\|decisionLog\|techContext\|productContext\|projectbrief\|progress" docs/memory/ --include="*.md" | wc -l
+# Expected: non-zero (cross-references exist between memory bank files)
+```
+

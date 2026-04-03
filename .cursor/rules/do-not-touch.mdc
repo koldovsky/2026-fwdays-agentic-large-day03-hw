@@ -1,0 +1,31 @@
+---
+description: "Protected files that should not be modified"
+globs: "packages/excalidraw/**"
+alwaysApply: true
+---
+
+# Protected Files
+
+NEVER modify these files without explicit approval:
+
+- `packages/excalidraw/scene/Renderer.ts` — render pipeline
+- `packages/excalidraw/data/restore.ts` — file format compat
+- `packages/excalidraw/actions/manager.tsx` — action system
+- `packages/excalidraw/types.ts` — core types
+
+Changes to protected files require:
+
+1. Full understanding of dependencies
+2. Running complete test suite
+3. Manual QA verification
+
+## How to Verify
+
+### Confirm protected files have not been unexpectedly modified
+
+```bash
+# Check git diff for protected files
+git diff --name-only HEAD | grep -E \
+  "packages/excalidraw/scene/Renderer\.ts|packages/excalidraw/data/restore\.ts|packages/excalidraw/actions/manager\.tsx|packages/excalidraw/types\.ts"
+# Expected: no output unless the change is intentional and approved
+```

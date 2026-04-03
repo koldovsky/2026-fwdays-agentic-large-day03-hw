@@ -1,0 +1,66 @@
+---
+description: "Code conventions for Excalidraw components and utilities"
+globs: packages/**/*.ts,packages/**/*.tsx
+alwaysApply: false
+---
+
+# Code Conventions
+
+## Components
+
+- Functional components + hooks ONLY (no class components)
+- Props interface: `{ComponentName}Props`
+- Prefer named exports; default exports are allowed for existing/legacy modules or where
+  justified (e.g., `React.memo` wrappers). New files should use named exports unless there
+  is a clear reason not to.
+- Colocated tests: `ComponentName.test.tsx`
+
+## TypeScript
+
+- Strict mode — no `any`, no `@ts-ignore`
+- Prefer `type` over `interface` for simple types
+- Import types: `import type { X } from "..."`
+
+## Files
+
+- kebab-case for files: `element-utils.ts`
+- PascalCase for components: `LayerUI.tsx`
+
+## How to Verify
+
+### Components
+
+```bash
+# Confirm no class components exist
+grep -rn "extends React\.Component\|extends Component\|extends PureComponent" packages/ --include="*.tsx" --include="*.ts"
+# Expected: no output
+
+# Audit default exports in new component files (existing files are exempt)
+# Prefer named exports for new code; flag unexpected new default exports for review
+grep -rn "^export default" packages/ --include="*.tsx"
+# Expected: only legacy/existing files — new files should use named exports
+```
+
+### TypeScript
+
+```bash
+# TODO: Update to skip comment lines.
+grep -rn ": any\b\|as any\b" packages/ --include="*.ts" --include="*.tsx"
+# Expected: no output
+
+# Confirm no @ts-ignore usage
+grep -rn "@ts-ignore" packages/ --include="*.ts" --include="*.tsx"
+# Expected: no output
+```
+
+### Files
+
+```bash
+# Find component files not following PascalCase convention
+find packages/ -name "*.tsx" | grep -v "__tests__" | grep -v ".test." | grep -vE "/[A-Z][A-Za-z0-9]+\.tsx$"
+# Expected: no output (all .tsx files should be PascalCase)
+
+# Find non-component TS files not following kebab-case convention
+find packages/ -name "*.ts" |  grep -v ".d.ts" | grep -vE "(__tests__|test)" | grep -vE "/[a-z][a-z0-9-]+\.ts$"
+# Expected: no output
+```
