@@ -258,6 +258,8 @@ import {
   maybeHandleArrowPointlikeDrag,
   getUncroppedWidthAndHeight,
   getActiveTextElement,
+  parseMarkdownLinks,
+  getLineWidth,
 } from "@excalidraw/element";
 
 import type { GlobalPoint, LocalPoint, Radians } from "@excalidraw/math";
@@ -6600,6 +6602,71 @@ class App extends React.Component<AppProps, AppState> {
     }
   };
 
+  /**
+   * Returns the URL of an inline markdown link `[label](url)` that was
+   * clicked inside a text element, or null if no such link was hit.
+   */
+  private getInlineMarkdownLinkAtPoint = (
+    element: NonDeletedExcalidrawElement,
+    scenePoint: Readonly<{ x: number; y: number }>,
+  ): string | null => {
+    if (!isTextElement(element)) {
+      return null;
+    }
+
+    // Rotate the scene point into the element's local coordinate space
+    const cx = element.x + element.width / 2;
+    const cy = element.y + element.height / 2;
+    const [localX, localY] = pointRotateRads(
+      pointFrom(scenePoint.x, scenePoint.y),
+      pointFrom(cx, cy),
+      (-element.angle) as Radians,
+    );
+
+    // Position relative to element origin
+    const relX = localX - element.x;
+    const relY = localY - element.y;
+
+    if (relX < 0 || relY < 0 || relX > element.width || relY > element.height) {
+      return null;
+    }
+
+    const lineHeightPx = getLineHeightInPx(element.fontSize, element.lineHeight);
+    const lineIndex = Math.floor(relY / lineHeightPx);
+    const lines = element.text.replace(/\r\n?/g, "\n").split("\n");
+
+    if (lineIndex < 0 || lineIndex >= lines.length) {
+      return null;
+    }
+
+    const line = lines[lineIndex];
+    const segments = parseMarkdownLinks(line);
+    const fontString = getFontString(element);
+
+    const lineWidth = getLineWidth(line, fontString);
+    let segStartX =
+      element.textAlign === "right"
+        ? element.width - lineWidth
+        : element.textAlign === "center"
+        ? (element.width - lineWidth) / 2
+        : 0;
+
+    for (const segment of segments) {
+      const segWidth = getLineWidth(segment.content, fontString);
+      if (
+        segment.type === "link" &&
+        segment.url &&
+        relX >= segStartX &&
+        relX <= segStartX + segWidth
+      ) {
+        return segment.url;
+      }
+      segStartX += segWidth;
+    }
+
+    return null;
+  };
+
   private handleElementLinkClick = (
     event: React.PointerEvent<HTMLCanvasElement>,
   ) => {
@@ -7975,11 +8042,48 @@ class App extends React.Component<AppProps, AppState> {
       !this.state.selectedElementIds[this.hitLinkElement.id]
     ) {
       this.handleElementLinkClick(event);
-    } else if (this.state.viewModeEnabled) {
-      this.setState({
-        activeEmbeddable: null,
-        selectedElementIds: {},
-      });
+    } else {
+      // Check for inline markdown links inside text elements
+      const draggedDistance = this.lastPointerDownEvent
+        ? pointDistance(
+            pointFrom(
+              this.lastPointerDownEvent.clientX,
+              this.lastPointerDownEvent.clientY,
+            ),
+            pointFrom(event.clientX, event.clientY),
+          )
+        : Infinity;
+
+      if (draggedDistance <= DRAGGING_THRESHOLD) {
+        const hitElement = this.getElementAtPosition(
+          scenePointer.x,
+          scenePointer.y,
+        );
+        if (
+          hitElement &&
+          isTextElement(hitElement) &&
+          !this.state.selectedElementIds[hitElement.id]
+        ) {
+          const inlineUrl = this.getInlineMarkdownLinkAtPoint(
+            hitElement,
+            scenePointer,
+          );
+          if (inlineUrl) {
+            const newWindow = window.open(undefined, "_blank");
+            if (newWindow) {
+              newWindow.opener = null;
+              newWindow.location = inlineUrl;
+            }
+          }
+        }
+      }
+
+      if (this.state.viewModeEnabled) {
+        this.setState({
+          activeEmbeddable: null,
+          selectedElementIds: {},
+        });
+      }
     }
   };
 
