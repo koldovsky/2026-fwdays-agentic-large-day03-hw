@@ -14,6 +14,7 @@ See [activeContext.md](./activeContext.md) for the current session state.
 - Reduced Memory Bank duplication versus deep technical/product docs by compacting context files and keeping link-first references.
 - Added deep i18n architecture documentation in [i18n-architecture.md](../technical/i18n-architecture.md), covering translation engine, Crowdin workflow, language gating, RTL support, and runtime data flow.
 - Added i18n-specific hidden invariants (16, 17) for static language filtering and silent locale fallback.
+- Added properties panel architecture documentation in [properties-panel-architecture.md](../technical/properties-panel-architecture.md), covering PanelComponent rendering, three layout modes, element-type filtering, and how to add new controls.
 - Added context menu architecture documentation in [context-menu-architecture.md](../technical/context-menu-architecture.md), covering rendering, item registration via Action system, predicate-based filtering, text-specific menu items, and extension points. Documented that nested menus are not supported natively.
 
 ## In Progress
