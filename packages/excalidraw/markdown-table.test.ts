@@ -199,4 +199,33 @@ describe("markdownTableToSkeletons", () => {
     const texts = cells.map((c) => c.label.text);
     expect(texts).toEqual(["A", "B", "1", "2", "3", "4"]);
   });
+
+  it("should produce same results with no opts as with empty opts", () => {
+    const withoutOpts = asContainers(markdownTableToSkeletons(parsed));
+    const withEmptyOpts = asContainers(markdownTableToSkeletons(parsed, {}));
+    expect(withoutOpts.map((c) => c.width)).toEqual(
+      withEmptyOpts.map((c) => c.width),
+    );
+    expect(withoutOpts.map((c) => c.height)).toEqual(
+      withEmptyOpts.map((c) => c.height),
+    );
+  });
+
+  it("should respect custom minCellWidth via opts", () => {
+    const cells = asContainers(
+      markdownTableToSkeletons(parsed, { minCellWidth: 200 }),
+    );
+    for (const cell of cells) {
+      expect(cell.width).toBeGreaterThanOrEqual(200);
+    }
+  });
+
+  it("should respect custom cellHeight via opts", () => {
+    const cells = asContainers(
+      markdownTableToSkeletons(parsed, { cellHeight: 80 }),
+    );
+    for (const cell of cells) {
+      expect(cell.height).toBe(80);
+    }
+  });
 });

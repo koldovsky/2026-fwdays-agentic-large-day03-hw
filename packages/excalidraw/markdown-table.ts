@@ -58,15 +58,24 @@ export const parseMarkdownTable = (
   return { headers, rows };
 };
 
-const MIN_CELL_WIDTH = 100;
-const CHAR_WIDTH_ESTIMATE = 10;
-const CELL_PADDING = 40;
-const CELL_HEIGHT = 50;
+export type TableSizingOpts = {
+  minCellWidth?: number;
+  charWidthEstimate?: number;
+  cellPadding?: number;
+  cellHeight?: number;
+};
 
 export const computeColumnWidths = (
   allRows: string[][],
   numCols: number,
+  opts: TableSizingOpts = {},
 ): number[] => {
+  const {
+    minCellWidth = 100,
+    charWidthEstimate = 10,
+    cellPadding = 40,
+  } = opts;
+
   const widths: number[] = [];
   for (let col = 0; col < numCols; col++) {
     let maxLen = 0;
@@ -76,20 +85,22 @@ export const computeColumnWidths = (
         maxLen = len;
       }
     }
-    widths.push(Math.max(MIN_CELL_WIDTH, maxLen * CHAR_WIDTH_ESTIMATE + CELL_PADDING));
+    widths.push(Math.max(minCellWidth, maxLen * charWidthEstimate + cellPadding));
   }
   return widths;
 };
 
 export const markdownTableToSkeletons = (
   parsed: { headers: string[]; rows: string[][] },
+  opts: TableSizingOpts = {},
 ): ExcalidrawElementSkeleton[] => {
+  const { cellHeight = 50 } = opts;
   const groupId = randomId();
   const skeletons: ExcalidrawElementSkeleton[] = [];
 
   const allRows = [parsed.headers, ...parsed.rows];
   const numCols = parsed.headers.length;
-  const columnWidths = computeColumnWidths(allRows, numCols);
+  const columnWidths = computeColumnWidths(allRows, numCols, opts);
 
   for (let rowIdx = 0; rowIdx < allRows.length; rowIdx++) {
     const row = allRows[rowIdx];
@@ -98,9 +109,9 @@ export const markdownTableToSkeletons = (
       skeletons.push({
         type: "rectangle",
         x: xOffset,
-        y: rowIdx * CELL_HEIGHT,
+        y: rowIdx * cellHeight,
         width: columnWidths[colIdx],
-        height: CELL_HEIGHT,
+        height: cellHeight,
         groupIds: [groupId],
         label: {
           text: row[colIdx] || "",
