@@ -14,7 +14,7 @@ describe("FontPicker", () => {
         disconnect() {}
       };
 
-    const { queryByTestId } = await render(
+    const { queryByTestId, findByText } = await render(
       <Excalidraw handleKeyboardGlobally={true} />,
     );
 
@@ -27,5 +27,7 @@ describe("FontPicker", () => {
     act(() => {
       fontPickerTrigger!.click();
     });
+
+    expect(await findByText("Lexend")).toBeInTheDocument();
   });
 });

@@ -81,6 +81,20 @@ describe("restoreElements", () => {
     ).toEqual([expect.objectContaining({ isDeleted: true })]);
   });
 
+  it("should restore text element with Lexend font family", () => {
+    const textElement = API.createElement({
+      type: "text",
+      fontFamily: FONT_FAMILY.Lexend,
+      text: "lexend",
+    });
+
+    const restored = restore.restoreElements([textElement], null)[0] as
+      | ExcalidrawTextElement
+      | undefined;
+
+    expect(restored?.fontFamily).toBe(FONT_FAMILY.Lexend);
+  });
+
   it("should restore text element correctly passing value for each attribute", () => {
     const textElement = API.createElement({
       type: "text",

@@ -51,6 +51,13 @@ describe("exportToSvg", () => {
       width: ELEMENT_WIDTH,
       index: "a3",
     },
+    {
+      ...textFixture,
+      fontFamily: FONT_FAMILY.Lexend,
+      height: ELEMENT_HEIGHT,
+      width: ELEMENT_WIDTH,
+      index: "a4",
+    },
   ] as NonDeletedExcalidrawElement[];
 
   const DEFAULT_OPTIONS = {
@@ -67,6 +74,12 @@ describe("exportToSvg", () => {
     );
 
     expect(svgElement).toMatchSnapshot();
+
+    const exported = svgElement.outerHTML;
+    expect(exported).toContain(
+      "font-family: Lexend; src: url(data:font/woff2",
+    );
+    expect(exported).toMatch(/font-family="Lexend,\s*sans-serif/);
   });
 
   it("with a CJK font", async () => {
@@ -80,7 +93,7 @@ describe("exportToSvg", () => {
           text: "中国你好！这是一个测试。中国你好！日本こんにちは！これはテストです。한국 안녕하세요! 이것은 테스트입니다.",
           originalText:
             "中国你好！这是一个测试。中国你好！日本こんにちは！これはテストです。한국 안녕하세요! 이것은 테스트입니다.",
-          index: "a4" as FractionalIndex,
+          index: "a5" as FractionalIndex,
         } as ExcalidrawTextElement,
       ],
       DEFAULT_OPTIONS,

@@ -161,31 +161,29 @@ SidebarInner.displayName = "SidebarInner";
 
 export const Sidebar = Object.assign(
   forwardRef((props: SidebarProps, ref: React.ForwardedRef<HTMLDivElement>) => {
-    const appState = useUIAppState();
+    const uiState = useUIAppState();
+    const openSidebar = uiState?.openSidebar ?? null;
 
     const { onStateChange } = props;
 
-    const refPrevOpenSidebar = useRef(appState.openSidebar);
+    const refPrevOpenSidebar = useRef(openSidebar);
     useEffect(() => {
       if (
         // closing sidebar
-        ((!appState.openSidebar &&
-          refPrevOpenSidebar?.current?.name === props.name) ||
+        ((!openSidebar && refPrevOpenSidebar?.current?.name === props.name) ||
           // opening current sidebar
-          (appState.openSidebar?.name === props.name &&
+          (openSidebar?.name === props.name &&
             refPrevOpenSidebar?.current?.name !== props.name) ||
           // switching tabs or switching to a different sidebar
           refPrevOpenSidebar.current?.name === props.name) &&
-        appState.openSidebar !== refPrevOpenSidebar.current
+        openSidebar !== refPrevOpenSidebar.current
       ) {
         onStateChange?.(
-          appState.openSidebar?.name !== props.name
-            ? null
-            : appState.openSidebar,
+          openSidebar?.name !== props.name ? null : openSidebar,
         );
       }
-      refPrevOpenSidebar.current = appState.openSidebar;
-    }, [appState.openSidebar, onStateChange, props.name]);
+      refPrevOpenSidebar.current = openSidebar;
+    }, [openSidebar, onStateChange, props.name]);
 
     const [mounted, setMounted] = useState(false);
     useLayoutEffect(() => {
@@ -205,7 +203,7 @@ export const Sidebar = Object.assign(
     // Alternative, and more general solution would be to namespace the fallback
     // HoC so that state is not shared between subcomponents when the wrapping
     // component is of the same type (e.g. Sidebar -> SidebarHeader).
-    const shouldRender = mounted && appState.openSidebar?.name === props.name;
+    const shouldRender = mounted && openSidebar?.name === props.name;
 
     if (!shouldRender) {
       return null;
