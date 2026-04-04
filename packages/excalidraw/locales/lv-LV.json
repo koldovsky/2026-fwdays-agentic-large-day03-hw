@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "Izmantojiet {{shortcut}}, lai ielīmētu kā jaunu elementu, vai ielīmētu esošā teksta lauciņā",
     "unableToEmbed": "",
     "unrecognizedLinkFormat": "",
-    "elementLinkCopied": ""
+    "elementLinkCopied": "",
+    "markdownLinkDetected": "Markdown link detected. Label is shown; open the link from the element."
   },
   "colors": {
     "transparent": "Caurspīdīgs",

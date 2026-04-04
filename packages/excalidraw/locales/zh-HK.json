@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "",
     "unableToEmbed": "",
     "unrecognizedLinkFormat": "",
-    "elementLinkCopied": ""
+    "elementLinkCopied": "",
+    "markdownLinkDetected": "Markdown link detected. Label is shown; open the link from the element."
   },
   "colors": {
     "transparent": "",

@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "Pomocí {{shortcut}} vložte jako jeden prvek,\nnebo vložte do existujícího textového editoru",
     "unableToEmbed": "",
     "unrecognizedLinkFormat": "",
-    "elementLinkCopied": ""
+    "elementLinkCopied": "",
+    "markdownLinkDetected": "Markdown link detected. Label is shown; open the link from the element."
   },
   "colors": {
     "transparent": "Průhledná",

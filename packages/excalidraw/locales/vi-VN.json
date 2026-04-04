@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "Sử dụng {{shortcut}} để dán như một phần tử riêng lẻ hoặc dán vào một bộ soạn thảo văn bản có sẵn",
     "unableToEmbed": "Nhúng liên kết này hiện không được phép. Đưa ra vấn đề trên GitHub để yêu cầu đưa liên kết này vào danh sách được phép",
     "unrecognizedLinkFormat": "Liên kết bạn nhúng không khớp với định dạng mong đợi. Vui lòng thử dán liên kết 'embed' do trang nguồn cung cấp",
-    "elementLinkCopied": "Đã sao chép liên kết vào bộ nhớ tạm"
+    "elementLinkCopied": "Đã sao chép liên kết vào bộ nhớ tạm",
+    "markdownLinkDetected": "Markdown link detected. Label is shown; open the link from the element."
   },
   "colors": {
     "transparent": "Độ trong suốt",

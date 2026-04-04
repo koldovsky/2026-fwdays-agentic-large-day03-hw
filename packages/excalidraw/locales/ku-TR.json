@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "بۆ دانانەوە وەکو یەک توخم یان دانانەوە بۆ نێو دەسکاریکەرێکی دەق کە بوونی هەیە {{shortcut}} بەکاربهێنە",
     "unableToEmbed": "",
     "unrecognizedLinkFormat": "",
-    "elementLinkCopied": ""
+    "elementLinkCopied": "",
+    "markdownLinkDetected": "Markdown link detected. Label is shown; open the link from the element."
   },
   "colors": {
     "transparent": "ڕوون",

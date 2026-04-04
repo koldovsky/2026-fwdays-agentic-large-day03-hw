@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "Utiliser {{shortcut}} pour coller comme un seul élément,\nou coller dans un éditeur de texte existant",
     "unableToEmbed": "Intégrer cet URL n'est actuellement pas autorisé. Ouvrez un ticket sur GitHub pour demander son ajout à la liste blanche",
     "unrecognizedLinkFormat": "Le lien que vous avez intégré ne correspond pas au format attendu. Veuillez essayer de coller la chaîne d'intégration fournie par le site source",
-    "elementLinkCopied": "Lien copié dans le presse-papiers"
+    "elementLinkCopied": "Lien copié dans le presse-papiers",
+    "markdownLinkDetected": "Markdown link detected. Label is shown; open the link from the element."
   },
   "colors": {
     "transparent": "Transparent",

@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "",
     "unableToEmbed": "",
     "unrecognizedLinkFormat": "",
-    "elementLinkCopied": "Copiats al quichapapièrs"
+    "elementLinkCopied": "Copiats al quichapapièrs",
+    "markdownLinkDetected": "Markdown link detected. Label is shown; open the link from the element."
   },
   "colors": {
     "transparent": "Transparéncia",
