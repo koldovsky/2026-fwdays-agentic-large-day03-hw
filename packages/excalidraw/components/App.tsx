@@ -7123,12 +7123,11 @@ class App extends React.Component<AppProps, AppState> {
           this.state.selectedLinearElement.hoverPointIndex === -1) &&
         this.state.openDialog?.name !== "elementLinkSelector" &&
         !(selectedElements.length === 1 && isElbowArrow(selectedElements[0])) &&
-        // HACK: Disable transform handles for linear elements on mobile until a
-        // better way of showing them is found
+        // Suppress transform handles for simple 2-point lines where the
+        // bounding box degenerates (handles overlap, poor UX on all platforms)
         !(
           isLinearElement(selectedElements[0]) &&
-          (this.editorInterface.userAgent.isMobileDevice ||
-            selectedElements[0].points.length === 2)
+          selectedElements[0].points.length <= 2
         )
       ) {
         const elementWithTransformHandleType =
@@ -8296,8 +8295,7 @@ class App extends React.Component<AppProps, AppState> {
         !isElbowArrow(selectedElements[0]) &&
         !(
           isLinearElement(selectedElements[0]) &&
-          (this.editorInterface.userAgent.isMobileDevice ||
-            selectedElements[0].points.length === 2)
+          selectedElements[0].points.length <= 2
         ) &&
         !(
           this.state.selectedLinearElement &&
