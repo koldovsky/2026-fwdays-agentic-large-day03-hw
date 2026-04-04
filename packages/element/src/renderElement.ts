@@ -19,6 +19,7 @@ import {
   THEME,
   distance,
   getFontString,
+  getInlineHyperlinkLineSegments,
   isRTL,
   getVerticalOffset,
   invariant,
@@ -52,7 +53,7 @@ import {
   getBoundTextMaxHeight,
   getBoundTextMaxWidth,
 } from "./textElement";
-import { getLineHeightInPx } from "./textMeasurements";
+import { getLineHeightInPx, getLineWidth } from "./textMeasurements";
 import {
   isTextElement,
   isLinearElement,
@@ -81,6 +82,8 @@ import type {
 } from "./types";
 
 import type { RoughCanvas } from "roughjs/bin/canvas";
+
+const INLINE_LINK_COLOR = "#1971c2";
 
 const isPendingImageElement = (
   element: ExcalidrawElement,
@@ -554,7 +557,8 @@ const drawElementOnCanvas = (
         }
         context.canvas.setAttribute("dir", rtl ? "rtl" : "ltr");
         context.save();
-        context.font = getFontString(element);
+        const font = getFontString(element);
+        context.font = font;
         context.fillStyle =
           renderConfig.theme === THEME.DARK
             ? applyDarkModeFilter(element.strokeColor)
@@ -582,13 +586,71 @@ const drawElementOnCanvas = (
           lineHeightPx,
         );
 
+        const hyperlinkLines = getInlineHyperlinkLineSegments(
+          element.originalText,
+          element.text,
+        );
+        const hasInlineHyperlinks = hyperlinkLines.some((line) =>
+          line.some((segment) => !!segment.link),
+        );
+
+        const textFill =
+          renderConfig.theme === THEME.DARK
+            ? applyDarkModeFilter(element.strokeColor)
+            : element.strokeColor;
+        const hyperlinkFill =
+          renderConfig.theme === THEME.DARK
+            ? applyDarkModeFilter(INLINE_LINK_COLOR)
+            : INLINE_LINK_COLOR;
+
         for (let index = 0; index < lines.length; index++) {
-          context.fillText(
-            lines[index],
-            horizontalOffset,
-            index * lineHeightPx + verticalOffset,
-          );
+          const y = index * lineHeightPx + verticalOffset;
+          const line = lines[index];
+
+          if (!hasInlineHyperlinks) {
+            context.fillText(line, horizontalOffset, y);
+            continue;
+          }
+
+          const lineSegments = hyperlinkLines[index] || [{ text: line, link: null }];
+          const lineWidth = getLineWidth(line, font);
+          const lineStartX =
+            element.textAlign === "center"
+              ? horizontalOffset - lineWidth / 2
+              : element.textAlign === "right"
+              ? horizontalOffset - lineWidth
+              : horizontalOffset;
+
+          let currentX = lineStartX;
+
+          for (const segment of lineSegments) {
+            if (!segment.text) {
+              continue;
+            }
+
+            const segmentWidth = getLineWidth(segment.text, font);
+            context.textAlign = "left";
+            context.fillStyle = segment.link ? hyperlinkFill : textFill;
+            context.fillText(segment.text, currentX, y);
+
+            if (segment.link) {
+              context.save();
+              context.strokeStyle = hyperlinkFill;
+              context.lineWidth = Math.max(1, element.fontSize / 18);
+              context.beginPath();
+              context.moveTo(currentX, y + Math.max(1, element.fontSize / 12));
+              context.lineTo(
+                currentX + segmentWidth,
+                y + Math.max(1, element.fontSize / 12),
+              );
+              context.stroke();
+              context.restore();
+            }
+
+            currentX += segmentWidth;
+          }
         }
+        context.textAlign = element.textAlign as CanvasTextAlign;
         context.restore();
         if (shouldTemporarilyAttach) {
           context.canvas.remove();

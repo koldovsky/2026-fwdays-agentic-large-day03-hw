@@ -1,4 +1,9 @@
-import { normalizeLink } from "../src/url";
+import {
+  getInlineHyperlinkLineSegments,
+  getRenderableText,
+  normalizeLink,
+  parseInlineHyperlinks,
+} from "../src/url";
 
 describe("normalizeLink", () => {
   // NOTE not an extensive XSS test suite, just to check if we're not
@@ -29,3 +34,46 @@ describe("normalizeLink", () => {
     expect(normalizeLink("test&")).toBe("test&");
   });
 });
+
+describe("inline markdown hyperlinks", () => {
+  it("parses valid markdown hyperlinks and leaves plain text untouched", () => {
+    expect(parseInlineHyperlinks("See [docs](https://example.com/docs)")).toEqual([
+      { text: "See ", link: null },
+      { text: "docs", link: "https://example.com/docs" },
+    ]);
+  });
+
+  it("keeps malformed or unsafe links as plain text", () => {
+    expect(parseInlineHyperlinks("[x](javascript:alert(1))")).toEqual([
+      { text: "[x](javascript:alert(1))", link: null },
+    ]);
+
+    expect(parseInlineHyperlinks("[x](not a url)")).toEqual([
+      { text: "[x](not a url)", link: null },
+    ]);
+  });
+
+  it("produces rendered text without markdown URL syntax", () => {
+    expect(getRenderableText("See [docs](https://example.com/docs) now")).toBe(
+      "See docs now",
+    );
+  });
+
+  it("maps rendered lines back to hyperlink segments", () => {
+    const source = "A [docs](https://example.com)\nB [ref](https://test.dev)";
+    const rendered = getRenderableText(source);
+
+    expect(rendered).toBe("A docs\nB ref");
+    expect(getInlineHyperlinkLineSegments(source, rendered)).toEqual([
+      [
+        { text: "A ", link: null },
+        { text: "docs", link: "https://example.com" },
+      ],
+      [
+        { text: "B ", link: null },
+        { text: "ref", link: "https://test.dev" },
+      ],
+    ]);
+  });
+});
+

@@ -5,7 +5,10 @@ import {
   THEME,
   DARK_THEME_FILTER,
   getFontFamilyString,
+  getFontString,
+  getInlineHyperlinkLineSegments,
   isRTL,
+  isLocalLink,
   isTestEnv,
   getVerticalOffset,
   applyDarkModeFilter,
@@ -21,6 +24,7 @@ import {
 import { LinearElementEditor } from "@excalidraw/element";
 import { getBoundTextElement, getContainerElement } from "@excalidraw/element";
 import { getLineHeightInPx } from "@excalidraw/element";
+import { getLineWidth } from "@excalidraw/element";
 import {
   isArrowElement,
   isIframeLikeElement,
@@ -46,6 +50,8 @@ import type { RenderableElementsMap, SVGRenderConfig } from "../scene/types";
 import type { AppState, BinaryFiles } from "../types";
 import type { Drawable } from "roughjs/bin/core";
 import type { RoughSVG } from "roughjs/bin/svg";
+
+const INLINE_LINK_COLOR = "#1971c2";
 
 const roughSVGDrawWithPrecision = (
   rsvg: RoughSVG,
@@ -668,24 +674,88 @@ const renderElementToSvg = (
             : element.textAlign === "right" || direction === "rtl"
             ? "end"
             : "start";
+        const hyperlinkLines = getInlineHyperlinkLineSegments(
+          element.originalText,
+          element.text,
+        );
+        const hasInlineHyperlinks = hyperlinkLines.some((line) =>
+          line.some((segment) => !!segment.link),
+        );
+        const textColor =
+          renderConfig.theme === THEME.DARK
+            ? applyDarkModeFilter(element.strokeColor)
+            : element.strokeColor;
+        const hyperlinkColor =
+          renderConfig.theme === THEME.DARK
+            ? applyDarkModeFilter(INLINE_LINK_COLOR)
+            : INLINE_LINK_COLOR;
+        const font = getFontString(element);
         for (let i = 0; i < lines.length; i++) {
-          const text = svgRoot.ownerDocument.createElementNS(SVG_NS, "text");
-          text.textContent = lines[i];
-          text.setAttribute("x", `${horizontalOffset}`);
-          text.setAttribute("y", `${i * lineHeightPx + verticalOffset}`);
-          text.setAttribute("font-family", getFontFamilyString(element));
-          text.setAttribute("font-size", `${element.fontSize}px`);
-          text.setAttribute(
-            "fill",
-            renderConfig.theme === THEME.DARK
-              ? applyDarkModeFilter(element.strokeColor)
-              : element.strokeColor,
-          );
-          text.setAttribute("text-anchor", textAnchor);
-          text.setAttribute("style", "white-space: pre;");
-          text.setAttribute("direction", direction);
-          text.setAttribute("dominant-baseline", "alphabetic");
-          node.appendChild(text);
+          if (!hasInlineHyperlinks) {
+            const text = svgRoot.ownerDocument.createElementNS(SVG_NS, "text");
+            text.textContent = lines[i];
+            text.setAttribute("x", `${horizontalOffset}`);
+            text.setAttribute("y", `${i * lineHeightPx + verticalOffset}`);
+            text.setAttribute("font-family", getFontFamilyString(element));
+            text.setAttribute("font-size", `${element.fontSize}px`);
+            text.setAttribute("fill", textColor);
+            text.setAttribute("text-anchor", textAnchor);
+            text.setAttribute("style", "white-space: pre;");
+            text.setAttribute("direction", direction);
+            text.setAttribute("dominant-baseline", "alphabetic");
+            node.appendChild(text);
+            continue;
+          }
+
+          const line = lines[i];
+          const y = i * lineHeightPx + verticalOffset;
+          const lineWidth = getLineWidth(line, font);
+          const lineStartX =
+            element.textAlign === "center"
+              ? horizontalOffset - lineWidth / 2
+              : element.textAlign === "right"
+              ? horizontalOffset - lineWidth
+              : horizontalOffset;
+          let currentX = lineStartX;
+
+          for (const segment of hyperlinkLines[i] || []) {
+            if (!segment.text) {
+              continue;
+            }
+
+            const text = svgRoot.ownerDocument.createElementNS(SVG_NS, "text");
+            text.textContent = segment.text;
+            text.setAttribute("x", `${currentX}`);
+            text.setAttribute("y", `${y}`);
+            text.setAttribute("font-family", getFontFamilyString(element));
+            text.setAttribute("font-size", `${element.fontSize}px`);
+            text.setAttribute("fill", segment.link ? hyperlinkColor : textColor);
+            text.setAttribute("text-anchor", "start");
+            text.setAttribute("style", segment.link ? "white-space: pre; text-decoration: underline;" : "white-space: pre;");
+            text.setAttribute("direction", direction);
+            text.setAttribute("dominant-baseline", "alphabetic");
+
+            const segmentWidth = getLineWidth(
+              segment.text,
+              font,
+            );
+
+            if (segment.link) {
+              const anchorTag = svgRoot.ownerDocument.createElementNS(SVG_NS, "a");
+              anchorTag.setAttribute("href", segment.link);
+              anchorTag.setAttribute(
+                "target",
+                isLocalLink(segment.link) ? "_self" : "_blank",
+              );
+              anchorTag.setAttribute("rel", "noopener noreferrer");
+              anchorTag.appendChild(text);
+              node.appendChild(anchorTag);
+            } else {
+              node.appendChild(text);
+            }
+
+            currentX += segmentWidth;
+          }
         }
 
         const g = maybeWrapNodesInFrameClipPath(

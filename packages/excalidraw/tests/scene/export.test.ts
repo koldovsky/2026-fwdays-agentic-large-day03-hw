@@ -192,6 +192,30 @@ describe("exportToSvg", () => {
     );
     expect(svgElement.innerHTML).toMatchSnapshot();
   });
+
+  it("exports inline markdown hyperlinks as SVG anchors", async () => {
+    const markdownLinkedText = {
+      ...textFixture,
+      text: "See docs",
+      originalText: "See [docs](https://example.com/docs)",
+      width: 120,
+      height: 30,
+      autoResize: true,
+      index: "a9",
+    } as NonDeletedExcalidrawElement;
+
+    const svgElement = await exportUtils.exportToSvg(
+      [markdownLinkedText],
+      DEFAULT_OPTIONS,
+      null,
+    );
+
+    const inlineAnchor = svgElement.querySelector('a[href="https://example.com/docs"]');
+    expect(inlineAnchor).toBeTruthy();
+    expect(inlineAnchor?.textContent).toBe("docs");
+    expect(svgElement.textContent).toContain("See docs");
+    expect(svgElement.textContent).not.toContain("[docs](https://example.com/docs)");
+  });
 });
 
 describe("exporting frames", () => {

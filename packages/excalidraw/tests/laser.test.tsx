@@ -62,6 +62,42 @@ describe("laser tool interactions", () => {
     expect(onLinkOpenSpy).toHaveBeenCalledTimes(1);
   });
 
+  it("opens inline markdown links in text while using the laser tool", async () => {
+    const onLinkOpenSpy = vi.fn();
+    const onLinkOpen: NonNullable<ExcalidrawProps["onLinkOpen"]> = (
+      ...args
+    ) => {
+      onLinkOpenSpy(...args);
+      args[1].preventDefault();
+    };
+    await render(<Excalidraw onLinkOpen={onLinkOpen} />);
+
+    const linkedText = API.createElement({
+      type: "text",
+      x: 20,
+      y: 20,
+      width: 100,
+      height: 30,
+      text: "[docs](https://example.com/docs)",
+    });
+    API.setElements([linkedText]);
+
+    act(() => {
+      h.app.setActiveTool({ type: "laser" });
+    });
+
+    mouse.moveTo(linkedText.x + 10, linkedText.y + 10);
+    expect(GlobalTestState.interactiveCanvas.style.cursor).toBe(
+      CURSOR_TYPE.POINTER,
+    );
+
+    mouse.clickAt(linkedText.x + 10, linkedText.y + 10);
+    expect(onLinkOpenSpy).toHaveBeenCalledTimes(1);
+    expect(onLinkOpenSpy.mock.calls[0][0].link).toBe(
+      "https://example.com/docs",
+    );
+  });
+
   it("activates embeddables on center click while using the laser tool", async () => {
     await render(<Excalidraw />);
 

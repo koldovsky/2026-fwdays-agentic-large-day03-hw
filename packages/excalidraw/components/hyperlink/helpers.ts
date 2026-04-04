@@ -1,8 +1,14 @@
 import { pointFrom, pointRotateRads } from "@excalidraw/math";
 
-import { MIME_TYPES } from "@excalidraw/common";
+import {
+  MIME_TYPES,
+  getFontString,
+  getInlineHyperlinkLineSegments,
+} from "@excalidraw/common";
 import { getElementAbsoluteCoords } from "@excalidraw/element";
+import { getLineHeightInPx, getLineWidth } from "@excalidraw/element";
 import { hitElementBoundingBox } from "@excalidraw/element";
+import { isTextElement } from "@excalidraw/element";
 
 import type { GlobalPoint, Radians } from "@excalidraw/math";
 
@@ -86,20 +92,149 @@ export const isPointHittingLink = (
   [x, y]: GlobalPoint,
   isMobile: boolean,
 ) => {
-  if (!element.link || appState.selectedElementIds[element.id]) {
-    return false;
-  }
-  if (
-    !isMobile &&
-    appState.viewModeEnabled &&
-    hitElementBoundingBox(pointFrom(x, y), element, elementsMap)
-  ) {
-    return true;
-  }
-  return isPointHittingLinkIcon(
+  return !!getLinkAtPoint(
     element,
     elementsMap,
     appState,
     pointFrom(x, y),
+    isMobile,
   );
+};
+
+export type HitLink = {
+  element: NonDeletedExcalidrawElement;
+  link: string;
+  bounds: Bounds;
+};
+
+const getInlineLinkAtPoint = (
+  element: NonDeletedExcalidrawElement,
+  [x, y]: GlobalPoint,
+): HitLink | null => {
+  if (!isTextElement(element)) {
+    return null;
+  }
+
+  const center = pointFrom(
+    element.x + element.width / 2,
+    element.y + element.height / 2,
+  );
+  const [localPointX, localPointY] = pointRotateRads(
+    pointFrom(x, y),
+    center,
+    (-element.angle) as Radians,
+  );
+  const localX = localPointX - element.x;
+  const localY = localPointY - element.y;
+
+  if (
+    localX < 0 ||
+    localY < 0 ||
+    localX > element.width ||
+    localY > element.height
+  ) {
+    return null;
+  }
+
+  const font = getFontString(element);
+  const lineHeightPx = getLineHeightInPx(element.fontSize, element.lineHeight);
+  const lines = element.text.replace(/\r\n?/g, "\n").split("\n");
+  const inlineLines = getInlineHyperlinkLineSegments(
+    element.originalText,
+    element.text,
+  );
+
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+    const line = lines[lineIndex];
+    const lineTop = lineIndex * lineHeightPx;
+    const lineBottom = lineTop + lineHeightPx;
+
+    if (localY < lineTop || localY > lineBottom) {
+      continue;
+    }
+
+    const lineWidth = getLineWidth(line, font);
+    const horizontalOffset =
+      element.textAlign === "center"
+        ? element.width / 2 - lineWidth / 2
+        : element.textAlign === "right"
+        ? element.width - lineWidth
+        : 0;
+
+    let currentX = horizontalOffset;
+
+    for (const segment of inlineLines[lineIndex] || []) {
+      if (!segment.text) {
+        continue;
+      }
+      const width = getLineWidth(segment.text, font);
+      const hitBounds: Bounds = [
+        currentX + element.x,
+        lineTop + element.y,
+        width,
+        lineHeightPx,
+      ];
+
+      if (
+        segment.link &&
+        localX >= currentX &&
+        localX <= currentX + width &&
+        localY >= lineTop &&
+        localY <= lineBottom
+      ) {
+        return {
+          element,
+          link: segment.link,
+          bounds: hitBounds,
+        };
+      }
+
+      currentX += width;
+    }
+  }
+
+  return null;
+};
+
+export const getLinkAtPoint = (
+  element: NonDeletedExcalidrawElement,
+  elementsMap: ElementsMap,
+  appState: AppState,
+  [x, y]: GlobalPoint,
+  isMobile: boolean,
+): HitLink | null => {
+  if (appState.selectedElementIds[element.id]) {
+    return null;
+  }
+
+  if (element.link) {
+    if (
+      !isMobile &&
+      appState.viewModeEnabled &&
+      hitElementBoundingBox(pointFrom(x, y), element, elementsMap)
+    ) {
+      const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
+      return {
+        element,
+        link: element.link,
+        bounds: [x1, y1, x2 - x1, y2 - y1],
+      };
+    }
+
+    if (isPointHittingLinkIcon(element, elementsMap, appState, pointFrom(x, y))) {
+      const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
+      const [linkX, linkY, linkWidth, linkHeight] = getLinkHandleFromCoords(
+        [x1, y1, x2, y2],
+        element.angle,
+        appState,
+      );
+      return {
+        element,
+        link: element.link,
+        bounds: [linkX, linkY, linkWidth, linkHeight],
+      };
+    }
+  }
+
+  return getInlineLinkAtPoint(element, pointFrom(x, y));
 };
