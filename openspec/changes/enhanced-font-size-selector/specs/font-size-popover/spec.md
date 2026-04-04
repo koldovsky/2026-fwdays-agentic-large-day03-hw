@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Inline font size bar with SVG icon presets and numeric trigger
-The properties panel (full mode) SHALL display 4 font size presets (S, M, L, XL) as SVG icon buttons — the same icons as the original RadioSelection but slightly smaller to leave room for the numeric trigger. After the presets, a vertical separator and a "current style" trigger button MUST be displayed showing the actual numeric font size value. The trigger MUST reflect the real fontSize at all times. Clicking a preset (S/M/L/XL) MUST apply the font size AND close the popover if it is open.
+The properties panel (full mode) SHALL display 4 font size presets (S, M, L, XL) as SVG icon buttons — the same icons as the original RadioSelection but slightly smaller to leave room for the numeric trigger. After the presets, a vertical separator and a "current style" trigger button MUST be displayed showing the actual numeric font size value. The trigger MUST reflect the real fontSize at all times. Clicking a preset applies the font size immediately.
 
 #### Scenario: Selecting a text element shows inline bar
 - **WHEN** user selects a text element on the canvas
@@ -40,12 +40,12 @@ The properties panel (full mode) SHALL display 4 font size presets (S, M, L, XL)
 
 ---
 
-### Requirement: Font size popover with 10 preset buttons in 2 rows
-The system SHALL display a popover when the user clicks the current style trigger button. The popover MUST contain exactly 10 named size presets arranged in 2 rows of 5 — all sizes from 2XS to 8XL inclusive. No section headers. The popover MUST be rendered using the `PropertiesPopover` component.
+### Requirement: Font size popover with 12 preset buttons in 3 rows
+The system SHALL display a popover when the user clicks the current style trigger button. The popover MUST contain exactly 12 named size presets arranged in 3 rows of 4 — all FONT_SIZES values. The popover has two labeled sections: "Presets" (grid of buttons) and "Custom size" (dropdown + unit selector). The popover MUST be rendered using the `PropertiesPopover` component.
 
 #### Scenario: Opening the font size popover
 - **WHEN** user clicks the current style trigger in the font size bar
-- **THEN** a popover opens showing 2 rows of 5 preset buttons: row 1 (2XS, XS, 2XL, 3XL, 4XL), row 2 (5XL, 6XL, 7XL, 8XL, 10XL)
+- **THEN** a popover opens showing a "Presets" label followed by 3 rows of 4 preset buttons: row 1 (2XS, XS, S, M), row 2 (L, XL, 2XL, 3XL), row 3 (4XL, 5XL, 8XL, 10XL)
 - **AND** the `appState.openPopup` is set to `"fontSize"`
 
 #### Scenario: Clicking an extended preset applies the size
@@ -60,8 +60,8 @@ The system SHALL display a popover when the user clicks the current style trigge
 - **AND** the inline bar's current style trigger updates to "12"
 
 #### Scenario: Active extended preset is highlighted
-- **WHEN** the selected text element has fontSize=96 and the popover is open
-- **THEN** the "6XL" preset button in the popover is shown in the active state
+- **WHEN** the selected text element has fontSize=120 and the popover is open
+- **THEN** the "8XL" preset button in the popover is shown in the active state
 
 #### Scenario: Closing the popover
 - **WHEN** user clicks outside the popover
@@ -84,7 +84,7 @@ The system SHALL display a popover when the user clicks the current style trigge
 ---
 
 ### Requirement: Numeric font size dropdown with inline unit selector
-The font size popover SHALL contain a row below the preset buttons with a dropdown/select and a unit type selector placed side-by-side in a single horizontal line. The dropdown MUST contain all named FONT_SIZES values plus additional large sizes above 144px (160, 180, 200, 240). The unit selector (px/pt) MUST be placed to the right of the dropdown, not below it.
+The font size popover SHALL contain a "Custom size" labeled section below the preset grid with a `<select>` dropdown and a unit type selector placed side-by-side in a single horizontal line. The dropdown MUST contain all `FONT_SIZES` values plus additional large sizes above 144px (160, 180, 200, 240). The unit selector (px/pt) MUST be placed to the right of the dropdown, not below it. The unit labels "px" and "pt" are hardcoded (not localized).
 
 #### Scenario: Selecting a numeric size from dropdown
 - **WHEN** user opens the font size popover and selects "72" from the numeric dropdown
@@ -93,7 +93,7 @@ The font size popover SHALL contain a row below the preset buttons with a dropdo
 
 #### Scenario: Dropdown includes all named sizes plus extra large
 - **WHEN** user opens the font size popover and inspects the dropdown
-- **THEN** the dropdown contains all FONT_SIZES values (10, 12, 16, 20, 28, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144) plus 160, 180, 200, 240
+- **THEN** the dropdown contains all FONT_SIZES values (10, 12, 16, 20, 28, 36, 48, 60, 72, 84, 120, 144) plus 160, 180, 200, 240
 
 #### Scenario: Current size is highlighted in dropdown
 - **WHEN** the selected text element has fontSize=24 and the popover is open
@@ -129,11 +129,11 @@ The unit type selector SHALL be displayed inline (to the right of) the numeric d
 ---
 
 ### Requirement: Extended FONT_SIZES constant
-The `FONT_SIZES` constant in `packages/common/src/constants.ts` SHALL be extended with smaller sizes (2xs, xs) and larger sizes (2xl through 10xl). Existing values (sm=16, md=20, lg=28, xl=36) MUST NOT change.
+The `FONT_SIZES` constant in `packages/common/src/constants.ts` SHALL be extended with smaller sizes (2xs, xs) and larger sizes (2xl, 3xl, 4xl, 5xl, 8xl, 10xl). Sizes 6xl, 7xl, 9xl are intentionally omitted. Existing values (sm=16, md=20, lg=28, xl=36) MUST NOT change.
 
 #### Scenario: FONT_SIZES includes all named sizes
 - **WHEN** code imports `FONT_SIZES` from `@excalidraw/common`
-- **THEN** it contains keys: 2xs(10), xs(12), sm(16), md(20), lg(28), xl(36), 2xl(48), 3xl(60), 4xl(72), 5xl(84), 6xl(96), 7xl(108), 8xl(120), 9xl(132), 10xl(144)
+- **THEN** it contains keys: 2xs(10), xs(12), sm(16), md(20), lg(28), xl(36), 2xl(48), 3xl(60), 4xl(72), 5xl(84), 8xl(120), 10xl(144)
 
 #### Scenario: Backward compatibility
 - **WHEN** existing code references `FONT_SIZES.sm`, `FONT_SIZES.md`, `FONT_SIZES.lg`, or `FONT_SIZES.xl`

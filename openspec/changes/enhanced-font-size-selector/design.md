@@ -13,8 +13,8 @@ Key constraints:
 ## Goals / Non-Goals
 
 **Goals:**
-- Provide quick access to common sizes (S through 2XL) in the inline bar.
-- Provide a popover with extended sizes (2XL–10XL), a numeric preset dropdown, and a unit display selector.
+- Provide quick access to common sizes (S/M/L/XL) via 4 SVG icon presets in the inline bar.
+- Provide a popover with all 12 named sizes in a 3×4 grid, a numeric dropdown, and a unit display selector.
 - Follow the ColorPicker TopPicks + Popover pattern for visual consistency.
 - Reuse existing components: `RadioSelection` (or compact button variants), `ButtonSeparator`, `PropertiesPopover`, Radix `Popover`.
 - Keep existing S/M/L/XL values and keyboard shortcuts (Ctrl+Shift+</>`) fully backward-compatible.
@@ -56,23 +56,20 @@ Key constraints:
 | 3xl | 60 |
 | 4xl | 72 |
 | 5xl | 84 |
-| 6xl | 96 |
-| 7xl | 108 |
 | 8xl | 120 |
-| 9xl | 132 |
 | 10xl | 144 |
 
-**Rationale:** Values roughly follow a progression similar to Tailwind CSS text scale. Smaller sizes (2XS=10, XS=12) cover annotation and fine-label use cases. Each step above 2XL increases by ~12px for consistent visual jumps. The inline bar shows S/M/L/XL/2XL; the popover shows smaller (2XS, XS) and larger (2XL–10XL) presets.
+**Rationale:** 12 named sizes total. Smaller sizes (2XS=10, XS=12) cover annotation and fine-label use cases. Sizes 6xl(96), 7xl(108), 9xl(132) were dropped to fit the popover grid layout (3 rows × 4 buttons). The inline bar shows S/M/L/XL (4 SVG icon presets); the popover shows all 12 sizes in a grid including the inline ones.
 
 **Alternatives considered:**
 - Exponential scaling (×1.25) — rejected, produces awkward numbers at larger sizes.
 - CSS-named sizes (xx-large, etc.) — rejected, Excalidraw stores raw px numbers.
 
-### D3: Numeric dropdown with predefined values
+### D3: Numeric dropdown with all named sizes + extra large
 
-**Choice:** The popover includes a dropdown list with common numeric sizes: 8, 10, 12, 14, 16, 20, 24, 28, 36, 48, 64, 72, 96, 128.
+**Choice:** The popover includes a `<select>` dropdown containing all `FONT_SIZES` values (10, 12, 16, 20, 28, 36, 48, 60, 72, 84, 120, 144) plus extra-large values above 144px (160, 180, 200, 240).
 
-**Rationale:** These match standard typographic sizes familiar to users from word processors and design tools. The dropdown allows precise size selection without requiring free-text input (which would need validation, parsing, and edge case handling).
+**Rationale:** Using `Object.values(FONT_SIZES)` as the base keeps the dropdown automatically in sync with the constant. Extra-large values beyond 144px cover poster/presentation use cases. The dropdown allows precise size selection without requiring free-text input (which would need validation, parsing, and edge case handling).
 
 ### D4: Unit type selector is display-only
 
@@ -90,19 +87,19 @@ Key constraints:
 
 **Choice:** The inline bar renders as:
 ```
-[S] [M] [L] [XL] [2XL] | [current value trigger]
+[S] [M] [L] [XL] | [current value trigger]
 ```
 Where `|` is a `ButtonSeparator` and the current value trigger shows the **actual** numeric fontSize of the selected element (e.g., "36") and opens the popover on click. The trigger is reactive — it reads from `getFormValue()` on every render, so it updates immediately when the size changes by any means (preset click, keyboard shortcut, popover selection, or external API call).
 
-**Rationale:** This matches the ColorPicker layout: `[swatch] [swatch] ... | [active-color-trigger]`. The numeric display gives users immediate feedback about the precise value regardless of how it was set.
+**Rationale:** This matches the ColorPicker layout: `[swatch] [swatch] ... | [active-color-trigger]`. Four SVG icon presets (S/M/L/XL) keep the inline bar compact. The numeric display gives users immediate feedback about the precise value regardless of how it was set.
 
 ## Risks / Trade-offs
 
-- **Panel width increase** → The inline bar with 5 presets + separator + trigger is wider than the current 4-button `RadioSelection`. Mitigated by making preset buttons smaller (matching compact color swatch sizing) and relying on the existing panel scroll.
+- **Panel width increase** → The inline bar with 4 presets + separator + trigger is wider than the current 4-button `RadioSelection`. Mitigated by making preset buttons smaller (matching compact color swatch sizing) and relying on the existing panel scroll.
 
 - **Popover complexity** → Adding a dropdown inside a popover increases z-index and focus management concerns. Mitigated by using `PropertiesPopover` which already handles viewport fitting and focus trapping.
 
-- **i18n surface area** → New labels for 2XL–10XL sizes and unit names. Low risk — these are short, largely numeric strings.
+- **i18n surface area** → Minimal. Size labels (2XS, XL, etc.) and unit names (px, pt) are hardcoded as universal abbreviations that don't need translation. Only section headers ("Presets", "Custom size") use i18n.
 
 - **Snapshot test breakage** → The font size panel DOM changes significantly. Tests in `packages/excalidraw/tests/` that snapshot the properties panel will need updates. Mitigated by running `yarn test:update`.
 

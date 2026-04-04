@@ -1,8 +1,8 @@
 ## 1. Constants & Types
 
-- [x] 1.1 Extend `FONT_SIZES` in `packages/common/src/constants.ts` with smaller keys `"2xs"`(10), `"xs"`(12) and larger keys `"2xl"` through `"10xl"` (values: 48, 60, 72, 84, 96, 108, 120, 132, 144)
+- [x] 1.1 Extend `FONT_SIZES` in `packages/common/src/constants.ts` with smaller keys `"2xs"`(10), `"xs"`(12) and larger keys `"2xl"`(48), `"3xl"`(60), `"4xl"`(72), `"5xl"`(84), `"8xl"`(120), `"10xl"`(144) — 12 sizes total (6xl, 7xl, 9xl intentionally omitted)
 - [x] 1.2 Add `"fontSize"` to the `openPopup` union type in `packages/excalidraw/types.ts`
-- [x] 1.3 Add i18n translation keys in `packages/excalidraw/locales/en.json` for new size labels (`labels.2xs`, `labels.xs`, `labels.2xl` through `labels.10xl`, `labels.fontSizeUnits`, `labels.pt`, `labels.px`, `labels.currentSize`)
+- [x] 1.3 Add i18n translation keys in `packages/excalidraw/locales/en.json` for popover section labels (`labels.fontSizePresets`, `labels.fontSizeCustom`, `labels.currentSize`). Size abbreviations (2XS, XL, etc.) and unit names (px, pt) are hardcoded as universal abbreviations
 
 ## 2. Icons
 
@@ -12,11 +12,11 @@
 ## 3. FontSizePicker Component
 
 - [x] 3.1 Create `packages/excalidraw/components/FontSizePicker/` directory with `FontSizePicker.tsx` and `FontSizePicker.scss`
-- [x] 3.2 Implement `FontSizeTopPicks` sub-component — renders compact preset buttons (S, M, L, XL, 2XL) with active state highlighting, following `ColorPicker/TopPicks.tsx` pattern
+- [x] 3.2 Implement `FontSizeTopPicks` sub-component — renders 4 compact SVG icon preset buttons (S, M, L, XL) with active state highlighting, following `ColorPicker/TopPicks.tsx` pattern
 - [x] 3.3 Implement `FontSizeTrigger` sub-component — shows actual numeric fontSize from `getFormValue()` (reactive to all change sources: presets, keyboard, popover, API), acts as Radix `Popover.Trigger`, follows `ColorPickerTrigger` pattern
 - [x] 3.4 Implement `FontSizePopoverContent` sub-component — wraps in `PropertiesPopover`, contains extended preset grid + numeric dropdown + unit selector
-- [x] 3.5 Implement preset grid inside popover — smaller sizes row (2XS, XS), larger sizes rows (2XL–5XL, 6XL–10XL), all with active state highlighting
-- [x] 3.6 Implement numeric size dropdown — `<select>` or custom dropdown with values [8, 10, 12, 14, 16, 20, 24, 28, 36, 48, 64, 72, 96, 128], highlights current value
+- [x] 3.5 Implement preset grid inside popover — 3 rows × 4 buttons covering all 12 FONT_SIZES, with section label "Presets" and active state highlighting
+- [x] 3.6 Implement numeric size dropdown — `<select>` with all FONT_SIZES values + extra-large (160, 180, 200, 240), highlights current value. Section label "Custom size" above the row
 - [x] 3.7 Implement unit type selector (px/pt toggle) — display-only conversion using 1pt = 1.333px ratio, persisted in component local state
 - [x] 3.8 Compose `FontSizePicker` main component — combines TopPicks + `ButtonSeparator` + Radix Popover (Trigger + Content), manages `openPopup` state via `updateData`
 
@@ -37,7 +37,7 @@
 - [x] 6.1 Style `FontSizeTopPicks` compact buttons to match `color-picker__top-picks` button sizing and density
 - [x] 6.2 Style the trigger button to match `color-picker__button active-color properties-trigger` pattern
 - [x] 6.3 Style the popover preset grid (two rows, consistent spacing) to match existing PropertiesPopover content
-- [x] 6.4 Style the numeric dropdown and unit selector to fit within the `13rem` max-width popover constraint
+- [x] 6.4 Style the numeric dropdown and unit selector to fit within the `14rem` max-width popover constraint
 - [x] 6.5 Ensure dark mode and RTL compatibility
 
 ## 7. Testing
