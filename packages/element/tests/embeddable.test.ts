@@ -231,3 +231,65 @@ describe("Google Drive video embedding", () => {
     ).toBe(true);
   });
 });
+
+describe("Notion page embedding", () => {
+  it("should recognize a standard Notion page URL with title slug", () => {
+    const url =
+      "https://myteam.notion.site/My-Page-Title-abc123def456789012345678901234ab";
+    const result = getEmbedLink(url);
+
+    expect(result).toBeTruthy();
+    expect(result?.type).toBe("generic");
+    expect(result?.link).toBe(
+      "https://myteam.notion.site/ebd/abc123def456789012345678901234ab",
+    );
+    expect(result?.intrinsicSize).toEqual({ w: 550, h: 720 });
+  });
+
+  it("should recognize a Notion page URL without title slug", () => {
+    const url = "https://myteam.notion.site/abc123def456789012345678901234ab";
+    const result = getEmbedLink(url);
+
+    expect(result).toBeTruthy();
+    expect(result?.type).toBe("generic");
+    expect(result?.link).toBe(
+      "https://myteam.notion.site/ebd/abc123def456789012345678901234ab",
+    );
+  });
+
+  it("should produce the correct embed URL format", () => {
+    const url =
+      "https://workspace.notion.site/Getting-Started-0123456789abcdef0123456789abcdef";
+    const result = getEmbedLink(url);
+
+    expect(result).toBeTruthy();
+    expect(result?.link).toBe(
+      "https://workspace.notion.site/ebd/0123456789abcdef0123456789abcdef",
+    );
+  });
+
+  it("should not match non-Notion URLs", () => {
+    const url = "https://example.com/abc123def456789012345678901234ab";
+    const result = getEmbedLink(url);
+
+    expect(result?.link).toBe(url);
+    expect(result?.type).toBe("generic");
+  });
+
+  it("should enable allowSameOrigin for Notion embeds", () => {
+    const url =
+      "https://myteam.notion.site/Page-abc123def456789012345678901234ab";
+    const result = getEmbedLink(url);
+
+    expect(result?.sandbox?.allowSameOrigin).toBe(true);
+  });
+
+  it("should validate Notion domain by default", () => {
+    expect(
+      embeddableURLValidator(
+        "https://myteam.notion.site/Page-abc123def456789012345678901234ab",
+        undefined,
+      ),
+    ).toBe(true);
+  });
+});
