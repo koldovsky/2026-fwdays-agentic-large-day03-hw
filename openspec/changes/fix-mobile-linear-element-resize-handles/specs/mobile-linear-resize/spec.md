@@ -6,17 +6,20 @@ The system SHALL render a selection frame (bounding box) with transform handles 
 
 #### Scenario: Multi-point polyline selected on mobile shows bounding box
 
-- **WHEN** a user on a mobile device selects a single linear element with more than 2 points (e.g., a polyline from the Basic Shapes library)
+- **GIVEN** a mobile device user has a single multi-point linear element (> 2 points) on the canvas
+- **WHEN** the user selects that element
 - **THEN** the system SHALL display a selection frame with resize handles around the element
 
 #### Scenario: Multi-point polyline selected on tablet shows bounding box
 
-- **WHEN** a user on a tablet device selects a single linear element with more than 2 points
+- **GIVEN** a tablet device user has a single multi-point linear element (> 2 points) on the canvas
+- **WHEN** the user selects that element
 - **THEN** the system SHALL display a selection frame with resize handles around the element
 
 #### Scenario: Multi-point polyline selected on desktop continues to show bounding box
 
-- **WHEN** a user on a desktop device selects a single linear element with more than 2 points
+- **GIVEN** a desktop device user has a single multi-point linear element (> 2 points) on the canvas
+- **WHEN** the user selects that element
 - **THEN** the system SHALL display a selection frame with resize handles (existing behavior preserved)
 
 ### Requirement: Simple 2-point linear elements SHALL NOT display bounding box handles
@@ -25,12 +28,14 @@ The system SHALL suppress transform handle interaction for linear elements with 
 
 #### Scenario: 2-point line selected on mobile has no transform handles
 
-- **WHEN** a user on a mobile device selects a single linear element with exactly 2 points
+- **GIVEN** a mobile device user has a single 2-point linear element on the canvas
+- **WHEN** the user selects that element
 - **THEN** the system SHALL NOT display transform handles for that element
 
 #### Scenario: 2-point line selected on desktop has no transform handles
 
-- **WHEN** a user on a desktop device selects a single linear element with exactly 2 points
+- **GIVEN** a desktop device user has a single 2-point linear element on the canvas
+- **WHEN** the user selects that element
 - **THEN** the system SHALL NOT display transform handles for that element
 
 ### Requirement: Transform handle interaction SHALL work for multi-point linear elements on mobile
@@ -39,12 +44,14 @@ The system SHALL allow pointer-down (touch) interactions with transform handles 
 
 #### Scenario: User resizes a multi-point polyline via corner handle on mobile
 
-- **WHEN** a user on a mobile device touches a corner transform handle of a selected multi-point linear element and drags
+- **GIVEN** a mobile device user has selected a multi-point linear element that displays transform handles
+- **WHEN** the user touches a corner transform handle and drags
 - **THEN** the element SHALL resize proportionally from that corner
 
 #### Scenario: User rotates a multi-point polyline via rotation handle on mobile
 
-- **WHEN** a user on a mobile device touches the rotation handle of a selected multi-point linear element and drags
+- **GIVEN** a mobile device user has selected a multi-point linear element that displays transform handles
+- **WHEN** the user touches the rotation handle and drags
 - **THEN** the element SHALL rotate around its center
 
 ### Requirement: Phone form factor SHALL use corner-only handles for multi-point linear elements
@@ -53,12 +60,14 @@ On phone form factor devices, the system SHALL display only corner transform han
 
 #### Scenario: Phone shows corner handles only for multi-point polyline
 
-- **WHEN** a user on a phone form factor device selects a multi-point linear element
+- **GIVEN** a phone form factor device user has a multi-point linear element on the canvas
+- **WHEN** the user selects that element
 - **THEN** the system SHALL display corner transform handles but SHALL NOT display edge (north/south/east/west) resize handles
 
 #### Scenario: Tablet shows full handles for multi-point polyline
 
-- **WHEN** a user on a tablet form factor device selects a multi-point linear element
+- **GIVEN** a tablet form factor device user has a multi-point linear element on the canvas
+- **WHEN** the user selects that element
 - **THEN** the system SHALL display both corner and applicable edge transform handles
 
 ### Requirement: Elbow arrows SHALL remain excluded from bounding box on all platforms
@@ -67,10 +76,34 @@ The existing behavior where single-selected elbow arrows do not display a boundi
 
 #### Scenario: Elbow arrow selected on mobile has no bounding box
 
-- **WHEN** a user on a mobile device selects a single elbow arrow element
+- **GIVEN** a mobile device user has a single elbow arrow element on the canvas
+- **WHEN** the user selects that element
 - **THEN** the system SHALL NOT display a bounding box or transform handles
 
 #### Scenario: Elbow arrow selected on desktop has no bounding box
 
-- **WHEN** a user on a desktop device selects a single elbow arrow element
+- **GIVEN** a desktop device user has a single elbow arrow element on the canvas
+- **WHEN** the user selects that element
 - **THEN** the system SHALL NOT display a bounding box or transform handles
+
+### Requirement: Edge cases SHALL behave correctly
+
+The system SHALL handle degenerate and boundary cases for linear element selection without errors.
+
+#### Scenario: Linear element with exactly 1 point has no bounding box
+
+- **GIVEN** a linear element with only 1 point exists on the canvas (degenerate case)
+- **WHEN** the user selects that element on any device
+- **THEN** the system SHALL NOT display a bounding box or transform handles
+
+#### Scenario: Empty selection has no bounding box
+
+- **GIVEN** no elements are selected on the canvas
+- **WHEN** the system evaluates bounding box visibility
+- **THEN** the system SHALL NOT attempt to render a bounding box or transform handles
+
+#### Scenario: Multi-element selection including linear elements shows bounding box on mobile
+
+- **GIVEN** a mobile device user has multiple elements selected (including linear elements with any point count)
+- **WHEN** the selection contains more than one element
+- **THEN** the system SHALL display a bounding box with transform handles around the combined selection

@@ -26,8 +26,9 @@
 ## 5. Quality Checklist
 
 - [x] 5.1 Run `yarn test:typecheck` to verify TypeScript types
-- [x] 5.2 Run `yarn fix` to ensure code formatting and linting passes
-- [x] 5.3 Verify no hardcoded values were introduced (all thresholds use existing constants/conditions)
-- [x] 5.4 Verify no i18n strings were added or need translation
-- [x] 5.5 Verify no security concerns (no new user input handling, no new data exposure)
-- [x] 5.6 Review that the changes are self-explanatory — another developer should understand the fix without additional explanation
+- [x] 5.2 Run `yarn build` to verify the project builds successfully (pre-existing failure: workbox/vite-plugin-pwa service worker issue, verified identical on clean branch)
+- [x] 5.3 Run `yarn fix` to ensure code formatting and linting passes
+- [x] 5.4 Verify no hardcoded values were introduced (all thresholds use existing constants/conditions)
+- [x] 5.5 Verify no i18n strings were added or need translation
+- [x] 5.6 Verify no security concerns (no new user input handling, no new data exposure)
+- [x] 5.7 Review that the changes are self-explanatory — another developer should understand the fix without additional explanation

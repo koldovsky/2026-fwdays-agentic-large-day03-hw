@@ -19,6 +19,14 @@ On Android and mobile devices, shapes inserted from the Basic Shapes library (wh
 
 ### Modified Capabilities
 
+## Risks
+
+- **Touch hit-testing regression on multi-point polylines** (Likelihood: Low, Severity: Medium) — `resizeTest.ts` already handles touch `pointerType` correctly; no mobile-specific guards exist in that code path. Mitigation: new unit tests for `hasBoundingBox()` on mobile; manual QA on Android/iOS with Basic Shapes library items.
+- **Incorrect handle rendering on mobile** (Likelihood: Low, Severity: Low) — `interactiveScene.ts` has no `isMobileDevice` checks in the transform handle rendering path; once `hasBoundingBox()` returns `true`, handles render through the same code as desktop. Mitigation: verify no additional mobile guards in rendering code.
+- **Unintended behavior change for 2-point lines on desktop** (Likelihood: Low, Severity: Low) — The App.tsx HACK condition changes from `isMobileDevice || points === 2` to `points <= 2`, which is functionally equivalent on desktop (the `points === 2` branch already covered desktop). Mitigation: existing tests for 2-point line behavior.
+- **Phone form factor handle clutter** (Likelihood: Low, Severity: Low) — `canResizeFromSides()` already returns `false` for phone+mobile, ensuring corner-only handles. Mitigation: verify existing behavior is preserved.
+- **Rollback plan**: Revert the 3-line change in `hasBoundingBox()` and 2 condition changes in `App.tsx`; no data migration or API changes involved.
+
 ## Impact
 
 - **`packages/element/src/transformHandles.ts`**: `hasBoundingBox()` — remove the `!editorInterface.userAgent.isMobileDevice` condition for multi-point linear elements; review `canResizeFromSides()` and `getOmitSidesForEditorInterface()` for phone form factor behavior
