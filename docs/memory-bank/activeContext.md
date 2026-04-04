@@ -6,10 +6,10 @@ See [progress.md](./progress.md) for broader status and [hidden invariants](../t
 - Memory Bank now exists and is the primary durable context for the repo.
 - Keep Memory Bank compact and non-duplicative, with deep detail living in `docs/technical/*` and `docs/product/*`.
 
-## Active Change: enhanced-font-size-selector
-- **Goal:** Expand font size selector from 4 presets (S/M/L/XL) to compact presets + popover with extended sizes (2XL–10XL), numeric dropdown, and px/pt display toggle. [GitHub #10506](https://github.com/excalidraw/excalidraw/issues/10506).
-- **Stage:** Implementation complete (31/31 tasks). All tests pass. Ready for manual QA and archive.
-- **Key artifacts:** [proposal](../../openspec/changes/enhanced-font-size-selector/proposal.md) | [design](../../openspec/changes/enhanced-font-size-selector/design.md) | [spec](../../openspec/changes/enhanced-font-size-selector/specs/font-size-popover/spec.md) | [tasks](../../openspec/changes/enhanced-font-size-selector/tasks.md)
+## Recently Completed: enhanced-font-size-selector
+- **Summary:** Expanded font size selector from 4 presets to 4 inline SVG icon presets + popover with 12 named sizes (3×4 grid), numeric dropdown, px/pt display toggle, and section labels. [GitHub #10506](https://github.com/excalidraw/excalidraw/issues/10506).
+- **Status:** Archived. Spec and implementation complete.
+- **Archive:** [openspec/archive/enhanced-font-size-selector/](../../openspec/archive/enhanced-font-size-selector/)
 - **Pattern:** Follows ColorPicker TopPicks + PropertiesPopover pattern. New `FontSizePicker/` component directory.
 
 ## Recent Changes

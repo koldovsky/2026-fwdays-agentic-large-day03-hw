@@ -8,6 +8,9 @@ Detailed architecture, package internals, and risky invariants are documented in
 - `@excalidraw/excalidraw` is the core editor runtime and API surface; `excalidraw-app` hosts product-specific integrations.
 - Runtime correctness depends on restore/reconcile pipeline behavior, store capture semantics, and collaboration merge rules.
 
+## Key Patterns
+- **Properties panel popover pattern:** Inline presets (compact buttons/swatches) → `ButtonSeparator` → trigger button → `PropertiesPopover` with detailed picker. Used by `ColorPicker` and `FontSizePicker`. New property controls should follow this pattern. See [properties-panel-architecture.md](../technical/properties-panel-architecture.md).
+
 ## Source Of Detail
 - Technical overview and data/state/render flow: [architecture.md](../technical/architecture.md)
 - Package-level internals (`packages/*`): [packages-architecture.md](../technical/packages-architecture.md)

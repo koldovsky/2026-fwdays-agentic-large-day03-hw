@@ -16,9 +16,9 @@ See [activeContext.md](./activeContext.md) for the current session state.
 - Added i18n-specific hidden invariants (16, 17) for static language filtering and silent locale fallback.
 - Added properties panel architecture documentation in [properties-panel-architecture.md](../technical/properties-panel-architecture.md), covering PanelComponent rendering, three layout modes, element-type filtering, and how to add new controls.
 - Added context menu architecture documentation in [context-menu-architecture.md](../technical/context-menu-architecture.md), covering rendering, item registration via Action system, predicate-based filtering, text-specific menu items, and extension points. Documented that nested menus are not supported natively.
+- **enhanced-font-size-selector** — Completed and archived. Expanded font size control: 4 inline SVG presets (S/M/L/XL) + popover with 12 named sizes in 3×4 grid, numeric dropdown, px/pt display toggle, section labels. `FONT_SIZES` extended to 12 keys (2xs–10xl, without 6xl/7xl/9xl). New `FontSizePicker/` component following ColorPicker pattern. See [archive](../../openspec/archive/enhanced-font-size-selector/).
 
 ## In Progress
-- **enhanced-font-size-selector** — Implementation complete (31/31 tasks). All automated tests pass (104 files, 1330 tests). Awaiting manual QA and archive. See [tasks](../../openspec/changes/enhanced-font-size-selector/tasks.md).
 - Validate and refine service-specific setup details in the new onboarding guide as backend assumptions evolve.
 
 ## Remaining

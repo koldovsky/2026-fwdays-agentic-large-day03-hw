@@ -42,6 +42,14 @@ See [systemPatterns.md](./systemPatterns.md) for architecture and [hidden invari
 - Alternatives Considered: writing both local and collab state simultaneously; rejected by current implementation because it risks conflicts and stale restores.
 - Consequences: start/stop collaboration flows must keep browser-state versions, file storage, and scene/image statuses in sync.
 
+## D-007 Enhanced Font Size Selector Follows ColorPicker Pattern
+- Status: accepted
+- Context: the 4-preset font size control (S/M/L/XL) was insufficient for users needing large-format text. GitHub #10506.
+- Decision: create `FontSizePicker` component replicating the ColorPicker inline presets + PropertiesPopover pattern. 4 SVG icon inline presets, popover with 12 named sizes in 3×4 grid, numeric `<select>` dropdown, and px/pt display toggle. `FONT_SIZES` extended to 12 keys (2xs through 10xl, omitting 6xl/7xl/9xl for grid fit). Size abbreviations and unit names are hardcoded (not i18n). Popover manages `openPopup: "fontSize"` with race-condition guard in `onOpenChange`.
+- Why: consistent UX pattern across properties panel, proven Radix Popover integration, and minimal i18n surface.
+- Alternatives Considered: extending RadioSelection with "more" button (rejected — RadioSelection not designed for popovers); standalone dropdown (rejected — doesn't match panel visual language).
+- Consequences: new property popovers should follow the same TopPicks + PropertiesPopover pattern.
+
 ## D-006 Advanced Integrations Stay App-Specific
 - Status: accepted
 - Context: features such as AI generation, Excalidraw+, share dialogs, and Firebase-backed services are useful but not universal.
