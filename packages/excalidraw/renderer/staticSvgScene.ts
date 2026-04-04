@@ -3,8 +3,10 @@ import {
   MAX_DECIMALS_FOR_SVG_EXPORT,
   SVG_NS,
   THEME,
+  TEXT_ORIENTATION,
   DARK_THEME_FILTER,
   getFontFamilyString,
+  getFontString,
   isRTL,
   isTestEnv,
   getVerticalOffset,
@@ -20,7 +22,11 @@ import {
 } from "@excalidraw/element";
 import { LinearElementEditor } from "@excalidraw/element";
 import { getBoundTextElement, getContainerElement } from "@excalidraw/element";
-import { getLineHeightInPx } from "@excalidraw/element";
+import {
+  charWidth,
+  getEffectiveTextOrientation,
+  getLineHeightInPx,
+} from "@excalidraw/element";
 import {
   isArrowElement,
   isIframeLikeElement,
@@ -645,47 +651,119 @@ const renderElementToSvg = (
             offsetY || 0
           }) rotate(${degree} ${cx} ${cy})`,
         );
-        const lines = element.text.replace(/\r\n?/g, "\n").split("\n");
         const lineHeightPx = getLineHeightInPx(
           element.fontSize,
           element.lineHeight,
         );
-        const horizontalOffset =
-          element.textAlign === "center"
-            ? element.width / 2
-            : element.textAlign === "right"
-            ? element.width
-            : 0;
         const verticalOffset = getVerticalOffset(
           element.fontFamily,
           element.fontSize,
           lineHeightPx,
         );
-        const direction = isRTL(element.text) ? "rtl" : "ltr";
-        const textAnchor =
-          element.textAlign === "center"
-            ? "middle"
-            : element.textAlign === "right" || direction === "rtl"
-            ? "end"
-            : "start";
-        for (let i = 0; i < lines.length; i++) {
-          const text = svgRoot.ownerDocument.createElementNS(SVG_NS, "text");
-          text.textContent = lines[i];
-          text.setAttribute("x", `${horizontalOffset}`);
-          text.setAttribute("y", `${i * lineHeightPx + verticalOffset}`);
-          text.setAttribute("font-family", getFontFamilyString(element));
-          text.setAttribute("font-size", `${element.fontSize}px`);
-          text.setAttribute(
-            "fill",
-            renderConfig.theme === THEME.DARK
-              ? applyDarkModeFilter(element.strokeColor)
-              : element.strokeColor,
+        const fill =
+          renderConfig.theme === THEME.DARK
+            ? applyDarkModeFilter(element.strokeColor)
+            : element.strokeColor;
+
+        if (getEffectiveTextOrientation(element) === TEXT_ORIENTATION.VERTICAL) {
+          const columns = element.text.replace(/\r\n?/g, "\n").split("\n");
+          const font = getFontString(element);
+          const colWidths = columns.map((col) => {
+            let w = 0;
+            for (const c of Array.from(col)) {
+              w = Math.max(w, charWidth.calculate(c, font));
+            }
+            return col.length === 0
+              ? charWidth.calculate(" ", font)
+              : w;
+          });
+          const contentWidth = colWidths.reduce((a, b) => a + b, 0);
+          const colHeights = columns.map((col) =>
+            Math.max(
+              lineHeightPx,
+              Array.from(col).length * lineHeightPx,
+            ),
           );
-          text.setAttribute("text-anchor", textAnchor);
-          text.setAttribute("style", "white-space: pre;");
-          text.setAttribute("direction", direction);
-          text.setAttribute("dominant-baseline", "alphabetic");
-          node.appendChild(text);
+          const blockHeight = Math.max(...colHeights, lineHeightPx);
+          const blockX =
+            element.textAlign === "center"
+              ? (element.width - contentWidth) / 2
+              : element.textAlign === "right"
+              ? element.width - contentWidth
+              : 0;
+          const blockY =
+            element.verticalAlign === "middle"
+              ? (element.height - blockHeight) / 2
+              : element.verticalAlign === "bottom"
+              ? element.height - blockHeight
+              : 0;
+          let cumX = blockX;
+          for (let ci = 0; ci < columns.length; ci++) {
+            const col = columns[ci];
+            const colW = colWidths[ci];
+            const chars = Array.from(col);
+            const colH = Math.max(
+              lineHeightPx,
+              chars.length * lineHeightPx,
+            );
+            const yColOffset =
+              element.verticalAlign === "middle"
+                ? (blockHeight - colH) / 2
+                : element.verticalAlign === "bottom"
+                ? blockHeight - colH
+                : 0;
+            for (let i = 0; i < chars.length; i++) {
+              const ch = chars[i];
+              const cw = charWidth.calculate(ch, font);
+              const x = cumX + (colW - cw) / 2;
+              const y = blockY + yColOffset + i * lineHeightPx + verticalOffset;
+              const textNode = svgRoot.ownerDocument.createElementNS(
+                SVG_NS,
+                "text",
+              );
+              textNode.textContent = ch;
+              textNode.setAttribute("x", `${x}`);
+              textNode.setAttribute("y", `${y}`);
+              textNode.setAttribute("font-family", getFontFamilyString(element));
+              textNode.setAttribute("font-size", `${element.fontSize}px`);
+              textNode.setAttribute("fill", fill);
+              textNode.setAttribute("text-anchor", "start");
+              textNode.setAttribute("style", "white-space: pre;");
+              textNode.setAttribute("direction", "ltr");
+              textNode.setAttribute("dominant-baseline", "alphabetic");
+              node.appendChild(textNode);
+            }
+            cumX += colW;
+          }
+        } else {
+          const lines = element.text.replace(/\r\n?/g, "\n").split("\n");
+          const horizontalOffset =
+            element.textAlign === "center"
+              ? element.width / 2
+              : element.textAlign === "right"
+              ? element.width
+              : 0;
+          const direction = isRTL(element.text) ? "rtl" : "ltr";
+          const textAnchor =
+            element.textAlign === "center"
+              ? "middle"
+              : element.textAlign === "right" || direction === "rtl"
+              ? "end"
+              : "start";
+          for (let i = 0; i < lines.length; i++) {
+            const text = svgRoot.ownerDocument.createElementNS(SVG_NS, "text");
+            text.textContent = lines[i];
+            text.setAttribute("x", `${horizontalOffset}`);
+            text.setAttribute("y", `${i * lineHeightPx + verticalOffset}`);
+            text.setAttribute("font-family", getFontFamilyString(element));
+            text.setAttribute("font-size", `${element.fontSize}px`);
+            text.setAttribute("fill", fill);
+            text.setAttribute("text-anchor", textAnchor);
+            text.setAttribute("style", "white-space: pre;");
+            text.setAttribute("direction", direction);
+            text.setAttribute("dominant-baseline", "alphabetic");
+            node.appendChild(text);
+          }
         }
 
         const g = maybeWrapNodesInFrameClipPath(

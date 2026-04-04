@@ -3,7 +3,9 @@ import {
   DEFAULT_FONT_FAMILY,
   DEFAULT_FONT_SIZE,
   DEFAULT_TEXT_ALIGN,
+  DEFAULT_TEXT_ORIENTATION,
   DEFAULT_VERTICAL_ALIGN,
+  TEXT_ORIENTATION,
   VERTICAL_ALIGN,
   randomInteger,
   randomId,
@@ -21,9 +23,17 @@ import {
   getResizedElementAbsoluteCoords,
 } from "./bounds";
 import { newElementWith } from "./mutateElement";
-import { getBoundTextMaxWidth } from "./textElement";
-import { normalizeText, measureText } from "./textMeasurements";
-import { wrapText } from "./textWrapping";
+import {
+  getEffectiveTextOrientation,
+  wrapTextElement,
+} from "./textElement";
+import {
+  normalizeText,
+  measureText,
+  measureVerticalText,
+  getLineHeightInPx,
+} from "./textMeasurements";
+import { wrapTextVertical } from "./textWrapping";
 
 import { isLineElement } from "./typeChecks";
 
@@ -35,6 +45,7 @@ import type {
   ExcalidrawGenericElement,
   NonDeleted,
   TextAlign,
+  TextOrientation,
   VerticalAlign,
   Arrowhead,
   ExcalidrawFreeDrawElement,
@@ -244,6 +255,7 @@ export const newTextElement = (
     fontFamily?: FontFamilyValues;
     textAlign?: TextAlign;
     verticalAlign?: VerticalAlign;
+    textOrientation?: TextOrientation;
     containerId?: ExcalidrawTextContainer["id"] | null;
     lineHeight?: ExcalidrawTextElement["lineHeight"];
     autoResize?: ExcalidrawTextElement["autoResize"];
@@ -252,14 +264,29 @@ export const newTextElement = (
   const fontFamily = opts.fontFamily || DEFAULT_FONT_FAMILY;
   const fontSize = opts.fontSize || DEFAULT_FONT_SIZE;
   const lineHeight = opts.lineHeight || getLineHeight(fontFamily);
-  const text = normalizeText(opts.text);
-  const metrics = measureText(
-    text,
-    getFontString({ fontFamily, fontSize }),
-    lineHeight,
-  );
   const textAlign = opts.textAlign || DEFAULT_TEXT_ALIGN;
   const verticalAlign = opts.verticalAlign || DEFAULT_VERTICAL_ALIGN;
+  const containerId = opts.containerId || null;
+  const textOrientation: TextOrientation = containerId
+    ? TEXT_ORIENTATION.HORIZONTAL
+    : opts.textOrientation ?? DEFAULT_TEXT_ORIENTATION;
+  const font = getFontString({ fontFamily, fontSize });
+  const normalized = normalizeText(opts.text);
+  let text = normalized;
+  let metrics;
+  if (textOrientation === TEXT_ORIENTATION.VERTICAL) {
+    const lineHeightPx = getLineHeightInPx(fontSize, lineHeight);
+    text = wrapTextVertical(
+      normalized,
+      font,
+      Number.POSITIVE_INFINITY,
+      lineHeightPx,
+    );
+    metrics = measureVerticalText(text, font, lineHeight, fontSize);
+  } else {
+    metrics = measureText(normalized, font, lineHeight);
+    text = normalized;
+  }
   const offsets = getTextElementPositionOffsets(
     { textAlign, verticalAlign },
     metrics,
@@ -272,12 +299,13 @@ export const newTextElement = (
     fontFamily,
     textAlign,
     verticalAlign,
+    textOrientation,
     x: opts.x - offsets.x,
     y: opts.y - offsets.y,
     width: metrics.width,
     height: metrics.height,
-    containerId: opts.containerId || null,
-    originalText: opts.originalText ?? text,
+    containerId,
+    originalText: opts.originalText ?? normalized,
     autoResize: opts.autoResize ?? true,
     lineHeight,
   };
@@ -300,15 +328,27 @@ const getAdjustedDimensions = (
   width: number;
   height: number;
 } => {
-  let { width: nextWidth, height: nextHeight } = measureText(
-    nextText,
-    getFontString(element),
-    element.lineHeight,
-  );
+  const font = getFontString(element);
+  const isVertical =
+    getEffectiveTextOrientation(element) === TEXT_ORIENTATION.VERTICAL;
+  const measure = (t: string) =>
+    isVertical
+      ? measureVerticalText(
+          t,
+          font,
+          element.lineHeight,
+          element.fontSize,
+        )
+      : measureText(t, font, element.lineHeight);
 
-  // wrapped text
+  let { width: nextWidth, height: nextHeight } = measure(nextText);
+
   if (!element.autoResize) {
-    nextWidth = element.width;
+    if (isVertical) {
+      nextHeight = element.height;
+    } else {
+      nextWidth = element.width;
+    }
   }
 
   const { textAlign, verticalAlign } = element;
@@ -320,11 +360,7 @@ const getAdjustedDimensions = (
     !element.containerId &&
     element.autoResize
   ) {
-    const prevMetrics = measureText(
-      element.text,
-      getFontString(element),
-      element.lineHeight,
-    );
+    const prevMetrics = measure(element.text);
     const offsets = getTextElementPositionOffsets(element, {
       width: nextWidth - prevMetrics.width,
       height: nextHeight - prevMetrics.height,
@@ -421,19 +457,25 @@ export const refreshTextDimensions = (
   textElement: ExcalidrawTextElement,
   container: ExcalidrawTextContainer | null,
   elementsMap: ElementsMap,
-  text = textElement.text,
+  content = textElement.originalText,
 ) => {
   if (textElement.isDeleted) {
     return;
   }
+  const el =
+    content !== textElement.originalText
+      ? newElementWith(textElement, { originalText: content })
+      : textElement;
+
+  let text: string;
   if (container || !textElement.autoResize) {
-    text = wrapText(
-      text,
-      getFontString(textElement),
-      container
-        ? getBoundTextMaxWidth(container, textElement)
-        : textElement.width,
-    );
+    text = wrapTextElement(el, content, container);
+  } else if (
+    getEffectiveTextOrientation(textElement) === TEXT_ORIENTATION.VERTICAL
+  ) {
+    text = wrapTextElement(el, content, null);
+  } else {
+    text = normalizeText(content);
   }
   const dimensions = getAdjustedDimensions(textElement, elementsMap, text);
   return { text, ...dimensions };

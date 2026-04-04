@@ -23,6 +23,8 @@ import {
   reduceToCommonValue,
   invariant,
   FONT_SIZES,
+  TEXT_ORIENTATION,
+  DEFAULT_TEXT_ORIENTATION,
 } from "@excalidraw/common";
 
 import { canBecomePolygon, getNonDeletedElements } from "@excalidraw/element";
@@ -74,6 +76,7 @@ import type {
   ExcalidrawTextElement,
   FontFamilyValues,
   TextAlign,
+  TextOrientation,
   VerticalAlign,
 } from "@excalidraw/element/types";
 
@@ -116,6 +119,8 @@ import {
   TextAlignLeftIcon,
   TextAlignCenterIcon,
   TextAlignRightIcon,
+  TextOrientationHorizontalIcon,
+  TextOrientationVerticalIcon,
   FillZigZagIcon,
   ArrowheadTriangleOutlineIcon,
   ArrowheadCircleOutlineIcon,
@@ -1476,6 +1481,88 @@ export const actionChangeVerticalAlign = register<VerticalAlign>({
                   app.scene.getNonDeletedElementsMap(),
                 ) !== null,
               (hasSelection) => (hasSelection ? null : VERTICAL_ALIGN.MIDDLE),
+            )}
+            onChange={(value) => {
+              withCaretPositionPreservation(
+                () => updateData(value),
+                isCompact,
+                !!appState.editingTextElement,
+                data?.onPreventClose,
+              );
+            }}
+          />
+        </div>
+      </fieldset>
+    );
+  },
+});
+
+export const actionChangeTextOrientation = register<TextOrientation>({
+  name: "changeTextOrientation",
+  label: "Change text orientation",
+  trackEvent: { category: "element" },
+  perform: (elements, appState, value, app) => {
+    return {
+      elements: changeProperty(
+        elements,
+        appState,
+        (oldElement) => {
+          if (isTextElement(oldElement) && !oldElement.containerId) {
+            const newElement: ExcalidrawTextElement = newElementWith(
+              oldElement,
+              { textOrientation: value },
+            );
+            redrawTextBoundingBox(
+              newElement,
+              app.scene.getContainerElement(oldElement),
+              app.scene,
+            );
+            return newElement;
+          }
+          return oldElement;
+        },
+        true,
+      ),
+      appState: {
+        ...appState,
+      },
+      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+    };
+  },
+  PanelComponent: ({ elements, appState, updateData, app, data }) => {
+    const { isCompact } = getStylesPanelInfo(app);
+    return (
+      <fieldset>
+        <legend>{t("labels.textOrientation")}</legend>
+        <div className="buttonList">
+          <RadioSelection<TextOrientation | false>
+            group="text-orientation"
+            options={[
+              {
+                value: TEXT_ORIENTATION.HORIZONTAL,
+                text: t("labels.textOrientationHorizontal"),
+                icon: TextOrientationHorizontalIcon,
+                testId: "text-orientation-horizontal",
+              },
+              {
+                value: TEXT_ORIENTATION.VERTICAL,
+                text: t("labels.textOrientationVertical"),
+                icon: TextOrientationVerticalIcon,
+                testId: "text-orientation-vertical",
+              },
+            ]}
+            value={getFormValue(
+              elements,
+              app,
+              (element) => {
+                if (isTextElement(element) && !element.containerId) {
+                  return element.textOrientation;
+                }
+                return null;
+              },
+              (element) => isTextElement(element) && !element.containerId,
+              (hasSelection) =>
+                hasSelection ? null : DEFAULT_TEXT_ORIENTATION,
             )}
             onChange={(value) => {
               withCaretPositionPreservation(

@@ -1,6 +1,6 @@
 import { isDevEnv, isTestEnv } from "@excalidraw/common";
 
-import { charWidth, getLineWidth } from "./textMeasurements";
+import { charWidth, getLineWidth, normalizeText } from "./textMeasurements";
 
 import type { FontString } from "./types";
 
@@ -402,6 +402,36 @@ export const wrapText = (
   return getWrappedTextLines(text, font, maxWidth)
     .map((line) => line.text)
     .join("\n");
+};
+
+export const wrapTextVertical = (
+  text: string,
+  _font: FontString,
+  maxColumnHeight: number,
+  lineHeightPx: number,
+): string => {
+  const normalized = normalizeText(text);
+  const hardParts = normalized.split("\n");
+  const columns: string[] = [];
+
+  for (const part of hardParts) {
+    const chars = Array.from(part);
+    let col = "";
+    let colHeight = 0;
+
+    for (const ch of chars) {
+      if (col.length > 0 && colHeight + lineHeightPx > maxColumnHeight) {
+        columns.push(col);
+        col = "";
+        colHeight = 0;
+      }
+      col += ch;
+      colHeight += lineHeightPx;
+    }
+    columns.push(col);
+  }
+
+  return columns.join("\n");
 };
 
 /**

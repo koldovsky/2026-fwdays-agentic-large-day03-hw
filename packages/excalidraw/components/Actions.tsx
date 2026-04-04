@@ -11,6 +11,7 @@ import {
 
 import {
   shouldAllowVerticalAlign,
+  supportsTextOrientation,
   suppportsHorizontalAlign,
   hasBoundTextElement,
   isElbowArrow,
@@ -231,6 +232,8 @@ export const SelectedShapeActions = ({
           {(appState.activeTool.type === "text" ||
             suppportsHorizontalAlign(targetElements, elementsMap)) &&
             renderAction("changeTextAlign")}
+          {supportsTextOrientation(targetElements) &&
+            renderAction("changeTextOrientation")}
         </>
       )}
 
@@ -597,6 +600,8 @@ const CombinedTextProperties = ({
                 renderAction("changeTextAlign")}
               {shouldAllowVerticalAlign(targetElements, elementsMap) &&
                 renderAction("changeVerticalAlign")}
+              {supportsTextOrientation(targetElements) &&
+                renderAction("changeTextOrientation")}
             </div>
           </PropertiesPopover>
         )}

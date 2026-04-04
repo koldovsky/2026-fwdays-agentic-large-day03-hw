@@ -4,6 +4,7 @@ import {
   type CombineBrandsIfNeeded,
   DEFAULT_FONT_FAMILY,
   DEFAULT_TEXT_ALIGN,
+  DEFAULT_TEXT_ORIENTATION,
   DEFAULT_VERTICAL_ALIGN,
   FONT_FAMILY,
   ROUNDNESS,
@@ -396,6 +397,10 @@ export const restoreElement = (
         text,
         textAlign: element.textAlign || DEFAULT_TEXT_ALIGN,
         verticalAlign: element.verticalAlign || DEFAULT_VERTICAL_ALIGN,
+        textOrientation: element.containerId
+          ? DEFAULT_TEXT_ORIENTATION
+          : (element as ExcalidrawTextElement).textOrientation ??
+            DEFAULT_TEXT_ORIENTATION,
         containerId: element.containerId ?? null,
         originalText: element.originalText || text,
         autoResize: element.autoResize ?? true,

@@ -4,6 +4,7 @@ import {
   BOUND_TEXT_PADDING,
   DEFAULT_FONT_SIZE,
   TEXT_ALIGN,
+  TEXT_ORIENTATION,
   VERTICAL_ALIGN,
   getFontString,
   isProdEnv,
@@ -22,8 +23,13 @@ import {
 } from "./containerCache";
 import { LinearElementEditor } from "./linearElementEditor";
 
-import { measureText } from "./textMeasurements";
-import { wrapText } from "./textWrapping";
+import {
+  getLineHeightInPx,
+  measureText,
+  measureVerticalText,
+  normalizeText,
+} from "./textMeasurements";
+import { wrapText, wrapTextVertical } from "./textWrapping";
 import {
   isBoundToContainer,
   isArrowElement,
@@ -41,7 +47,48 @@ import type {
   ExcalidrawTextElement,
   ExcalidrawTextElementWithContainer,
   NonDeletedExcalidrawElement,
+  TextOrientation,
 } from "./types";
+
+export const getEffectiveTextOrientation = (
+  textElement: ExcalidrawTextElement,
+): TextOrientation => {
+  if (textElement.containerId) {
+    return TEXT_ORIENTATION.HORIZONTAL;
+  }
+  return textElement.textOrientation;
+};
+
+export const wrapTextElement = (
+  textElement: ExcalidrawTextElement,
+  originalText: string,
+  container: ExcalidrawElement | null,
+): string => {
+  const font = getFontString(textElement);
+  const normalized = normalizeText(originalText);
+  if (getEffectiveTextOrientation(textElement) === TEXT_ORIENTATION.VERTICAL) {
+    const lineHeightPx = getLineHeightInPx(
+      textElement.fontSize,
+      textElement.lineHeight,
+    );
+    const maxH = textElement.autoResize
+      ? Number.POSITIVE_INFINITY
+      : textElement.height;
+    return wrapTextVertical(normalized, font, maxH, lineHeightPx);
+  }
+  if (container || !textElement.autoResize) {
+    const maxWidth = container
+      ? getBoundTextMaxWidth(container, textElement)
+      : textElement.width;
+    return wrapText(normalized, font, maxWidth);
+  }
+  return normalized;
+};
+
+export const supportsTextOrientation = (
+  elements: readonly ExcalidrawElement[],
+): boolean =>
+  elements.some((el) => isTextElement(el) && !el.containerId);
 
 export const redrawTextBoundingBox = (
   textElement: ExcalidrawTextElement,
@@ -49,8 +96,6 @@ export const redrawTextBoundingBox = (
   scene: Scene,
 ) => {
   const elementsMap = scene.getNonDeletedElementsMap();
-
-  let maxWidth = undefined;
 
   if (!isProdEnv()) {
     invariant(
@@ -72,30 +117,37 @@ export const redrawTextBoundingBox = (
       : textElement.angle) as Radians,
   };
 
-  boundTextUpdates.text = textElement.text;
-
-  if (container || !textElement.autoResize) {
-    maxWidth = container
-      ? getBoundTextMaxWidth(container, textElement)
-      : textElement.width;
-    boundTextUpdates.text = wrapText(
-      textElement.originalText,
-      getFontString(textElement),
-      maxWidth,
-    );
-  }
-
-  const metrics = measureText(
-    boundTextUpdates.text,
-    getFontString(textElement),
-    textElement.lineHeight,
+  boundTextUpdates.text = wrapTextElement(
+    textElement,
+    textElement.originalText,
+    container,
   );
 
-  // Note: only update width for unwrapped text and bound texts (which always have autoResize set to true)
+  const isVertical =
+    getEffectiveTextOrientation(textElement) === TEXT_ORIENTATION.VERTICAL;
+  const metrics = isVertical
+    ? measureVerticalText(
+        boundTextUpdates.text,
+        getFontString(textElement),
+        textElement.lineHeight,
+        textElement.fontSize,
+      )
+    : measureText(
+        boundTextUpdates.text,
+        getFontString(textElement),
+        textElement.lineHeight,
+      );
+
   if (textElement.autoResize) {
     boundTextUpdates.width = metrics.width;
+    boundTextUpdates.height = metrics.height;
+  } else if (isVertical) {
+    boundTextUpdates.width = metrics.width;
+    boundTextUpdates.height = textElement.height;
+  } else {
+    boundTextUpdates.width = textElement.width;
+    boundTextUpdates.height = metrics.height;
   }
-  boundTextUpdates.height = metrics.height;
 
   if (container) {
     const maxContainerHeight = getBoundTextMaxHeight(

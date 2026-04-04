@@ -369,6 +369,13 @@ export const TEXT_ALIGN = {
   RIGHT: "right",
 };
 
+export const TEXT_ORIENTATION = {
+  HORIZONTAL: "horizontal",
+  VERTICAL: "vertical",
+} as const;
+
+export const DEFAULT_TEXT_ORIENTATION = TEXT_ORIENTATION.HORIZONTAL;
+
 export const ELEMENT_READY_TO_ERASE_OPACITY = 20;
 
 // Radius represented as 25% of element's largest side (width/height).

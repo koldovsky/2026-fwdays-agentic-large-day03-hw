@@ -1,5 +1,6 @@
 import {
   BOUND_TEXT_PADDING,
+  DEFAULT_TEXT_ORIENTATION,
   ROUNDNESS,
   TEXT_ALIGN,
   VERTICAL_ALIGN,
@@ -157,6 +158,7 @@ export const actionBindText = register({
       containerId: container.id,
       verticalAlign: VERTICAL_ALIGN.MIDDLE,
       textAlign: TEXT_ALIGN.CENTER,
+      textOrientation: DEFAULT_TEXT_ORIENTATION,
       autoResize: true,
       angle: (isArrowElement(container) ? 0 : container?.angle ?? 0) as Radians,
     });
@@ -312,6 +314,7 @@ export const actionWrapTextInContainer = register({
           verticalAlign: VERTICAL_ALIGN.MIDDLE,
           boundElements: null,
           textAlign: TEXT_ALIGN.CENTER,
+          textOrientation: DEFAULT_TEXT_ORIENTATION,
           autoResize: true,
         });
 

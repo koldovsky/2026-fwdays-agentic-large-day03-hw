@@ -17,6 +17,7 @@ import {
   DARK_THEME_FILTER,
   MIME_TYPES,
   THEME,
+  TEXT_ORIENTATION,
   distance,
   getFontString,
   isRTL,
@@ -51,8 +52,9 @@ import {
   getContainerElement,
   getBoundTextMaxHeight,
   getBoundTextMaxWidth,
+  getEffectiveTextOrientation,
 } from "./textElement";
-import { getLineHeightInPx } from "./textMeasurements";
+import { charWidth, getLineHeightInPx } from "./textMeasurements";
 import {
   isTextElement,
   isLinearElement,
@@ -548,8 +550,6 @@ const drawElementOnCanvas = (
         const rtl = isRTL(element.text);
         const shouldTemporarilyAttach = rtl && !context.canvas.isConnected;
         if (shouldTemporarilyAttach) {
-          // to correctly render RTL text mixed with LTR, we have to append it
-          // to the DOM
           document.body.appendChild(context.canvas);
         }
         context.canvas.setAttribute("dir", rtl ? "rtl" : "ltr");
@@ -559,17 +559,6 @@ const drawElementOnCanvas = (
           renderConfig.theme === THEME.DARK
             ? applyDarkModeFilter(element.strokeColor)
             : element.strokeColor;
-        context.textAlign = element.textAlign as CanvasTextAlign;
-
-        // Canvas does not support multiline text by default
-        const lines = element.text.replace(/\r\n?/g, "\n").split("\n");
-
-        const horizontalOffset =
-          element.textAlign === "center"
-            ? element.width / 2
-            : element.textAlign === "right"
-            ? element.width
-            : 0;
 
         const lineHeightPx = getLineHeightInPx(
           element.fontSize,
@@ -582,12 +571,87 @@ const drawElementOnCanvas = (
           lineHeightPx,
         );
 
-        for (let index = 0; index < lines.length; index++) {
-          context.fillText(
-            lines[index],
-            horizontalOffset,
-            index * lineHeightPx + verticalOffset,
+        if (getEffectiveTextOrientation(element) === TEXT_ORIENTATION.VERTICAL) {
+          context.canvas.setAttribute("dir", "ltr");
+          context.textAlign = "left";
+          const columns = element.text.replace(/\r\n?/g, "\n").split("\n");
+          const font = getFontString(element);
+          const colWidths = columns.map((col) => {
+            let w = 0;
+            for (const c of Array.from(col)) {
+              w = Math.max(w, charWidth.calculate(c, font));
+            }
+            return col.length === 0
+              ? charWidth.calculate(" ", font)
+              : w;
+          });
+          const contentWidth = colWidths.reduce((a, b) => a + b, 0);
+          const colHeights = columns.map((col) =>
+            Math.max(
+              lineHeightPx,
+              Array.from(col).length * lineHeightPx,
+            ),
           );
+          const blockHeight = Math.max(
+            ...colHeights,
+            lineHeightPx,
+          );
+
+          const blockX =
+            element.textAlign === "center"
+              ? (element.width - contentWidth) / 2
+              : element.textAlign === "right"
+              ? element.width - contentWidth
+              : 0;
+          const blockY =
+            element.verticalAlign === "middle"
+              ? (element.height - blockHeight) / 2
+              : element.verticalAlign === "bottom"
+              ? element.height - blockHeight
+              : 0;
+
+          let cumX = blockX;
+          for (let ci = 0; ci < columns.length; ci++) {
+            const col = columns[ci];
+            const colW = colWidths[ci];
+            const chars = Array.from(col);
+            const colH = Math.max(
+              lineHeightPx,
+              chars.length * lineHeightPx,
+            );
+            const yColOffset =
+              element.verticalAlign === "middle"
+                ? (blockHeight - colH) / 2
+                : element.verticalAlign === "bottom"
+                ? blockHeight - colH
+                : 0;
+            for (let i = 0; i < chars.length; i++) {
+              const ch = chars[i];
+              const cw = charWidth.calculate(ch, font);
+              const x = cumX + (colW - cw) / 2;
+              const y = blockY + yColOffset + i * lineHeightPx + verticalOffset;
+              context.fillText(ch, x, y);
+            }
+            cumX += colW;
+          }
+        } else {
+          context.textAlign = element.textAlign as CanvasTextAlign;
+          const lines = element.text.replace(/\r\n?/g, "\n").split("\n");
+
+          const horizontalOffset =
+            element.textAlign === "center"
+              ? element.width / 2
+              : element.textAlign === "right"
+              ? element.width
+              : 0;
+
+          for (let index = 0; index < lines.length; index++) {
+            context.fillText(
+              lines[index],
+              horizontalOffset,
+              index * lineHeightPx + verticalOffset,
+            );
+          }
         }
         context.restore();
         if (shouldTemporarilyAttach) {

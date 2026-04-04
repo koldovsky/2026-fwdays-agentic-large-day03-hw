@@ -207,6 +207,33 @@ export const charWidth = (() => {
   };
 })();
 
+export const measureVerticalText = (
+  text: string,
+  font: FontString,
+  lineHeight: ExcalidrawTextElement["lineHeight"],
+  fontSize: number,
+) => {
+  const lineHeightPx = getLineHeightInPx(fontSize, lineHeight);
+  const columns = normalizeText(text).split("\n");
+  const spaceW = charWidth.calculate(" ", font);
+  let totalWidth = 0;
+  let maxHeight = 0;
+  for (const col of columns) {
+    const graphemes = Array.from(col);
+    let colW = 0;
+    for (const c of graphemes) {
+      colW = Math.max(colW, charWidth.calculate(c, font));
+    }
+    if (graphemes.length === 0) {
+      colW = spaceW;
+    }
+    totalWidth += colW;
+    const colH = Math.max(lineHeightPx, graphemes.length * lineHeightPx);
+    maxHeight = Math.max(maxHeight, colH);
+  }
+  return { width: totalWidth, height: maxHeight };
+};
+
 export const getMinCharWidth = (font: FontString) => {
   const cache = charWidth.getCache(font);
   if (!cache) {

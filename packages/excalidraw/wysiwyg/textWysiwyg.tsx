@@ -4,6 +4,7 @@ import {
   CLASSES,
   POINTER_BUTTON,
   THEME,
+  TEXT_ORIENTATION,
   isWritableElement,
   getFontString,
   getFontFamilyString,
@@ -35,6 +36,8 @@ import {
   getBoundTextElement,
 } from "@excalidraw/element";
 import { getTextWidth } from "@excalidraw/element";
+import { charWidth } from "@excalidraw/element";
+import { getEffectiveTextOrientation } from "@excalidraw/element";
 import { getLineHeightInPx } from "@excalidraw/element";
 import { getLineWidth } from "@excalidraw/element";
 import { normalizeText } from "@excalidraw/element";
@@ -192,6 +195,153 @@ const getLineCaretOffsetFromNativeLayout = ({
 
   return closestOffset;
 };
+
+const mapVerticalLayoutCaretToOriginal = (
+  layoutText: string,
+  originalText: string,
+  layoutCaret: number,
+): number => {
+  const L = layoutText.replace(/\r\n?/g, "\n");
+  const O = normalizeText(originalText);
+  let flat = 0;
+  for (let i = 0; i < layoutCaret && i < L.length; i++) {
+    if (L[i] !== "\n") {
+      flat++;
+    }
+  }
+  let seen = 0;
+  for (let oi = 0; oi < O.length; oi++) {
+    if (O[oi] === "\n") {
+      continue;
+    }
+    if (seen === flat) {
+      return oi;
+    }
+    seen++;
+  }
+  return O.length;
+};
+
+const getVerticalLayoutCaretOffset = (
+  layoutText: string,
+  font: ReturnType<typeof getFontString>,
+  textAlign: ExcalidrawTextElement["textAlign"],
+  verticalAlign: ExcalidrawTextElement["verticalAlign"],
+  width: number,
+  height: number,
+  lineHeightPx: number,
+  localX: number,
+  localY: number,
+): number => {
+  const L = layoutText.replace(/\r\n?/g, "\n");
+  const columns = L.split("\n");
+  if (columns.length === 0) {
+    return 0;
+  }
+  const colWidths = columns.map((col) => {
+    let w = 0;
+    for (const c of Array.from(col)) {
+      w = Math.max(w, charWidth.calculate(c, font));
+    }
+    return col.length === 0 ? charWidth.calculate(" ", font) : w;
+  });
+  const contentWidth = colWidths.reduce((a, b) => a + b, 0);
+  const colHeights = columns.map((col) =>
+    Math.max(lineHeightPx, Array.from(col).length * lineHeightPx),
+  );
+  const blockHeight = Math.max(...colHeights, lineHeightPx);
+  const blockX =
+    textAlign === "center"
+      ? (width - contentWidth) / 2
+      : textAlign === "right"
+        ? width - contentWidth
+        : 0;
+  const blockY =
+    verticalAlign === "middle"
+      ? (height - blockHeight) / 2
+      : verticalAlign === "bottom"
+        ? height - blockHeight
+        : 0;
+  let cumX = blockX;
+  let bestCi = 0;
+  let bestDx = Infinity;
+  for (let ci = 0; ci < columns.length; ci++) {
+    const cx = cumX + colWidths[ci]! / 2;
+    const d = Math.abs(localX - cx);
+    if (d < bestDx) {
+      bestDx = d;
+      bestCi = ci;
+    }
+    cumX += colWidths[ci]!;
+  }
+  const col = columns[bestCi]!;
+  const chars = Array.from(col);
+  const colH = Math.max(lineHeightPx, chars.length * lineHeightPx);
+  const yColOffset =
+    verticalAlign === "middle"
+      ? (blockHeight - colH) / 2
+      : verticalAlign === "bottom"
+        ? blockHeight - colH
+        : 0;
+  const relY = localY - blockY - yColOffset;
+  const row = Math.max(
+    0,
+    Math.min(chars.length, Math.round(relY / lineHeightPx)),
+  );
+  let offset = 0;
+  for (let j = 0; j < bestCi; j++) {
+    offset += columns[j]!.length + 1;
+  }
+  offset += row;
+  return Math.min(offset, L.length);
+};
+
+const getVerticalStandaloneInsets = (
+  el: ExcalidrawTextElement,
+  font: ReturnType<typeof getFontString>,
+  lineHeightPx: number,
+) => {
+  const columns = el.text.replace(/\r\n?/g, "\n").split("\n");
+  const colWidths = columns.map((col) => {
+    let w = 0;
+    for (const c of Array.from(col)) {
+      w = Math.max(w, charWidth.calculate(c, font));
+    }
+    return col.length === 0 ? charWidth.calculate(" ", font) : w;
+  });
+  const contentWidth = colWidths.reduce((a, b) => a + b, 0);
+  const colHeights = columns.map((col) =>
+    Math.max(lineHeightPx, Array.from(col).length * lineHeightPx),
+  );
+  const blockHeight = Math.max(...colHeights, lineHeightPx);
+  const blockX =
+    el.textAlign === "center"
+      ? (el.width - contentWidth) / 2
+      : el.textAlign === "right"
+        ? el.width - contentWidth
+        : 0;
+  const blockY =
+    el.verticalAlign === "middle"
+      ? (el.height - blockHeight) / 2
+      : el.verticalAlign === "bottom"
+        ? el.height - blockHeight
+        : 0;
+  const firstCol = columns[0] ?? "";
+  const firstColH = Math.max(
+    lineHeightPx,
+    Array.from(firstCol).length * lineHeightPx,
+  );
+  const yColOffset =
+    el.verticalAlign === "middle"
+      ? (blockHeight - firstColH) / 2
+      : el.verticalAlign === "bottom"
+        ? blockHeight - firstColH
+        : 0;
+  return { paddingLeft: blockX, paddingTop: blockY + yColOffset };
+};
+
+const verticalStandaloneEditExtraWidth = (fontSize: number) =>
+  Math.max(10, Math.ceil(fontSize * 0.4));
 
 type SubmitHandler = () => void;
 
@@ -356,32 +506,81 @@ export const textWysiwyg = ({
           coordY = y;
         }
       }
+      const font = getFontString(updatedTextElement);
       const [viewportX, viewportY] = getViewportCoords(coordX, coordY);
+
+      const isVerticalStandalone =
+        !container &&
+        !updatedTextElement.containerId &&
+        getEffectiveTextOrientation(updatedTextElement) ===
+          TEXT_ORIENTATION.VERTICAL;
+
+      let editorCoordX = coordX;
 
       if (!container) {
         maxWidth = (appState.width - 8 - viewportX) / appState.zoom.value;
-        width = Math.min(width, maxWidth);
+        if (isVerticalStandalone) {
+          const extra = verticalStandaloneEditExtraWidth(
+            updatedTextElement.fontSize,
+          );
+          const nextWidth = Math.min(
+            updatedTextElement.width + extra,
+            maxWidth,
+          );
+          const grown = nextWidth - updatedTextElement.width;
+          width = nextWidth;
+          if (updatedTextElement.textAlign === "center") {
+            editorCoordX = coordX - grown / 2;
+          } else if (updatedTextElement.textAlign === "right") {
+            editorCoordX = coordX - grown;
+          }
+        } else {
+          width = Math.min(width, maxWidth);
+        }
       } else {
         width += 0.5;
       }
 
-      // add 5% buffer otherwise it causes wysiwyg to jump
-      height *= 1.05;
+      if (!isVerticalStandalone) {
+        height *= 1.05;
+      }
 
-      const font = getFontString(updatedTextElement);
       const angle = getTextElementAngle(updatedTextElement, container);
 
-      // Make sure text editor height doesn't go beyond viewport
       const editorMaxHeight =
         (appState.height - viewportY) / appState.zoom.value;
+
+      const lineHeightPx = getLineHeightInPx(
+        updatedTextElement.fontSize,
+        updatedTextElement.lineHeight,
+      );
+      const verticalInsets = isVerticalStandalone
+        ? getVerticalStandaloneInsets(updatedTextElement, font, lineHeightPx)
+        : null;
+
+      editable.dir = isVerticalStandalone ? "ltr" : "auto";
+
+      if (isVerticalStandalone) {
+        editable.style.setProperty("caret-shape", "underscore");
+      } else {
+        editable.style.removeProperty("caret-shape");
+      }
+
+      const [editorViewportX, editorViewportY] = getViewportCoords(
+        editorCoordX,
+        coordY,
+      );
+
       Object.assign(editable.style, {
         font,
-        // must be defined *after* font ¯\_(ツ)_/¯
-        lineHeight: updatedTextElement.lineHeight,
+        lineHeight: isVerticalStandalone
+          ? `${lineHeightPx}px`
+          : updatedTextElement.lineHeight,
         width: `${width}px`,
         height: `${height}px`,
-        left: `${viewportX}px`,
-        top: `${viewportY}px`,
+        left: `${editorViewportX}px`,
+        top: `${editorViewportY}px`,
+        overflow: isVerticalStandalone ? "visible" : "hidden",
         transform: getTransform(
           width,
           height,
@@ -390,8 +589,17 @@ export const textWysiwyg = ({
           maxWidth,
           editorMaxHeight,
         ),
-        textAlign,
-        verticalAlign,
+        boxSizing: isVerticalStandalone ? "border-box" : "content-box",
+        paddingTop:
+          verticalInsets != null ? `${verticalInsets.paddingTop}px` : "0",
+        paddingLeft:
+          verticalInsets != null ? `${verticalInsets.paddingLeft}px` : "0",
+        paddingRight: "0",
+        paddingBottom: "0",
+        writingMode: isVerticalStandalone ? "vertical-lr" : "horizontal-tb",
+        textOrientation: isVerticalStandalone ? "upright" : "mixed",
+        textAlign: isVerticalStandalone ? "left" : textAlign,
+        verticalAlign: isVerticalStandalone ? "top" : verticalAlign,
         color:
           appState.theme === THEME.DARK
             ? applyDarkModeFilter(updatedTextElement.strokeColor)
@@ -413,6 +621,7 @@ export const textWysiwyg = ({
         y: coordY,
       };
       editable.scrollTop = 0;
+      editable.scrollLeft = 0;
       // For some reason updating font attribute doesn't set font family
       // hence updating font family explicitly for test environment
       if (isTestEnv()) {
@@ -479,6 +688,31 @@ export const textWysiwyg = ({
     );
     const localX = unrotatedX - layout.x;
     const localY = unrotatedY - layout.y;
+
+    const el = app.scene.getElement<ExcalidrawTextElement>(id);
+    if (
+      el &&
+      !isBoundToContainer(el) &&
+      getEffectiveTextOrientation(el) === TEXT_ORIENTATION.VERTICAL
+    ) {
+      const layoutCaret = getVerticalLayoutCaretOffset(
+        el.text,
+        layout.font,
+        layout.textAlign,
+        el.verticalAlign,
+        layout.width,
+        layout.height,
+        layout.lineHeightPx,
+        localX,
+        localY,
+      );
+      return mapVerticalLayoutCaretToOriginal(
+        el.text,
+        editable.value,
+        layoutCaret,
+      );
+    }
+
     const lines = getWrappedTextLines(
       editable.value,
       layout.font,

@@ -1719,6 +1719,38 @@ export const TextAlignRightIcon = createIcon(
   tablerIconProps,
 );
 
+export const TextOrientationHorizontalIcon = createIcon(
+  <g
+    stroke="currentColor"
+    fill="none"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    <line x1="5" y1="7" x2="19" y2="7" />
+    <line x1="5" y1="12" x2="15" y2="12" />
+    <line x1="5" y1="17" x2="17" y2="17" />
+  </g>,
+  tablerIconProps,
+);
+
+export const TextOrientationVerticalIcon = createIcon(
+  <g
+    stroke="currentColor"
+    fill="none"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth={2}
+  >
+    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+    <line x1="9" y1="5" x2="9" y2="19" />
+    <line x1="14" y1="5" x2="14" y2="15" />
+    <line x1="19" y1="5" x2="19" y2="17" />
+  </g>,
+  tablerIconProps,
+);
+
 // tabler-icons: layout-align-top
 export const TextAlignTopIcon = React.memo(({ theme }: { theme: Theme }) =>
   createIcon(

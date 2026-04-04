@@ -4,6 +4,7 @@ import type {
   FONT_FAMILY,
   ROUNDNESS,
   TEXT_ALIGN,
+  TEXT_ORIENTATION,
   THEME,
   VERTICAL_ALIGN,
 } from "@excalidraw/common";
@@ -30,6 +31,8 @@ export type TextAlign = typeof TEXT_ALIGN[keyof typeof TEXT_ALIGN];
 
 type VerticalAlignKeys = keyof typeof VERTICAL_ALIGN;
 export type VerticalAlign = typeof VERTICAL_ALIGN[VerticalAlignKeys];
+type TextOrientationKeys = keyof typeof TEXT_ORIENTATION;
+export type TextOrientation = typeof TEXT_ORIENTATION[TextOrientationKeys];
 export type FractionalIndex = string & { _brand: "franctionalIndex" };
 
 export type BoundElement = Readonly<{
@@ -240,6 +243,7 @@ export type ExcalidrawTextElement = _ExcalidrawElementBase &
     text: string;
     textAlign: TextAlign;
     verticalAlign: VerticalAlign;
+    textOrientation: TextOrientation;
     containerId: ExcalidrawGenericElement["id"] | null;
     originalText: string;
     /**
