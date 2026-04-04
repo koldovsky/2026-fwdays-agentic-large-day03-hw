@@ -88,4 +88,62 @@ describe("parseMarkdownLink", () => {
   it("returns null for a data: URL", () => {
     expect(parseMarkdownLink("[img](data:text/html, XSS)")).toBeNull();
   });
+
+  describe("obfuscated XSS vectors", () => {
+    it("rejects mixed-case jAvAsCrIpT: scheme", () => {
+      expect(
+        parseMarkdownLink("[xss](JaVaScRiPt:alert(document.cookie))"),
+      ).toBeNull();
+    });
+
+    it("rejects javascript: with leading control characters", () => {
+      expect(
+        parseMarkdownLink("[xss](\x01\x02javascript:alert(1))"),
+      ).toBeNull();
+    });
+
+    it("rejects javascript: with embedded tab", () => {
+      expect(
+        parseMarkdownLink("[xss](java\tscript:alert(1))"),
+      ).toBeNull();
+    });
+
+    it("rejects javascript: with embedded newline", () => {
+      expect(
+        parseMarkdownLink("[xss](java\nscript:alert(1))"),
+      ).toBeNull();
+    });
+
+    it("rejects javascript: URL-encoded (&#106;)", () => {
+      expect(
+        parseMarkdownLink("[xss](&#106;avascript:alert(1))"),
+      ).toBeNull();
+    });
+
+    it("rejects javascript: with hex entity (&#x6A;)", () => {
+      expect(
+        parseMarkdownLink("[xss](&#x6A;avascript:alert(1))"),
+      ).toBeNull();
+    });
+
+    it("rejects vbscript: scheme", () => {
+      expect(
+        parseMarkdownLink("[xss](vbscript:MsgBox('XSS'))"),
+      ).toBeNull();
+    });
+
+    it("rejects data: with base64 payload", () => {
+      expect(
+        parseMarkdownLink(
+          "[xss](data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==)",
+        ),
+      ).toBeNull();
+    });
+
+    it("rejects data: with mixed case", () => {
+      expect(
+        parseMarkdownLink("[xss](DaTa:text/html,<script>alert(1)</script>)"),
+      ).toBeNull();
+    });
+  });
 });
