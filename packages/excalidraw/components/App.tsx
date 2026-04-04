@@ -5,6 +5,8 @@ import { flushSync } from "react-dom";
 import rough from "roughjs/bin/rough";
 import { nanoid } from "nanoid";
 
+import { KeyboardPanEngine } from "../keyboard-pan";
+
 import {
   clamp,
   pointFrom,
@@ -705,6 +707,13 @@ class App extends React.Component<AppProps, AppState> {
   eraserTrail = new EraserTrail(this.animationFrameHandler, this);
   lassoTrail = new LassoTrail(this.animationFrameHandler, this);
 
+  keyboardPanEngine = new KeyboardPanEngine((dx, dy) => {
+    this.setState((state) => ({
+      scrollX: state.scrollX + dx,
+      scrollY: state.scrollY + dy,
+    }));
+  });
+
   onChangeEmitter = new Emitter<
     [
       elements: readonly ExcalidrawElement[],
@@ -858,6 +867,10 @@ class App extends React.Component<AppProps, AppState> {
     const result = editorJotaiStore.set(atom, ...args);
     this.triggerRender();
     return result;
+  };
+
+  private onWindowBlur = () => {
+    this.keyboardPanEngine.clearKeys();
   };
 
   private onWindowMessage(event: MessageEvent) {
@@ -3184,6 +3197,7 @@ class App extends React.Component<AppProps, AppState> {
     this.unmounted = true;
     this.removeEventListeners();
     this.library.destroy();
+    this.keyboardPanEngine.destroy();
     this.laserTrails.stop();
     this.eraserTrail.stop();
     this.onChangeEmitter.clear();
@@ -3253,6 +3267,7 @@ class App extends React.Component<AppProps, AppState> {
       }), // #3553
       addEventListener(document, EVENT.COPY, this.onCopy, { passive: false }),
       addEventListener(document, EVENT.KEYUP, this.onKeyUp, { passive: true }),
+      addEventListener(window, EVENT.BLUR, this.onWindowBlur),
       addEventListener(
         document,
         EVENT.POINTER_MOVE,
@@ -5001,6 +5016,13 @@ class App extends React.Component<AppProps, AppState> {
         return;
       }
 
+      // Arrow-key panning in view mode
+      if (this.state.viewModeEnabled && isArrowKey(event.key) && !event.repeat) {
+        this.keyboardPanEngine.pressKey(event.key);
+        event.preventDefault();
+        return;
+      }
+
       // view mode hardcoded from upstream -> disable tool switching for now
       const shouldPreventToolSwitching = this.props.viewModeEnabled === true;
 
@@ -5294,6 +5316,10 @@ class App extends React.Component<AppProps, AppState> {
   );
 
   private onKeyUp = withBatchedUpdates((event: KeyboardEvent) => {
+    if (this.state.viewModeEnabled && isArrowKey(event.key)) {
+      this.keyboardPanEngine.releaseKey(event.key);
+    }
+
     if (event.key === KEYS.SPACE) {
       if (
         (this.state.viewModeEnabled &&
