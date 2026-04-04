@@ -588,6 +588,7 @@ let didTapTwice: boolean = false;
 let tappedTwiceTimer = 0;
 let firstTapPosition: { x: number; y: number } | null = null;
 let isHoldingSpace: boolean = false;
+let isHoldingH: boolean = false;
 let isPanning: boolean = false;
 let isDraggingScrollBar: boolean = false;
 let currentScrollBars: ScrollBars = { horizontal: null, vertical: null };
@@ -2819,6 +2820,7 @@ class App extends React.Component<AppProps, AppState> {
 
   private onBlur = withBatchedUpdates(() => {
     isHoldingSpace = false;
+    isHoldingH = false;
     this.setState({
       isBindingEnabled: this.state.bindingPreference === "enabled",
     });
@@ -4997,6 +4999,16 @@ class App extends React.Component<AppProps, AppState> {
         }
       }
 
+      if (
+        event.key === KEYS.H &&
+        !event.repeat &&
+        !event.altKey &&
+        !event[KEYS.CTRL_OR_CMD] &&
+        !isHandToolActive(this.state)
+      ) {
+        isHoldingH = true;
+      }
+
       if (this.actionManager.handleKeyDown(event)) {
         return;
       }
@@ -5313,6 +5325,11 @@ class App extends React.Component<AppProps, AppState> {
         });
       }
       isHoldingSpace = false;
+    }
+
+    if (event.key === KEYS.H && isHoldingH && isHandToolActive(this.state)) {
+      isHoldingH = false;
+      this.actionManager.executeAction(actionToggleHandTool);
     }
 
     if (event.key === KEYS.ALT) {
