@@ -409,6 +409,14 @@ export const STROKE_WIDTH = {
   extraBold: 4,
 } as const;
 
+/** Bounds for the stroke width slider in the editor (element `strokeWidth` may exceed the max until the user adjusts it). */
+export const STROKE_WIDTH_SLIDER_MIN = 1;
+export const STROKE_WIDTH_SLIDER_MAX = 16;
+export const STROKE_WIDTH_SLIDER_STEP = 1;
+
+export const clampStrokeWidthForSlider = (value: number): number =>
+  Math.min(STROKE_WIDTH_SLIDER_MAX, Math.max(STROKE_WIDTH_SLIDER_MIN, value));
+
 export const DEFAULT_ELEMENT_PROPS: {
   strokeColor: ExcalidrawElement["strokeColor"];
   backgroundColor: ExcalidrawElement["backgroundColor"];
