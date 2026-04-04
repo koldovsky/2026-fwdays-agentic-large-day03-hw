@@ -258,6 +258,7 @@ import {
   maybeHandleArrowPointlikeDrag,
   getUncroppedWidthAndHeight,
   getActiveTextElement,
+  getMarkdownLinkUrlAtSceneCoords,
 } from "@excalidraw/element";
 
 import type { GlobalPoint, LocalPoint, Radians } from "@excalidraw/math";
@@ -683,6 +684,8 @@ class App extends React.Component<AppProps, AppState> {
   bindModeHandler: ReturnType<typeof setTimeout> | null = null;
 
   hitLinkElement?: NonDeletedExcalidrawElement;
+  /** URL from `[label](url)` inside text when not using the element-level link icon */
+  hitTextMarkdownLinkUrl: string | null = null;
   lastPointerDownEvent: React.PointerEvent<HTMLElement> | null = null;
   lastPointerUpEvent: React.PointerEvent<HTMLElement> | PointerEvent | null =
     null;
@@ -6569,12 +6572,15 @@ class App extends React.Component<AppProps, AppState> {
     scenePointer: Readonly<{ x: number; y: number }>,
     hitElementMightBeLocked: NonDeletedExcalidrawElement | null,
   ): ExcalidrawElement | undefined => {
+    this.hitTextMarkdownLinkUrl = null;
     if (hitElementMightBeLocked && hitElementMightBeLocked.locked) {
       return undefined;
     }
 
     const elements = this.scene.getNonDeletedElements();
     let hitElementIndex = -1;
+    const elementsMap = this.scene.getNonDeletedElementsMap();
+    const pt = pointFrom(scenePointer.x, scenePointer.y) as GlobalPoint;
 
     for (let index = elements.length - 1; index >= 0; index--) {
       const element = elements[index];
@@ -6584,18 +6590,27 @@ class App extends React.Component<AppProps, AppState> {
       ) {
         hitElementIndex = index;
       }
+      if (hitElementIndex !== -1 && index < hitElementIndex) {
+        continue;
+      }
       if (
         element.link &&
-        index >= hitElementIndex &&
         isPointHittingLink(
           element,
-          this.scene.getNonDeletedElementsMap(),
+          elementsMap,
           this.state,
-          pointFrom(scenePointer.x, scenePointer.y),
+          pt,
           this.editorInterface.formFactor === "phone",
         )
       ) {
         return element;
+      }
+      if (isTextElement(element)) {
+        const mdUrl = getMarkdownLinkUrlAtSceneCoords(element, elementsMap, pt);
+        if (mdUrl) {
+          this.hitTextMarkdownLinkUrl = mdUrl;
+          return element;
+        }
       }
     }
   };
@@ -6639,6 +6654,51 @@ class App extends React.Component<AppProps, AppState> {
       pointFrom(lastPointerUpCoords.x, lastPointerUpCoords.y),
       this.editorInterface.formFactor === "phone",
     );
+    const markdownUrl = this.hitTextMarkdownLinkUrl;
+    const openUrl = (
+      url: string,
+      payload: { link: string } & Partial<ExcalidrawElement>,
+    ) => {
+      let customEvent;
+      if (this.props.onLinkOpen) {
+        customEvent = wrapEvent(EVENT.EXCALIDRAW_LINK, event.nativeEvent);
+        this.props.onLinkOpen(payload as ExcalidrawElement, customEvent);
+      }
+      if (!customEvent?.defaultPrevented) {
+        const target = isLocalLink(url) ? "_self" : "_blank";
+        const newWindow = window.open(undefined, target);
+        if (newWindow) {
+          newWindow.opener = null;
+          newWindow.location = url;
+        }
+      }
+    };
+
+    if (markdownUrl) {
+      const lastPointerDownMd = getMarkdownLinkUrlAtSceneCoords(
+        this.hitLinkElement as ExcalidrawTextElement,
+        this.scene.getNonDeletedElementsMap(),
+        pointFrom(lastPointerDownCoords.x, lastPointerDownCoords.y),
+      );
+      const lastPointerUpMd = getMarkdownLinkUrlAtSceneCoords(
+        this.hitLinkElement as ExcalidrawTextElement,
+        this.scene.getNonDeletedElementsMap(),
+        pointFrom(lastPointerUpCoords.x, lastPointerUpCoords.y),
+      );
+      if (
+        lastPointerDownMd &&
+        lastPointerUpMd &&
+        lastPointerDownMd === lastPointerUpMd &&
+        lastPointerDownMd === markdownUrl
+      ) {
+        hideHyperlinkToolip();
+        const url = normalizeLink(markdownUrl);
+        openUrl(url, { ...this.hitLinkElement, link: url });
+      }
+      this.hitTextMarkdownLinkUrl = null;
+      return;
+    }
+
     if (lastPointerDownHittingLinkIcon && lastPointerUpHittingLinkIcon) {
       hideHyperlinkToolip();
       let url = this.hitLinkElement.link;

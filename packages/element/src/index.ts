@@ -77,6 +77,7 @@ export * from "./groups";
 export * from "./heading";
 export * from "./image";
 export * from "./linearElementEditor";
+export * from "./markdownLinkText";
 export * from "./mutateElement";
 export * from "./newElement";
 export * from "./positionElementsOnGrid";
