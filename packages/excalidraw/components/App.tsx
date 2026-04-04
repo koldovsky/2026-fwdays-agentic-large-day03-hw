@@ -156,6 +156,7 @@ import {
   isFlowchartNodeElement,
   isBindableElement,
   isTextElement,
+  getTextHyperlinkUrlAtScenePointer,
   getNormalizedDimensions,
   isElementCompletelyInViewport,
   isElementInViewport,
@@ -683,6 +684,10 @@ class App extends React.Component<AppProps, AppState> {
   bindModeHandler: ReturnType<typeof setTimeout> | null = null;
 
   hitLinkElement?: NonDeletedExcalidrawElement;
+  hitInlineTextHyperlink?: {
+    element: ExcalidrawTextElement;
+    url: string;
+  };
   lastPointerDownEvent: React.PointerEvent<HTMLElement> | null = null;
   lastPointerUpEvent: React.PointerEvent<HTMLElement> | PointerEvent | null =
     null;
@@ -6600,6 +6605,73 @@ class App extends React.Component<AppProps, AppState> {
     }
   };
 
+  private getInlineTextHyperlinkAtPosition = (
+    scenePointer: Readonly<{ x: number; y: number }>,
+    hitElementMightBeLocked: NonDeletedExcalidrawElement | null,
+  ):
+    | { element: ExcalidrawTextElement; url: string }
+    | undefined => {
+    if (hitElementMightBeLocked && hitElementMightBeLocked.locked) {
+      return undefined;
+    }
+
+    const elements = this.scene.getNonDeletedElements();
+    const elementsMap = this.scene.getNonDeletedElementsMap();
+    let hitElementIndex = -1;
+    const p = pointFrom<GlobalPoint>(scenePointer.x, scenePointer.y);
+
+    for (let index = elements.length - 1; index >= 0; index--) {
+      const element = elements[index];
+      if (
+        hitElementMightBeLocked &&
+        element.id === hitElementMightBeLocked.id
+      ) {
+        hitElementIndex = index;
+      }
+      if (index < hitElementIndex) {
+        continue;
+      }
+      if (!isTextElement(element)) {
+        continue;
+      }
+      if (
+        !hitElementItself({
+          point: p,
+          element,
+          threshold: this.getElementHitThreshold(element),
+          elementsMap,
+        })
+      ) {
+        continue;
+      }
+      const url = getTextHyperlinkUrlAtScenePointer(
+        element,
+        scenePointer.x,
+        scenePointer.y,
+      );
+      if (url) {
+        return { element, url };
+      }
+    }
+    return undefined;
+  };
+
+  private refreshHyperlinkHitState = (
+    scenePointer: Readonly<{ x: number; y: number }>,
+    hitElementMightBeLocked: NonDeletedExcalidrawElement | null,
+  ) => {
+    this.hitLinkElement = this.getElementLinkAtPosition(
+      scenePointer,
+      hitElementMightBeLocked,
+    );
+    this.hitInlineTextHyperlink = this.hitLinkElement
+      ? undefined
+      : this.getInlineTextHyperlinkAtPosition(
+          scenePointer,
+          hitElementMightBeLocked,
+        );
+  };
+
   private handleElementLinkClick = (
     event: React.PointerEvent<HTMLCanvasElement>,
   ) => {
@@ -6663,6 +6735,71 @@ class App extends React.Component<AppProps, AppState> {
             newWindow.opener = null;
             newWindow.location = url;
           }
+        }
+      }
+    }
+  };
+
+  private handleInlineTextHyperlinkClick = (
+    event: React.PointerEvent<HTMLCanvasElement>,
+  ) => {
+    const draggedDistance = pointDistance(
+      pointFrom(
+        this.lastPointerDownEvent!.clientX,
+        this.lastPointerDownEvent!.clientY,
+      ),
+      pointFrom(
+        this.lastPointerUpEvent!.clientX,
+        this.lastPointerUpEvent!.clientY,
+      ),
+    );
+    if (!this.hitInlineTextHyperlink || draggedDistance > DRAGGING_THRESHOLD) {
+      return;
+    }
+    const { element, url } = this.hitInlineTextHyperlink;
+    if (
+      this.state.selectedElementIds[element.id] ||
+      this.state.editingTextElement?.id === element.id
+    ) {
+      return;
+    }
+    const lastPointerDownCoords = viewportCoordsToSceneCoords(
+      this.lastPointerDownEvent!,
+      this.state,
+    );
+    const lastPointerUpCoords = viewportCoordsToSceneCoords(
+      this.lastPointerUpEvent!,
+      this.state,
+    );
+    const urlDown = getTextHyperlinkUrlAtScenePointer(
+      element,
+      lastPointerDownCoords.x,
+      lastPointerDownCoords.y,
+    );
+    const urlUp = getTextHyperlinkUrlAtScenePointer(
+      element,
+      lastPointerUpCoords.x,
+      lastPointerUpCoords.y,
+    );
+    if (urlDown && urlDown === urlUp && urlDown === url) {
+      let openUrl = normalizeLink(url);
+      let customEvent;
+      if (this.props.onLinkOpen) {
+        customEvent = wrapEvent(EVENT.EXCALIDRAW_LINK, event.nativeEvent);
+        this.props.onLinkOpen(
+          {
+            ...element,
+            link: openUrl,
+          },
+          customEvent,
+        );
+      }
+      if (!customEvent?.defaultPrevented) {
+        const target = isLocalLink(openUrl) ? "_self" : "_blank";
+        const newWindow = window.open(undefined, target);
+        if (newWindow) {
+          newWindow.opener = null;
+          newWindow.location = openUrl;
         }
       }
     }
@@ -7204,10 +7341,7 @@ class App extends React.Component<AppProps, AppState> {
         moveEvent: event,
       })
     ) {
-      this.hitLinkElement = this.getElementLinkAtPosition(
-        scenePointer,
-        hitElementMightBeLocked,
-      );
+      this.refreshHyperlinkHitState(scenePointer, hitElementMightBeLocked);
     }
 
     if (
@@ -7221,6 +7355,13 @@ class App extends React.Component<AppProps, AppState> {
         this.state,
         this.scene.getNonDeletedElementsMap(),
       );
+    } else if (
+      this.hitInlineTextHyperlink &&
+      !this.state.selectedElementIds[this.hitInlineTextHyperlink.element.id] &&
+      this.state.editingTextElement?.id !== this.hitInlineTextHyperlink.element.id
+    ) {
+      setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
+      hideHyperlinkToolip();
     } else {
       hideHyperlinkToolip();
       if (isLaserTool) {
@@ -7964,10 +8105,7 @@ class App extends React.Component<AppProps, AppState> {
           includeLockedElements: true,
         },
       );
-      this.hitLinkElement = this.getElementLinkAtPosition(
-        scenePointer,
-        hitElement,
-      );
+      this.refreshHyperlinkHitState(scenePointer, hitElement);
     }
 
     if (
@@ -7975,6 +8113,8 @@ class App extends React.Component<AppProps, AppState> {
       !this.state.selectedElementIds[this.hitLinkElement.id]
     ) {
       this.handleElementLinkClick(event);
+    } else if (this.hitInlineTextHyperlink) {
+      this.handleInlineTextHyperlinkClick(event);
     } else if (this.state.viewModeEnabled) {
       this.setState({
         activeEmbeddable: null,
@@ -8466,12 +8606,23 @@ class App extends React.Component<AppProps, AppState> {
             );
         }
 
-        this.hitLinkElement = this.getElementLinkAtPosition(
+        this.refreshHyperlinkHitState(
           pointerDownState.origin,
           hitElementMightBeLocked,
         );
 
         if (this.hitLinkElement) {
+          return true;
+        }
+
+        if (
+          this.hitInlineTextHyperlink &&
+          !this.state.selectedElementIds[
+            this.hitInlineTextHyperlink.element.id
+          ] &&
+          this.state.editingTextElement?.id !==
+            this.hitInlineTextHyperlink.element.id
+        ) {
           return true;
         }
 
