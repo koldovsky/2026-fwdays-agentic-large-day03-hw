@@ -2,6 +2,7 @@ import {
   isMarkdownTable,
   parseMarkdownTable,
   markdownTableToSkeletons,
+  computeColumnWidths,
 } from "./markdown-table";
 
 describe("isMarkdownTable", () => {
@@ -105,12 +106,53 @@ describe("markdownTableToSkeletons", () => {
     }
   });
 
-  it("should have uniform cell dimensions", () => {
+  it("should have per-column uniform width", () => {
+    const skeletons = markdownTableToSkeletons(parsed);
+    // Column 0 cells (rows 0,1,2) should share width
+    const col0Widths = [0, 2, 4].map((i) => (skeletons[i] as any).width);
+    expect(new Set(col0Widths).size).toBe(1);
+    // Column 1 cells (rows 0,1,2) should share width
+    const col1Widths = [1, 3, 5].map((i) => (skeletons[i] as any).width);
+    expect(new Set(col1Widths).size).toBe(1);
+  });
+
+  it("should have uniform row height", () => {
+    const skeletons = markdownTableToSkeletons(parsed);
+    const heights = skeletons.map((s) => (s as any).height);
+    expect(new Set(heights).size).toBe(1);
+  });
+
+  it("should respect minimum column width for short content", () => {
     const skeletons = markdownTableToSkeletons(parsed);
     const widths = skeletons.map((s) => (s as any).width);
-    const heights = skeletons.map((s) => (s as any).height);
-    expect(new Set(widths).size).toBe(1);
-    expect(new Set(heights).size).toBe(1);
+    for (const w of widths) {
+      expect(w).toBeGreaterThanOrEqual(100);
+    }
+  });
+
+  it("should widen column for long content", () => {
+    const longParsed = {
+      headers: ["Short", "This is a very long column header text here"],
+      rows: [["x", "y"]],
+    };
+    const skeletons = markdownTableToSkeletons(longParsed);
+    const col0Width = (skeletons[0] as any).width;
+    const col1Width = (skeletons[1] as any).width;
+    expect(col1Width).toBeGreaterThan(col0Width);
+  });
+
+  it("should keep other columns at minimum width when one column is long", () => {
+    const longParsed = {
+      headers: ["A", "B"],
+      rows: [["short", "this cell has a lot of text that should make column wider"]],
+    };
+    const skeletons = markdownTableToSkeletons(longParsed);
+    const col0Width = (skeletons[0] as any).width;
+    // "A" and "short" are both short — column should be at minimum
+    expect(col0Width).toBe(100);
+    // Column 1 should be wider
+    const col1Width = (skeletons[1] as any).width;
+    expect(col1Width).toBeGreaterThan(100);
   });
 
   it("should assign shared groupIds to all elements", () => {
