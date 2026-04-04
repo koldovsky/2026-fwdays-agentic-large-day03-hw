@@ -1,5 +1,10 @@
 import { isDevEnv, isTestEnv } from "@excalidraw/common";
 
+import {
+  containsMarkdownLink,
+  getDisplayText,
+  getMarkdownAwareTokens,
+} from "./markdownLinks";
 import { charWidth, getLineWidth } from "./textMeasurements";
 
 import type { FontString } from "./types";
@@ -459,9 +464,10 @@ export const getWrappedTextLines = (
   let offset = 0;
 
   for (const originalLine of text.split("\n")) {
-    const originalLineWidth = getLineWidth(originalLine, font);
+    const displayLine = getDisplayText(originalLine);
+    const displayLineWidth = getLineWidth(displayLine, font);
 
-    if (originalLineWidth <= maxWidth) {
+    if (displayLineWidth <= maxWidth) {
       lines.push({
         text: originalLine,
         start: offset,
@@ -490,7 +496,14 @@ const wrapLine = (
   lineStart: number,
 ): WrappedTextLine[] => {
   const lines: WrappedTextLine[] = [];
-  const tokens = parseTokens(line);
+  const lineHasLinks = containsMarkdownLink(line);
+  const tokens = lineHasLinks
+    ? getMarkdownAwareTokens(line, parseTokens)
+    : parseTokens(line);
+
+  const measureWidth = lineHasLinks
+    ? (text: string) => getLineWidth(getDisplayText(text), font)
+    : (text: string) => getLineWidth(text, font);
 
   let currentLine = "";
   let currentLineStart = lineStart;
@@ -506,10 +519,13 @@ const wrapLine = (
     const tokenEnd = tokenStart + token.length;
     const testLine = currentLine + token;
 
-    // cache single codepoint whitespace, CJK or emoji width calc. as kerning should not apply here
-    const testLineWidth = isSingleCharacter(token)
-      ? currentLineWidth + charWidth.calculate(token, font)
-      : getLineWidth(testLine, font);
+    // For lines with markdown links, always measure full display width
+    // since the isSingleCharacter optimization can't account for link
+    // syntax collapsing. For plain lines, use the single-char cache.
+    const testLineWidth =
+      !lineHasLinks && isSingleCharacter(token)
+        ? currentLineWidth + charWidth.calculate(token, font)
+        : measureWidth(testLine);
 
     // build up the current line, skipping length check for possibly trailing whitespaces
     if (/\s/.test(token) || testLineWidth <= maxWidth) {
@@ -540,7 +556,7 @@ const wrapLine = (
       currentLine = trailingLine.text;
       currentLineStart = trailingLine.start;
       currentLineEnd = trailingLine.end;
-      currentLineWidth = getLineWidth(trailingLine.text, font);
+      currentLineWidth = measureWidth(trailingLine.text);
       tokenOffset = tokenEnd;
       tokenIndex++;
     } else {
@@ -659,7 +675,8 @@ const trimLine = (
   font: FontString,
   maxWidth: number,
 ): WrappedTextLine => {
-  const shouldTrimWhitespaces = getLineWidth(line, font) > maxWidth;
+  const displayWidth = getLineWidth(getDisplayText(line), font);
+  const shouldTrimWhitespaces = displayWidth > maxWidth;
 
   if (!shouldTrimWhitespaces) {
     return {
@@ -676,7 +693,7 @@ const trimLine = (
     "",
   ];
 
-  let trimmedLineWidth = getLineWidth(trimmedLine, font);
+  let trimmedLineWidth = getLineWidth(getDisplayText(trimmedLine), font);
 
   for (const whitespace of Array.from(whitespaces)) {
     const _charWidth = charWidth.calculate(whitespace, font);

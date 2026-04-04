@@ -700,4 +700,47 @@ describe("Test wrapText", () => {
       expect(tokens).toContain("＃");
     });
   });
+
+  describe("markdown links and wrapping", () => {
+    // In test env, each character is 10px wide (jest-canvas-mock returns text.length, then * 10)
+
+    it("should not wrap when display text fits within maxWidth (fast path)", () => {
+      // Raw: "[Go](https://go.dev)" = 20 chars = 200px raw width
+      // Display: "Go" = 2 chars = 20px display width
+      // With maxWidth=20, display text fits, so no wrapping
+      const text = "[Go](https://go.dev)";
+      const res = wrapText(text, font, 20);
+      expect(res).toEqual(text);
+    });
+
+    it("should keep link and adjacent text on one line when display width fits", () => {
+      // Raw: "Hello [Go](https://go.dev) world" = 32 chars = 320px raw
+      // Display: "Hello Go world" = 14 chars = 140px
+      // maxWidth=140: display text fits exactly
+      const text = "Hello [Go](https://go.dev) world";
+      const res = wrapText(text, font, 140);
+      expect(res).toEqual(text);
+    });
+
+    it("should wrap based on display width, not raw markdown width", () => {
+      // Raw: "Hello [Go](https://go.dev) world" = 32 chars = 320px raw
+      // Display: "Hello Go world" = 14 chars = 140px
+      // maxWidth=80: display "Hello Go" (8 chars = 80px) fits, "world" wraps
+      const text = "Hello [Go](https://go.dev) world";
+      const res = wrapText(text, font, 80);
+      expect(res).toContain("\n");
+      // The link syntax should be intact on the first line
+      expect(res.split("\n")[0]).toContain("[Go](https://go.dev)");
+    });
+
+    it("should treat markdown link as atomic token", () => {
+      // The link [Go](https://go.dev) should never be broken in the middle.
+      // Display: "Go" = 20px, maxWidth=300 easily fits everything.
+      // Raw text is 320px, but wrapping should use display width 140px.
+      const text = "Hello [Go](https://go.dev) world";
+      const res = wrapText(text, font, 300);
+      // 140px display width fits in 300px, no wrapping needed
+      expect(res).toEqual(text);
+    });
+  });
 });
