@@ -18,6 +18,7 @@ See [activeContext.md](./activeContext.md) for the current session state.
 - Added context menu architecture documentation in [context-menu-architecture.md](../technical/context-menu-architecture.md), covering rendering, item registration via Action system, predicate-based filtering, text-specific menu items, and extension points. Documented that nested menus are not supported natively.
 
 ## In Progress
+- **enhanced-font-size-selector** — Implementation complete (31/31 tasks). All automated tests pass (104 files, 1330 tests). Awaiting manual QA and archive. See [tasks](../../openspec/changes/enhanced-font-size-selector/tasks.md).
 - Validate and refine service-specific setup details in the new onboarding guide as backend assumptions evolve.
 
 ## Remaining

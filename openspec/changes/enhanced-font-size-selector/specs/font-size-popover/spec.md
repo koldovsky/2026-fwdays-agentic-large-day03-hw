@@ -1,15 +1,16 @@
 ## ADDED Requirements
 
-### Requirement: Inline font size bar with compact presets
-The properties panel SHALL display font size presets (S, M, L, XL, 2XL) as compact buttons in an inline bar when a text element or text-bound container is selected. The buttons MUST be visually smaller than current RadioSelection buttons, matching the density of color swatch TopPicks. After the presets, a vertical separator and a "current style" trigger button MUST be displayed showing the actual numeric font size value of the selected element. The trigger MUST reflect the real fontSize at all times — including when the size is changed manually (e.g., via keyboard shortcuts Ctrl+Shift+</>, via the popover, or by any other means).
+### Requirement: Inline font size bar with SVG icon presets and numeric trigger
+The properties panel (full mode) SHALL display 4 font size presets (S, M, L, XL) as SVG icon buttons — the same icons as the original RadioSelection but slightly smaller to leave room for the numeric trigger. After the presets, a vertical separator and a "current style" trigger button MUST be displayed showing the actual numeric font size value. The trigger MUST reflect the real fontSize at all times. Clicking a preset (S/M/L/XL) MUST apply the font size AND close the popover if it is open.
 
-#### Scenario: Selecting a text element shows compact font size bar
+#### Scenario: Selecting a text element shows inline bar
 - **WHEN** user selects a text element on the canvas
-- **THEN** the properties panel shows an inline bar with buttons [S] [M] [L] [XL] [2XL], a vertical separator, and a trigger showing the current font size value (e.g., "20")
+- **THEN** the properties panel shows an inline bar with SVG icon buttons [S] [M] [L] [XL], a vertical separator, and a trigger showing the current font size value (e.g., "20")
 
-#### Scenario: Clicking a preset applies the font size
-- **WHEN** user clicks the "L" preset button
+#### Scenario: Clicking a preset applies font size and closes popover
+- **WHEN** the font size popover is open and user clicks the "L" preset button
 - **THEN** the selected text element's fontSize changes to 28px
+- **AND** the popover closes (`appState.openPopup` is set to `null`)
 - **AND** the current style trigger updates to show "28"
 
 #### Scenario: Active preset is highlighted
@@ -21,6 +22,11 @@ The properties panel SHALL display font size presets (S, M, L, XL, 2XL) as compa
 - **WHEN** the selected text element has fontSize=50 (not matching any preset)
 - **THEN** no preset button is in the active state
 - **AND** the current style trigger shows "50"
+
+#### Scenario: Fractional font size is displayed rounded to integer
+- **WHEN** the selected text element has fontSize=23.76 (result of manual increment via Ctrl+Shift+>)
+- **THEN** the current style trigger shows "24" (rounded to nearest integer)
+- **AND** the internal fontSize value remains 23.76 (no mutation occurs from display rounding)
 
 #### Scenario: Trigger reflects manual size changes in real time
 - **WHEN** user changes font size via keyboard shortcut (Ctrl+Shift+>)
@@ -34,12 +40,12 @@ The properties panel SHALL display font size presets (S, M, L, XL, 2XL) as compa
 
 ---
 
-### Requirement: Font size popover with extended presets
-The system SHALL display a popover when the user clicks the current style trigger button. The popover MUST contain smaller size presets (2XS, XS), the full range of larger size presets (2XL through 10XL), and MUST be rendered using the `PropertiesPopover` component. The presets SHALL be arranged in rows for visual clarity.
+### Requirement: Font size popover with 10 preset buttons in 2 rows
+The system SHALL display a popover when the user clicks the current style trigger button. The popover MUST contain exactly 10 named size presets arranged in 2 rows of 5 — all sizes from 2XS to 8XL inclusive. No section headers. The popover MUST be rendered using the `PropertiesPopover` component.
 
 #### Scenario: Opening the font size popover
 - **WHEN** user clicks the current style trigger in the font size bar
-- **THEN** a popover opens showing size presets in rows: smaller sizes (2XS, XS) and larger sizes (2XL, 3XL, 4XL, 5XL, 6XL, 7XL, 8XL, 9XL, 10XL)
+- **THEN** a popover opens showing 2 rows of 5 preset buttons: row 1 (2XS, XS, 2XL, 3XL, 4XL), row 2 (5XL, 6XL, 7XL, 8XL, 10XL)
 - **AND** the `appState.openPopup` is set to `"fontSize"`
 
 #### Scenario: Clicking an extended preset applies the size
@@ -67,15 +73,27 @@ The system SHALL display a popover when the user clicks the current style trigge
 - **THEN** the font size popover closes
 - **AND** the color picker popover opens
 
+#### Scenario: Opening popover MUST NOT change fontSize (action perform guard)
+- **WHEN** the FontSizePicker calls `updateData({ openPopup: "fontSize" })` to open the popover
+- **THEN** `actionChangeFontSize.perform()` SHALL detect the `{ openPopup }` object and update only `appState.openPopup`
+- **AND** the element's fontSize and `appState.currentItemFontSize` MUST remain unchanged
+- **AND** `captureUpdate` SHALL be `EVENTUALLY` (not `IMMEDIATELY`) since no element mutation occurred
+
+> **Invariant:** Because `PanelComponent.updateData()` flows through `action.perform()`, the perform function MUST discriminate between a numeric fontSize value and an `{ openPopup }` state-management object. Passing `{ openPopup }` directly to `changeFontSize()` will cause a React rendering crash ("Objects are not valid as a React child"). This guard MUST be tested.
+
 ---
 
-### Requirement: Numeric font size dropdown in popover
-The font size popover SHALL contain a dropdown/select below the preset rows with predefined numeric font size values: 8, 10, 12, 14, 16, 20, 24, 28, 36, 48, 64, 72, 96, 128. Selecting a value from the dropdown MUST apply that font size to the selected element(s).
+### Requirement: Numeric font size dropdown with inline unit selector
+The font size popover SHALL contain a row below the preset buttons with a dropdown/select and a unit type selector placed side-by-side in a single horizontal line. The dropdown MUST contain all named FONT_SIZES values plus additional large sizes above 144px (160, 180, 200, 240). The unit selector (px/pt) MUST be placed to the right of the dropdown, not below it.
 
 #### Scenario: Selecting a numeric size from dropdown
 - **WHEN** user opens the font size popover and selects "72" from the numeric dropdown
 - **THEN** the selected text element's fontSize changes to 72px
 - **AND** the inline bar's current style trigger updates to "72"
+
+#### Scenario: Dropdown includes all named sizes plus extra large
+- **WHEN** user opens the font size popover and inspects the dropdown
+- **THEN** the dropdown contains all FONT_SIZES values (10, 12, 16, 20, 28, 36, 48, 60, 72, 84, 96, 108, 120, 132, 144) plus 160, 180, 200, 240
 
 #### Scenario: Current size is highlighted in dropdown
 - **WHEN** the selected text element has fontSize=24 and the popover is open
@@ -89,7 +107,7 @@ The font size popover SHALL contain a dropdown/select below the preset rows with
 ---
 
 ### Requirement: Unit type display selector
-The font size popover SHALL include a unit type selector allowing the user to switch the displayed units between px and pt. The selector MUST NOT change the internal storage — fontSize MUST always be stored in px. When pt is selected, displayed values MUST be converted using the ratio 1pt = 1.333px (96px/72pt).
+The unit type selector SHALL be displayed inline (to the right of) the numeric dropdown, forming a single compact row. It MUST allow switching displayed units between px and pt. The selector MUST NOT change the internal storage — fontSize MUST always be stored in px. When pt is selected, displayed values MUST be converted using the ratio 1pt = 1.333px (96px/72pt).
 
 #### Scenario: Default display unit is px
 - **WHEN** user opens the font size popover
@@ -123,14 +141,15 @@ The `FONT_SIZES` constant in `packages/common/src/constants.ts` SHALL be extende
 
 ---
 
-### Requirement: Compact mode support
-In compact panel mode (`CompactShapeActions`), the font size picker MUST adapt to the narrower layout. The inline presets MAY be reduced (showing fewer quick-pick buttons) while the popover MUST remain fully functional.
+### Requirement: Mobile and compact (tablet) mode — original RadioSelection
+In mobile mode AND compact/tablet mode, the font size picker MUST render the original 4-button RadioSelection with SVG icons (S, M, L, XL). No numeric trigger, no popover. This ensures touch-friendly sizing and full backward compatibility on smaller screens.
 
-#### Scenario: Compact mode shows trigger only
-- **WHEN** the properties panel is in compact mode and a text element is selected
-- **THEN** the font size control shows at minimum a trigger button with the current size value
-- **AND** clicking the trigger opens the full font size popover
+#### Scenario: Mobile mode shows original 4-button RadioSelection
+- **WHEN** the properties panel is in mobile mode and a text element is selected
+- **THEN** the font size control renders 4 SVG icon radio buttons (S, M, L, XL) matching the original behavior
+- **AND** no numeric trigger button or popover is available
 
-#### Scenario: Popover works identically in compact mode
-- **WHEN** user opens the font size popover in compact mode
-- **THEN** the popover contains the same preset grid, numeric dropdown, and unit selector as in full mode
+#### Scenario: Compact/tablet mode shows original 4-button RadioSelection
+- **WHEN** the properties panel is in compact (tablet) mode and a text element is selected
+- **THEN** the font size control renders 4 SVG icon radio buttons (S, M, L, XL) matching the original behavior
+- **AND** no numeric trigger button or popover is available

@@ -6,7 +6,14 @@ See [progress.md](./progress.md) for broader status and [hidden invariants](../t
 - Memory Bank now exists and is the primary durable context for the repo.
 - Keep Memory Bank compact and non-duplicative, with deep detail living in `docs/technical/*` and `docs/product/*`.
 
+## Active Change: enhanced-font-size-selector
+- **Goal:** Expand font size selector from 4 presets (S/M/L/XL) to compact presets + popover with extended sizes (2XL–10XL), numeric dropdown, and px/pt display toggle. [GitHub #10506](https://github.com/excalidraw/excalidraw/issues/10506).
+- **Stage:** Implementation complete (31/31 tasks). All tests pass. Ready for manual QA and archive.
+- **Key artifacts:** [proposal](../../openspec/changes/enhanced-font-size-selector/proposal.md) | [design](../../openspec/changes/enhanced-font-size-selector/design.md) | [spec](../../openspec/changes/enhanced-font-size-selector/specs/font-size-popover/spec.md) | [tasks](../../openspec/changes/enhanced-font-size-selector/tasks.md)
+- **Pattern:** Follows ColorPicker TopPicks + PropertiesPopover pattern. New `FontSizePicker/` component directory.
+
 ## Recent Changes
+- Added properties panel architecture documentation in [properties-panel-architecture.md](../technical/properties-panel-architecture.md), covering the PanelComponent system, layout variants (full/compact/mobile), element-type visibility logic, collapsible popovers, and extension points for adding new property controls.
 - Added context menu architecture documentation in [context-menu-architecture.md](../technical/context-menu-architecture.md), covering the action-based menu system, item registration, predicate filtering, text-specific actions, and extension points. Notably, nested/sub-menus are not supported — the existing `DropdownMenu` subsystem would need to be integrated for that.
 - Added deep i18n/multilanguage architecture reference in [i18n-architecture.md](../technical/i18n-architecture.md), covering translation engine, language gating, Crowdin integration, RTL support, and data flow.
 - Added the core Memory Bank files under `docs/memory-bank/`.

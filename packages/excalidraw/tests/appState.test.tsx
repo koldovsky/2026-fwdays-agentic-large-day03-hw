@@ -76,7 +76,7 @@ describe("appState", () => {
     UI.clickTool("text");
 
     expect(h.state.currentItemFontSize).toBe(30);
-    fireEvent.click(queryByTestId(container, "fontSize-small")!);
+    fireEvent.click(queryByTestId(container, "fontSize-sm")!);
     expect(h.state.currentItemFontSize).toBe(16);
 
     const mouse = new Pointer("mouse");
