@@ -254,6 +254,18 @@ export type ExcalidrawTextElement = _ExcalidrawElementBase &
      *  with font size (using `getLineHeightInPx` helper).
      */
     lineHeight: number & { _brand: "unitlessLineHeight" };
+    /**
+     * Explicit glyph fill color. When absent on legacy elements, renderers use
+     * `strokeColor` as fill until migration (see `mergeTextPaintNormalization`).
+     * @see `packages/element/text-paint-serialization.md`
+     */
+    textFillColor?: string;
+    /** Color of the text outline when `textStrokeWidth` > 0. */
+    textStrokeColor?: string;
+    /**
+     * Text outline width in scene units; `0` means outline disabled (default for new text).
+     */
+    textStrokeWidth?: number;
   }>;
 
 export type ExcalidrawBindableElement =

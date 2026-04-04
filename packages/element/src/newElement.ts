@@ -265,8 +265,12 @@ export const newTextElement = (
     metrics,
   );
 
+  const base = _newElementBase<ExcalidrawTextElement>("text", opts);
   const textElementProps: ExcalidrawTextElement = {
-    ..._newElementBase<ExcalidrawTextElement>("text", opts),
+    ...base,
+    textFillColor: base.strokeColor,
+    textStrokeColor: base.strokeColor,
+    textStrokeWidth: 0,
     text,
     fontSize,
     fontFamily,

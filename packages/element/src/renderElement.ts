@@ -45,6 +45,8 @@ import type {
 import { getElementAbsoluteCoords, getElementBounds } from "./bounds";
 import { getUncroppedImageElement } from "./cropElement";
 import { LinearElementEditor } from "./linearElementEditor";
+import { getResolvedTextPaint } from "./textPaintResolve";
+
 import {
   getBoundTextElement,
   getContainerCoords,
@@ -555,10 +557,8 @@ const drawElementOnCanvas = (
         context.canvas.setAttribute("dir", rtl ? "rtl" : "ltr");
         context.save();
         context.font = getFontString(element);
-        context.fillStyle =
-          renderConfig.theme === THEME.DARK
-            ? applyDarkModeFilter(element.strokeColor)
-            : element.strokeColor;
+        const paint = getResolvedTextPaint(element, renderConfig.theme);
+        context.fillStyle = paint.fillColor;
         context.textAlign = element.textAlign as CanvasTextAlign;
 
         // Canvas does not support multiline text by default
@@ -581,6 +581,23 @@ const drawElementOnCanvas = (
           element.fontSize,
           lineHeightPx,
         );
+
+        // Text paint contract (Epic 2 / FR6): same semantics as SVG —
+        // `getResolvedTextPaint` + outline drawn first, then fill (matches
+        // SVG `paint-order: stroke fill` in staticSvgScene).
+        if (paint.outlineWidth > 0 && paint.outlineColor) {
+          context.strokeStyle = paint.outlineColor;
+          context.lineWidth = paint.outlineWidth;
+          context.lineJoin = "round";
+          context.lineCap = "round";
+          for (let index = 0; index < lines.length; index++) {
+            context.strokeText(
+              lines[index],
+              horizontalOffset,
+              index * lineHeightPx + verticalOffset,
+            );
+          }
+        }
 
         for (let index = 0; index < lines.length; index++) {
           context.fillText(

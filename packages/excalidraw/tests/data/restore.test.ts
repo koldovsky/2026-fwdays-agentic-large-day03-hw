@@ -1,9 +1,9 @@
 import { pointFrom } from "@excalidraw/math";
 import { vi } from "vitest";
 
-import { DEFAULT_SIDEBAR, FONT_FAMILY, ROUNDNESS } from "@excalidraw/common";
+import { DEFAULT_SIDEBAR, FONT_FAMILY, ROUNDNESS, THEME } from "@excalidraw/common";
 
-import { newElementWith } from "@excalidraw/element";
+import { getResolvedTextPaint, newElementWith } from "@excalidraw/element";
 import * as sizeHelpers from "@excalidraw/element";
 
 import type { LocalPoint } from "@excalidraw/math";
@@ -19,6 +19,7 @@ import type { NormalizedZoomValue } from "@excalidraw/excalidraw/types";
 
 import { API } from "../helpers/api";
 import * as restore from "../../data/restore";
+import { serializeAsJSON } from "../../data/json";
 import { getDefaultAppState } from "../../appState";
 
 import type { ImportedDataState } from "../../data/types";
@@ -1059,5 +1060,93 @@ describe("repairing bindings", () => {
         containerId: null,
       }),
     ]);
+  });
+
+  describe("text paint serialization (Epic 3)", () => {
+    it("legacy text without new paint keys resolves fill from strokeColor", () => {
+      const created = API.createElement({
+        type: "text",
+        text: "legacy",
+        width: 80,
+        height: 24,
+        strokeColor: "#c2255c",
+      });
+      const {
+        textFillColor: _tf,
+        textStrokeColor: _ts,
+        textStrokeWidth: _tw,
+        ...legacy
+      } = created as ExcalidrawTextElement;
+
+      const [restored] = restore.restoreElements([legacy as ExcalidrawTextElement], null);
+      const text = restored as ExcalidrawTextElement;
+
+      expect(text.textFillColor).toBeUndefined();
+      expect(text.textStrokeWidth).toBeUndefined();
+
+      const paint = getResolvedTextPaint(text, THEME.LIGHT);
+      expect(paint.fillColor).toBe("#c2255c");
+      expect(paint.outlineWidth).toBe(0);
+    });
+
+    it("coerces invalid textStrokeWidth to 0", () => {
+      const base = API.createElement({
+        type: "text",
+        text: "x",
+        width: 20,
+        height: 20,
+      });
+      const broken = { ...base, textStrokeWidth: -2 };
+      const [restored] = restore.restoreElements([broken], null);
+      expect((restored as ExcalidrawTextElement).textStrokeWidth).toBe(0);
+    });
+
+    it("removes null textStrokeWidth without forcing eager migration fields", () => {
+      const base = API.createElement({
+        type: "text",
+        text: "x",
+        width: 20,
+        height: 20,
+      });
+      const withNull = { ...base, textStrokeWidth: null as unknown as number };
+      const [restored] = restore.restoreElements([withNull as ExcalidrawTextElement], null);
+      expect((restored as ExcalidrawTextElement).textStrokeWidth).toBeUndefined();
+    });
+
+    it("strips empty string textFillColor", () => {
+      const base = API.createElement({
+        type: "text",
+        text: "x",
+        width: 20,
+        height: 20,
+      });
+      const bad = { ...base, textFillColor: "" };
+      const [restored] = restore.restoreElements([bad as ExcalidrawTextElement], null);
+      expect((restored as ExcalidrawTextElement).textFillColor).toBeUndefined();
+    });
+
+    it("serializeAsJSON round-trip preserves text paint fields", () => {
+      const base = API.createElement({
+        type: "text",
+        text: "save",
+        width: 40,
+        height: 24,
+      });
+      const styled = {
+        ...base,
+        textFillColor: "#2b8a3e",
+        textStrokeColor: "#1864ab",
+        textStrokeWidth: 2,
+      } as ExcalidrawTextElement;
+
+      const json = serializeAsJSON([styled], getDefaultAppState(), {}, "local");
+      const data = JSON.parse(json) as ImportedDataState;
+      const [again] = restore.restoreElements(data.elements ?? [], null);
+      const text = again as ExcalidrawTextElement;
+
+      expect(text.textFillColor).toBe("#2b8a3e");
+      expect(text.textStrokeColor).toBe("#1864ab");
+      expect(text.textStrokeWidth).toBe(2);
+    });
   });
 });

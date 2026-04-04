@@ -24,6 +24,7 @@ import {
   getColorNameAndShadeFromColor,
   getMostUsedCustomColors,
   isCustomColor,
+  isStrokeLikeColorPickerType,
 } from "./colorPickerUtils";
 import { colorPickerKeyNavHandler } from "./keyboardNavHandlers";
 
@@ -61,7 +62,7 @@ export const Picker = React.forwardRef(
     ref,
   ) => {
     const title = showTitle
-      ? type === "elementStroke"
+      ? isStrokeLikeColorPickerType(type)
         ? t("labels.stroke")
         : type === "elementBackground"
         ? t("labels.background")

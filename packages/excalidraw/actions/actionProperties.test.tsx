@@ -1,4 +1,4 @@
-import { queryByTestId } from "@testing-library/react";
+import { queryByTestId, screen } from "@testing-library/react";
 
 import {
   COLOR_PALETTE,
@@ -168,6 +168,39 @@ describe("element locking", () => {
       expect(queryByTestId(document.body, `font-family-code`)).toHaveClass(
         "active",
       );
+    });
+
+    it("should show standalone text outline toggle when exactly one standalone text is selected", () => {
+      const text = API.createElement({
+        type: "text",
+        text: "hello",
+        containerId: null,
+      });
+      API.setElements([text]);
+      API.setSelectedElements([text]);
+
+      const outlineToggle = screen
+        .getByText("Outline", { selector: ".Checkbox-label" })
+        .closest(".Checkbox");
+      expect(outlineToggle).not.toBeNull();
+      expect(
+        queryByTestId(document.body, "textOutlineStrokeWidth-thin"),
+      ).toBeNull();
+    });
+
+    it("should not show standalone text outline toggle for mixed selection", () => {
+      const text = API.createElement({
+        type: "text",
+        text: "hello",
+        containerId: null,
+      });
+      const rect = API.createElement({ type: "rectangle" });
+      API.setElements([text, rect]);
+      API.setSelectedElements([text, rect]);
+
+      expect(
+        screen.queryByText("Outline", { selector: ".Checkbox-label" }),
+      ).toBeNull();
     });
   });
 });

@@ -35,7 +35,10 @@ import {
 
 import { LinearElementEditor } from "@excalidraw/element";
 
-import { newElementWith } from "@excalidraw/element";
+import {
+  mergeTextPaintNormalization,
+  newElementWith,
+} from "@excalidraw/element";
 import { getArrowheadForPicker } from "@excalidraw/element";
 
 import {
@@ -82,6 +85,7 @@ import type { Scene } from "@excalidraw/element";
 import type { CaptureUpdateActionType } from "@excalidraw/element";
 
 import { trackEvent } from "../analytics";
+import { CheckboxItem } from "../components/CheckboxItem";
 import { RadioSelection } from "../components/RadioSelection";
 import { ColorPicker } from "../components/ColorPicker/ColorPicker";
 import { FontPicker } from "../components/FontPicker/FontPicker";
@@ -162,6 +166,17 @@ const getStylesPanelInfo = (app: AppClassProperties) => {
     isCompact: stylesPanelMode !== "full",
     isMobile: stylesPanelMode === "mobile",
   } as const;
+};
+
+/** Exactly one selected standalone text (not bound to a container). */
+export const shouldShowStandaloneTextPaintControls = (
+  targetElements: readonly ExcalidrawElement[],
+): boolean => {
+  if (targetElements.length !== 1) {
+    return false;
+  }
+  const el = targetElements[0];
+  return isTextElement(el) && el.containerId == null;
 };
 
 export const changeProperty = (
@@ -326,11 +341,24 @@ export const actionChangeStrokeColor = register<
           elements,
           appState,
           (el) => {
-            return hasStrokeColor(el.type)
-              ? newElementWith(el, {
+            if (!hasStrokeColor(el.type)) {
+              return el;
+            }
+            if (
+              isTextElement(el) &&
+              el.containerId == null &&
+              value.currentItemStrokeColor
+            ) {
+              return newElementWith(
+                el,
+                mergeTextPaintNormalization(el, {
                   strokeColor: value.currentItemStrokeColor,
-                })
-              : el;
+                }),
+              );
+            }
+            return newElementWith(el, {
+              strokeColor: value.currentItemStrokeColor,
+            });
           },
           true,
         ),
@@ -346,6 +374,14 @@ export const actionChangeStrokeColor = register<
   },
   PanelComponent: ({ elements, appState, updateData, app, data }) => {
     const { stylesPanelMode } = getStylesPanelInfo(app);
+    const targetElements = getTargetElements(
+      app.scene.getNonDeletedElementsMap(),
+      appState,
+    );
+
+    if (shouldShowStandaloneTextPaintControls(targetElements)) {
+      return null;
+    }
 
     return (
       <>
@@ -374,6 +410,251 @@ export const actionChangeStrokeColor = register<
     );
   },
 });
+
+type StandaloneTextFillForm = {
+  textFillColor?: string;
+  currentItemStrokeColor?: string;
+};
+
+export const actionChangeStandaloneTextFill = register<StandaloneTextFillForm>({
+  name: "changeStandaloneTextFill",
+  label: "labels.textFill",
+  trackEvent: false,
+  perform: (elements, appState, value) => {
+    if (value?.textFillColor === undefined) {
+      return {
+        appState: {
+          ...appState,
+          ...value,
+        },
+        captureUpdate: CaptureUpdateAction.EVENTUALLY,
+      };
+    }
+    return {
+      elements: changeProperty(
+        elements,
+        appState,
+        (el) => {
+          if (isTextElement(el) && el.containerId == null) {
+            return newElementWith(
+              el,
+              mergeTextPaintNormalization(el, {
+                textFillColor: value.textFillColor,
+              }),
+            );
+          }
+          return el;
+        },
+        true,
+      ),
+      appState: {
+        ...appState,
+        currentItemStrokeColor: value.textFillColor,
+        ...value,
+      },
+      captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+    };
+  },
+  PanelComponent: ({ elements, appState, updateData, app }) => {
+    const { stylesPanelMode } = getStylesPanelInfo(app);
+    const targetElements = getTargetElements(
+      app.scene.getNonDeletedElementsMap(),
+      appState,
+    );
+
+    if (!shouldShowStandaloneTextPaintControls(targetElements)) {
+      return null;
+    }
+
+    const textEl = targetElements[0] as ExcalidrawTextElement;
+    const fillColor =
+      textEl.textFillColor ??
+      textEl.strokeColor ??
+      appState.currentItemStrokeColor;
+
+    return (
+      <>
+        {stylesPanelMode === "full" && (
+          <h3 aria-hidden="true">{t("labels.textFill")}</h3>
+        )}
+        <ColorPicker
+          topPicks={DEFAULT_ELEMENT_STROKE_PICKS}
+          palette={DEFAULT_ELEMENT_STROKE_COLOR_PALETTE}
+          type="standaloneTextFill"
+          label={t("labels.textFill")}
+          color={fillColor}
+          onChange={(color) =>
+            updateData({
+              textFillColor: color,
+              currentItemStrokeColor: color,
+            })
+          }
+          elements={elements}
+          appState={appState}
+          updateData={updateData}
+        />
+      </>
+    );
+  },
+});
+
+type StandaloneTextOutlineForm = {
+  outlineEnabled?: boolean;
+  textStrokeColor?: string;
+  textStrokeWidth?: number;
+};
+
+export const actionChangeStandaloneTextOutline =
+  register<StandaloneTextOutlineForm>({
+    name: "changeStandaloneTextOutline",
+    label: "labels.textOutline",
+    trackEvent: false,
+    perform: (elements, appState, value) => {
+      const v = value ?? {};
+      const hasElementUpdate =
+        v.outlineEnabled !== undefined ||
+        v.textStrokeColor !== undefined ||
+        v.textStrokeWidth !== undefined;
+
+      if (!hasElementUpdate) {
+        return {
+          appState: {
+            ...appState,
+            ...v,
+          },
+          captureUpdate: CaptureUpdateAction.EVENTUALLY,
+        };
+      }
+
+      return {
+        elements: changeProperty(
+          elements,
+          appState,
+          (el) => {
+            if (!isTextElement(el) || el.containerId != null) {
+              return el;
+            }
+            const patch: {
+              textStrokeColor?: string;
+              textStrokeWidth?: number;
+            } = {};
+            if (v.outlineEnabled === true) {
+              const w = el.textStrokeWidth ?? 0;
+              if (w <= 0) {
+                patch.textStrokeWidth = STROKE_WIDTH.thin;
+              }
+            } else if (v.outlineEnabled === false) {
+              patch.textStrokeWidth = 0;
+            }
+            if (v.textStrokeColor !== undefined) {
+              patch.textStrokeColor = v.textStrokeColor;
+            }
+            if (v.textStrokeWidth !== undefined) {
+              patch.textStrokeWidth = v.textStrokeWidth;
+            }
+            if (Object.keys(patch).length === 0) {
+              return el;
+            }
+            return newElementWith(el, mergeTextPaintNormalization(el, patch));
+          },
+          true,
+        ),
+        appState: {
+          ...appState,
+        },
+        captureUpdate: CaptureUpdateAction.IMMEDIATELY,
+      };
+    },
+    PanelComponent: ({ elements, appState, updateData, app }) => {
+      const { stylesPanelMode } = getStylesPanelInfo(app);
+      const targetElements = getTargetElements(
+        app.scene.getNonDeletedElementsMap(),
+        appState,
+      );
+
+      if (!shouldShowStandaloneTextPaintControls(targetElements)) {
+        return null;
+      }
+
+      const textEl = targetElements[0] as ExcalidrawTextElement;
+      const outlineOn = (textEl.textStrokeWidth ?? 0) > 0;
+      const outlineColor =
+        textEl.textStrokeColor ??
+        textEl.strokeColor ??
+        DEFAULT_ELEMENT_STROKE_COLOR_PALETTE.black;
+      const rawOutlineWidth = textEl.textStrokeWidth ?? STROKE_WIDTH.thin;
+      const outlineWidthRadioValue =
+        rawOutlineWidth === STROKE_WIDTH.thin ||
+        rawOutlineWidth === STROKE_WIDTH.bold ||
+        rawOutlineWidth === STROKE_WIDTH.extraBold
+          ? rawOutlineWidth
+          : STROKE_WIDTH.thin;
+
+      return (
+        <>
+          {stylesPanelMode === "full" && (
+            <h3 aria-hidden="true">{t("labels.textOutline")}</h3>
+          )}
+          <fieldset>
+            <legend className="visually-hidden">
+              {t("labels.textOutline")}
+            </legend>
+            <CheckboxItem
+              checked={outlineOn}
+              onChange={(checked) => updateData({ outlineEnabled: checked })}
+            >
+              {t("labels.textOutline")}
+            </CheckboxItem>
+          </fieldset>
+          {outlineOn && (
+            <>
+              <ColorPicker
+                topPicks={DEFAULT_ELEMENT_STROKE_PICKS}
+                palette={DEFAULT_ELEMENT_STROKE_COLOR_PALETTE}
+                type="standaloneTextOutlineStroke"
+                label={t("labels.textOutlineStroke")}
+                color={outlineColor}
+                onChange={(color) => updateData({ textStrokeColor: color })}
+                elements={elements}
+                appState={appState}
+                updateData={updateData}
+              />
+              <fieldset>
+                <legend>{t("labels.textOutlineWidth")}</legend>
+                <div className="buttonList">
+                  <RadioSelection
+                    group="text-outline-stroke-width"
+                    options={[
+                      {
+                        value: STROKE_WIDTH.thin,
+                        text: t("labels.thin"),
+                        icon: StrokeWidthBaseIcon,
+                        testId: "textOutlineStrokeWidth-thin",
+                      },
+                      {
+                        value: STROKE_WIDTH.bold,
+                        text: t("labels.bold"),
+                        icon: StrokeWidthBoldIcon,
+                        testId: "textOutlineStrokeWidth-bold",
+                      },
+                      {
+                        value: STROKE_WIDTH.extraBold,
+                        text: t("labels.extraBold"),
+                        icon: StrokeWidthExtraBoldIcon,
+                        testId: "textOutlineStrokeWidth-extraBold",
+                      },
+                    ]}
+                    value={outlineWidthRadioValue}
+                    onChange={(w) => updateData({ textStrokeWidth: w })}
+                  />
+                </div>
+              </fieldset>
+            </>
+          )}
+        </>
+      );
+    },
+  });
 
 export const actionChangeBackgroundColor = register<
   Pick<AppState, "currentItemBackgroundColor" | "viewBackgroundColor">

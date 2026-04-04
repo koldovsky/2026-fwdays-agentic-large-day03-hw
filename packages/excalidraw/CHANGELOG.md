@@ -13,6 +13,12 @@ Please add the latest change on the top under the correct section.
 
 ## Unreleased
 
+### Features
+
+- **Standalone text paint in saved files:** optional `textFillColor`, `textStrokeColor`, and `textStrokeWidth` on text elements are serialized in `.excalidraw` JSON. Legacy files without these fields keep the previous look (fill from `strokeColor`, outline off). See `packages/element/text-paint-serialization.md`. Restore normalizes invalid outline widths and empty color strings.
+
+  **User-visible:** standalone text can have a separate **fill** vs optional **outline** (color + thickness) in the properties UI; theme (light/dark) applies to both. **Compatibility:** older files open unchanged until edited; embedders should not strip the new JSON keys when saving scenes. **Embedding docs:** see the “Text element paint” section in `packages/excalidraw/README.md`.
+
 ## Excalidraw API
 
 ### Breaking changes

@@ -1,5 +1,7 @@
 import { MAX_CUSTOM_COLORS_USED_IN_CANVAS } from "@excalidraw/common";
 
+import { isTextElement } from "@excalidraw/element";
+
 import type { ExcalidrawElement } from "@excalidraw/element/types";
 
 import type { ColorPickerColor, ColorPaletteCustom } from "@excalidraw/common";
@@ -38,6 +40,14 @@ export const colorPickerHotkeyBindings = [
   ["z", "x", "c", "v", "b"],
 ].flat();
 
+export type ColorPickerType =
+  | "canvasBackground"
+  | "elementBackground"
+  | "elementStroke"
+  /** Standalone text fill — distinct openPopup so two stroke-like pickers do not share state */
+  | "standaloneTextFill"
+  | "standaloneTextOutlineStroke";
+
 export const isCustomColor = ({
   color,
   palette,
@@ -49,31 +59,79 @@ export const isCustomColor = ({
   return !paletteValues.includes(color);
 };
 
+/** Stroke-style swatches (incl. standalone text fill / outline pickers). */
+export const isStrokeLikeColorPickerType = (type: ColorPickerType): boolean =>
+  type === "elementStroke" ||
+  type === "standaloneTextFill" ||
+  type === "standaloneTextOutlineStroke";
+
+export const getElementColorFieldForMostUsedCustom = (
+  type: ColorPickerType,
+): "backgroundColor" | "strokeColor" | "textStrokeColor" | null => {
+  if (type === "canvasBackground") {
+    return null;
+  }
+  if (type === "elementBackground") {
+    return "backgroundColor";
+  }
+  if (type === "standaloneTextOutlineStroke") {
+    return "textStrokeColor";
+  }
+  return "strokeColor";
+};
+
+/**
+ * Color source for "most used custom" swatches. Text outline uses `textStrokeColor`
+ * only (not `strokeColor`, which tracks glyph fill on text via normalization).
+ */
+const getElementColorStringForMostUsedCustom = (
+  element: ExcalidrawElement,
+  type: ColorPickerType,
+): string | undefined => {
+  if (type === "canvasBackground") {
+    return undefined;
+  }
+  if (type === "elementBackground") {
+    return element.backgroundColor;
+  }
+  if (type === "standaloneTextOutlineStroke") {
+    if (!isTextElement(element)) {
+      return undefined;
+    }
+    if ((element.textStrokeWidth ?? 0) <= 0) {
+      return undefined;
+    }
+    const c = element.textStrokeColor;
+    return typeof c === "string" && c !== "" ? c : undefined;
+  }
+  return element.strokeColor;
+};
+
 export const getMostUsedCustomColors = (
   elements: readonly ExcalidrawElement[],
-  type: "elementBackground" | "elementStroke",
+  type: ColorPickerType,
   palette: ColorPaletteCustom,
 ) => {
-  const elementColorTypeMap = {
-    elementBackground: "backgroundColor",
-    elementStroke: "strokeColor",
-  };
+  if (type === "canvasBackground") {
+    return [];
+  }
 
   const colors = elements.filter((element) => {
     if (element.isDeleted) {
       return false;
     }
 
-    const color =
-      element[elementColorTypeMap[type] as "backgroundColor" | "strokeColor"];
+    const color = getElementColorStringForMostUsedCustom(element, type);
+    if (color == null) {
+      return false;
+    }
 
     return isCustomColor({ color, palette });
   });
 
   const colorCountMap = new Map<string, number>();
   colors.forEach((element) => {
-    const color =
-      element[elementColorTypeMap[type] as "backgroundColor" | "strokeColor"];
+    const color = getElementColorStringForMostUsedCustom(element, type)!;
     if (colorCountMap.has(color)) {
       colorCountMap.set(color, colorCountMap.get(color)! + 1);
     } else {
@@ -95,8 +153,3 @@ export type ActiveColorPickerSectionAtomType =
   | null;
 export const activeColorPickerSectionAtom =
   atom<ActiveColorPickerSectionAtomType>(null);
-
-export type ColorPickerType =
-  | "canvasBackground"
-  | "elementBackground"
-  | "elementStroke";

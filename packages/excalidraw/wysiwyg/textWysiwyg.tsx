@@ -3,13 +3,11 @@ import {
   KEYS,
   CLASSES,
   POINTER_BUTTON,
-  THEME,
   isWritableElement,
   getFontString,
   getFontFamilyString,
   isTestEnv,
   MIME_TYPES,
-  applyDarkModeFilter,
   isRTL,
 } from "@excalidraw/common";
 import { pointFrom, pointRotateRads, type Radians } from "@excalidraw/math";
@@ -41,6 +39,7 @@ import { normalizeText } from "@excalidraw/element";
 import { wrapText } from "@excalidraw/element";
 import { getWrappedTextLines } from "@excalidraw/element";
 import {
+  getResolvedTextPaint,
   isArrowElement,
   isBoundToContainer,
   isTextElement,
@@ -370,6 +369,7 @@ export const textWysiwyg = ({
 
       const font = getFontString(updatedTextElement);
       const angle = getTextElementAngle(updatedTextElement, container);
+      const paint = getResolvedTextPaint(updatedTextElement, appState.theme);
 
       // Make sure text editor height doesn't go beyond viewport
       const editorMaxHeight =
@@ -392,13 +392,26 @@ export const textWysiwyg = ({
         ),
         textAlign,
         verticalAlign,
-        color:
-          appState.theme === THEME.DARK
-            ? applyDarkModeFilter(updatedTextElement.strokeColor)
-            : updatedTextElement.strokeColor,
+        color: paint.fillColor,
+        ...(paint.outlineWidth > 0 && paint.outlineColor
+          ? {
+              WebkitTextStrokeWidth: `${paint.outlineWidth}px`,
+              WebkitTextStrokeColor: paint.outlineColor,
+              WebkitTextFillColor: paint.fillColor,
+            }
+          : {
+              WebkitTextStrokeWidth: "",
+              WebkitTextStrokeColor: "",
+              WebkitTextFillColor: "",
+            }),
         opacity: updatedTextElement.opacity / 100,
         maxHeight: `${editorMaxHeight}px`,
       });
+      if (paint.outlineWidth > 0 && paint.outlineColor) {
+        editable.style.setProperty("paint-order", "stroke fill");
+      } else {
+        editable.style.removeProperty("paint-order");
+      }
       currentTextLayout = {
         angle: angle as Radians,
         font,

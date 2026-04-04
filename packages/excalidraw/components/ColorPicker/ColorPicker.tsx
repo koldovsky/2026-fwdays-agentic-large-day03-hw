@@ -30,7 +30,10 @@ import { ColorInput } from "./ColorInput";
 import { Picker } from "./Picker";
 import PickerHeading from "./PickerHeading";
 import { TopPicks } from "./TopPicks";
-import { activeColorPickerSectionAtom } from "./colorPickerUtils";
+import {
+  activeColorPickerSectionAtom,
+  isStrokeLikeColorPickerType,
+} from "./colorPickerUtils";
 
 import "./ColorPicker.scss";
 
@@ -253,7 +256,7 @@ const ColorPickerTrigger = ({
       aria-label={label}
       style={color ? { "--swatch-color": color } : undefined}
       title={
-        type === "elementStroke"
+        isStrokeLikeColorPickerType(type)
           ? t("labels.showStroke")
           : t("labels.showBackground")
       }
@@ -328,7 +331,7 @@ export const ColorPicker = ({
             color={color}
             label={label}
             type={type}
-            mode={type === "elementStroke" ? "stroke" : "background"}
+            mode={isStrokeLikeColorPickerType(type) ? "stroke" : "background"}
             editingTextElement={!!appState.editingTextElement}
             onToggle={() => {
               // atomic switch: if another popup is open, close it first, then open this one next tick
