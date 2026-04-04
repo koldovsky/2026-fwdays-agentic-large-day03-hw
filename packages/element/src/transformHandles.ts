@@ -348,7 +348,5 @@ export const hasBoundingBox = (
     return true;
   }
 
-  // on mobile/tablet we currently don't show bbox because of resize issues
-  // (also prob best for simplicity's sake)
-  return element.points.length > 2 && !editorInterface.userAgent.isMobileDevice;
+  return element.points.length > 2;
 };
