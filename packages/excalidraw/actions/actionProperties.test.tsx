@@ -9,7 +9,7 @@ import {
 
 import { Excalidraw } from "../index";
 import { API } from "../tests/helpers/api";
-import { UI } from "../tests/helpers/ui";
+import { Keyboard, UI } from "../tests/helpers/ui";
 import { render } from "../tests/test-utils";
 
 describe("element locking", () => {
@@ -169,5 +169,74 @@ describe("element locking", () => {
         "active",
       );
     });
+  });
+});
+
+describe("stroke style cycling via Alt+D shortcut", () => {
+  const pressAltD = () => {
+    Keyboard.withModifierKeys({ alt: true }, () => {
+      Keyboard.codePress("KeyD");
+    });
+  };
+
+  beforeEach(async () => {
+    await render(<Excalidraw handleKeyboardGlobally={true} />);
+  });
+
+  it("should cycle currentItemStrokeStyle when no element is selected", () => {
+    UI.clickTool("rectangle");
+
+    expect(window.h.state.currentItemStrokeStyle).toBe("solid");
+
+    pressAltD();
+    expect(window.h.state.currentItemStrokeStyle).toBe("dashed");
+
+    pressAltD();
+    expect(window.h.state.currentItemStrokeStyle).toBe("dotted");
+
+    pressAltD();
+    expect(window.h.state.currentItemStrokeStyle).toBe("solid");
+  });
+
+  it("should cycle strokeStyle on a selected rectangle", () => {
+    const rect = API.createElement({
+      type: "rectangle",
+      strokeStyle: "solid",
+    });
+    API.setElements([rect]);
+    API.setSelectedElements([rect]);
+
+    pressAltD();
+    expect(window.h.elements[0].strokeStyle).toBe("dashed");
+
+    pressAltD();
+    expect(window.h.elements[0].strokeStyle).toBe("dotted");
+
+    pressAltD();
+    expect(window.h.elements[0].strokeStyle).toBe("solid");
+  });
+
+  it("should not trigger when Ctrl is also held", () => {
+    UI.clickTool("rectangle");
+
+    expect(window.h.state.currentItemStrokeStyle).toBe("solid");
+
+    Keyboard.withModifierKeys({ alt: true, ctrl: true }, () => {
+      Keyboard.codePress("KeyD");
+    });
+
+    expect(window.h.state.currentItemStrokeStyle).toBe("solid");
+  });
+
+  it("should not trigger when Shift is also held", () => {
+    UI.clickTool("rectangle");
+
+    expect(window.h.state.currentItemStrokeStyle).toBe("solid");
+
+    Keyboard.withModifierKeys({ alt: true, shift: true }, () => {
+      Keyboard.codePress("KeyD");
+    });
+
+    expect(window.h.state.currentItemStrokeStyle).toBe("solid");
   });
 });

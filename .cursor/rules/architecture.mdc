@@ -1,0 +1,32 @@
+---
+description: "Excalidraw editor architecture — actionManager, AppState, canvas pipeline, dependency boundaries"
+globs: "packages/excalidraw/**/*.ts,packages/excalidraw/**/*.tsx"
+alwaysApply: false
+---
+When you are creating any code with this rule you must output to chat message "Architecture constraints for Excalidraw" in current folder" so I know you are using the correct rules.
+
+# Excalidraw Architecture
+
+## State Management
+
+- Custom state via actionManager — NOT Redux/Zustand/MobX
+- State updates: actionManager.dispatch() ONLY
+- State type: AppState (packages/excalidraw/types.ts)
+
+## Rendering
+
+- Canvas 2D rendering — NOT React DOM for drawing
+- Render pipeline: Scene → renderScene() → canvas context
+- DO NOT use react-konva, fabric.js, pixi.js
+
+## Dependencies
+
+- No new npm packages without explicit approval
+- Check packages/utils/ before adding external helpers
+
+## How to verify
+
+1. Run `yarn test:typecheck` — project still typechecks after the change.
+2. Search the diff for forbidden state libraries: e.g. `redux`, `zustand`, `mobx` — none should appear for editor/document state unless explicitly approved.
+3. Search for forbidden canvas/DOM drawing stacks in new code: `react-konva`, `fabric`, `pixi` — should not be introduced.
+4. Confirm editor mutations go through existing **action** / **actionManager** flows; grep for ad-hoc global singletons that replace `AppState` patterns when touching editor logic.

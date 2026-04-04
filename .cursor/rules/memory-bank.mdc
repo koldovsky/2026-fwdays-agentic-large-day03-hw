@@ -1,0 +1,40 @@
+---
+description: "MemoryBank — persistent project knowledge in docs/memory/"
+alwaysApply: true
+---
+
+# MemoryBank
+
+Structured markdown in `docs/memory/` is the **only** cross-session project memory. Treat it as source of truth, not guesses.
+
+## Files (what to update when)
+
+| File | When |
+|------|------|
+| `activeContext.md` | **Every session** — focus, git-ish state, next steps |
+| `progress.md` | Task done or status changes |
+| `decisionLog.md` | Non-trivial decisions (ADR: Context → Decision → Consequences) |
+| `systemPatterns.md` | Architecture / module / pipeline changes |
+| `techContext.md` | Deps, tooling, CI, commands |
+| `productContext.md` | UX / product behavior changes |
+| `projectbrief.md` | Rare — major repo/structure changes |
+
+## Workflow
+
+1. Start substantive work by reading **`activeContext.md`** if it exists.
+2. After a meaningful change (feature, fix, refactor, config, decision), update the **relevant** files above.
+3. **`activeContext.md`** should stay aligned with real repo state and what you are doing next.
+
+## Constraints
+
+- Keep each file **≤ 200 lines**; trim stale content as needed.
+- Facts must match **source code / repo** — no invented details.
+- Prefer headings, short tables, bullets.
+- **Do not delete** MemoryBank files; edit in place only.
+
+## How to verify
+
+1. After a substantive change, open `docs/memory/activeContext.md` — it should reflect current focus and rough git/state-of-work accuracy.
+2. If architecture, tooling, product behavior, or a notable decision changed, the matching file (`systemPatterns.md`, `techContext.md`, `productContext.md`, or `decisionLog.md`) should have a short, factual update (not invented details).
+3. For task closure, `docs/memory/progress.md` should list completed steps when the team uses it for tracking.
+4. No MemoryBank file exceeds **200 lines** after edits; trim stale content instead of growing unbounded.
