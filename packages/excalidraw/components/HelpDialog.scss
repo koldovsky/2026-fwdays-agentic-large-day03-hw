@@ -4,12 +4,76 @@
   .HelpDialog {
     .Modal__content {
       max-width: 960px;
+      height: 80vh;
+    }
+
+    // Make the Dialog title span a flex row so the search control sits right
+    .Dialog__titleContent {
+      display: flex;
+      align-items: center;
+      width: 100%;
     }
 
     h3 {
       margin: 1.5rem 0;
       font-weight: 700;
       font-size: 1.125rem;
+    }
+
+    &__title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      gap: 0.75rem;
+    }
+
+    &__search-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      background: transparent;
+      border: none;
+      padding: 0.25rem;
+      color: var(--color-gray-40);
+      cursor: pointer;
+      line-height: 0;
+      border-radius: var(--border-radius-md);
+
+      &:hover {
+        color: var(--color-gray-60);
+      }
+
+      &:active {
+        color: var(--text-primary-color);
+      }
+
+      svg {
+        width: 1.25rem;
+        height: 1.25rem;
+      }
+    }
+
+    &__search-input {
+      flex: 1;
+      max-width: 220px;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--dialog-border-color);
+      outline: none;
+      font-size: 1rem;
+      font-family: inherit;
+      color: var(--text-primary-color);
+      padding: 0.125rem 0;
+
+      &::placeholder {
+        color: var(--color-gray-40);
+      }
+
+      &:focus {
+        border-bottom-color: var(--color-primary);
+      }
     }
 
     &__header {
@@ -105,6 +169,13 @@
 
       &:last-child {
         border-bottom: none;
+      }
+
+      mark {
+        background-color: var(--color-primary-light);
+        color: inherit;
+        border-radius: 2px;
+        padding: 0 1px;
       }
     }
 
