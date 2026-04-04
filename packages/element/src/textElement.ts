@@ -6,6 +6,7 @@ import {
   TEXT_ALIGN,
   VERTICAL_ALIGN,
   getFontString,
+  getRenderableText,
   isProdEnv,
   invariant,
 } from "@excalidraw/common";
@@ -72,14 +73,14 @@ export const redrawTextBoundingBox = (
       : textElement.angle) as Radians,
   };
 
-  boundTextUpdates.text = textElement.text;
+  boundTextUpdates.text = getRenderableText(textElement.originalText);
 
   if (container || !textElement.autoResize) {
     maxWidth = container
       ? getBoundTextMaxWidth(container, textElement)
       : textElement.width;
     boundTextUpdates.text = wrapText(
-      textElement.originalText,
+      getRenderableText(textElement.originalText),
       getFontString(textElement),
       maxWidth,
     );
@@ -167,9 +168,10 @@ export const handleBindTextResize = (
       shouldMaintainAspectRatio ||
       (transformHandleType !== "n" && transformHandleType !== "s")
     ) {
+      text = getRenderableText(textElement.originalText);
       if (text) {
         text = wrapText(
-          textElement.originalText,
+          text,
           getFontString(textElement),
           maxWidth,
         );

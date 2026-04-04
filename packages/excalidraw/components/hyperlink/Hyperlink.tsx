@@ -9,6 +9,7 @@ import {
 } from "react";
 
 import { EVENT, HYPERLINK_TOOLTIP_DELAY, KEYS } from "@excalidraw/common";
+import type { Bounds } from "@excalidraw/common";
 
 import { getElementAbsoluteCoords } from "@excalidraw/element";
 
@@ -386,12 +387,16 @@ export const showHyperlinkTooltip = (
   element: NonDeletedExcalidrawElement,
   appState: AppState,
   elementsMap: ElementsMap,
+  options?: {
+    link?: string;
+    bounds?: Bounds;
+  },
 ) => {
   if (HYPERLINK_TOOLTIP_TIMEOUT_ID) {
     clearTimeout(HYPERLINK_TOOLTIP_TIMEOUT_ID);
   }
   HYPERLINK_TOOLTIP_TIMEOUT_ID = window.setTimeout(
-    () => renderTooltip(element, appState, elementsMap),
+    () => renderTooltip(element, appState, elementsMap, options),
     HYPERLINK_TOOLTIP_DELAY,
   );
 };
@@ -400,8 +405,14 @@ const renderTooltip = (
   element: NonDeletedExcalidrawElement,
   appState: AppState,
   elementsMap: ElementsMap,
+  options?: {
+    link?: string;
+    bounds?: Bounds;
+  },
 ) => {
-  if (!element.link) {
+  const link = options?.link ?? element.link;
+
+  if (!link) {
     return;
   }
 
@@ -409,17 +420,15 @@ const renderTooltip = (
 
   tooltipDiv.classList.add("excalidraw-tooltip--visible");
   tooltipDiv.style.maxWidth = "20rem";
-  tooltipDiv.textContent = isElementLink(element.link)
+  tooltipDiv.textContent = isElementLink(link)
     ? t("labels.link.goToElement")
-    : element.link;
+    : link;
 
-  const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
+  const [linkX, linkY, linkWidth, linkHeight] = options?.bounds ?? (() => {
+    const [x1, y1, x2, y2] = getElementAbsoluteCoords(element, elementsMap);
 
-  const [linkX, linkY, linkWidth, linkHeight] = getLinkHandleFromCoords(
-    [x1, y1, x2, y2],
-    element.angle,
-    appState,
-  );
+    return getLinkHandleFromCoords([x1, y1, x2, y2], element.angle, appState);
+  })();
 
   const linkViewportCoords = sceneCoordsToViewportCoords(
     { sceneX: linkX, sceneY: linkY },

@@ -172,6 +172,26 @@ describe("textWysiwyg", () => {
       expect(h.state.editingTextElement?.id).toBe(text.id);
     });
 
+    it("should show original markdown when editing text with inline links", async () => {
+      const text = API.createElement({
+        type: "text",
+        x: 40,
+        y: 40,
+        width: 80,
+        height: 24,
+        text: "docs",
+      });
+      API.updateElement(text, {
+        originalText: "[docs](https://example.com/docs)",
+      });
+      API.setElements([text]);
+
+      mouse.doubleClickAt(text.x + 4, text.y + 4);
+
+      const editor = await getTextEditor();
+      expect(editor.value).toBe("[docs](https://example.com/docs)");
+    });
+
     it("should edit existing bound text on ENTER even if higher z-index unbound text exists at container center", () => {
       const container = API.createElement({
         type: "rectangle",

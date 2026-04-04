@@ -449,7 +449,8 @@ import { searchItemInFocusAtom } from "./SearchMenu";
 import { isSidebarDockedAtom } from "./Sidebar/Sidebar";
 import { StaticCanvas, InteractiveCanvas } from "./canvases";
 import NewElementCanvas from "./canvases/NewElementCanvas";
-import { isPointHittingLink } from "./hyperlink/helpers";
+import { getLinkAtPoint, isPointHittingLink } from "./hyperlink/helpers";
+import type { HitLink } from "./hyperlink/helpers";
 import { MagicIcon, copyIcon, fullscreenIcon } from "./icons";
 import { AppStateObserver, type OnStateChange } from "./AppStateObserver";
 
@@ -682,7 +683,7 @@ class App extends React.Component<AppProps, AppState> {
 
   bindModeHandler: ReturnType<typeof setTimeout> | null = null;
 
-  hitLinkElement?: NonDeletedExcalidrawElement;
+  hitLinkElement?: HitLink;
   lastPointerDownEvent: React.PointerEvent<HTMLElement> | null = null;
   lastPointerUpEvent: React.PointerEvent<HTMLElement> | PointerEvent | null =
     null;
@@ -6568,7 +6569,7 @@ class App extends React.Component<AppProps, AppState> {
   private getElementLinkAtPosition = (
     scenePointer: Readonly<{ x: number; y: number }>,
     hitElementMightBeLocked: NonDeletedExcalidrawElement | null,
-  ): ExcalidrawElement | undefined => {
+  ): HitLink | undefined => {
     if (hitElementMightBeLocked && hitElementMightBeLocked.locked) {
       return undefined;
     }
@@ -6584,18 +6585,17 @@ class App extends React.Component<AppProps, AppState> {
       ) {
         hitElementIndex = index;
       }
-      if (
-        element.link &&
-        index >= hitElementIndex &&
-        isPointHittingLink(
+      if (index >= hitElementIndex) {
+        const hitLink = getLinkAtPoint(
           element,
           this.scene.getNonDeletedElementsMap(),
           this.state,
           pointFrom(scenePointer.x, scenePointer.y),
           this.editorInterface.formFactor === "phone",
-        )
-      ) {
-        return element;
+        );
+        if (hitLink) {
+          return hitLink;
+        }
       }
     }
   };
@@ -6622,7 +6622,7 @@ class App extends React.Component<AppProps, AppState> {
     );
     const elementsMap = this.scene.getNonDeletedElementsMap();
     const lastPointerDownHittingLinkIcon = isPointHittingLink(
-      this.hitLinkElement,
+      this.hitLinkElement.element,
       elementsMap,
       this.state,
       pointFrom(lastPointerDownCoords.x, lastPointerDownCoords.y),
@@ -6633,7 +6633,7 @@ class App extends React.Component<AppProps, AppState> {
       this.state,
     );
     const lastPointerUpHittingLinkIcon = isPointHittingLink(
-      this.hitLinkElement,
+      this.hitLinkElement.element,
       elementsMap,
       this.state,
       pointFrom(lastPointerUpCoords.x, lastPointerUpCoords.y),
@@ -6649,7 +6649,7 @@ class App extends React.Component<AppProps, AppState> {
           customEvent = wrapEvent(EVENT.EXCALIDRAW_LINK, event.nativeEvent);
           this.props.onLinkOpen(
             {
-              ...this.hitLinkElement,
+              ...this.hitLinkElement.element,
               link: url,
             },
             customEvent,
@@ -7212,14 +7212,18 @@ class App extends React.Component<AppProps, AppState> {
 
     if (
       this.hitLinkElement &&
-      !this.state.selectedElementIds[this.hitLinkElement.id]
+      !this.state.selectedElementIds[this.hitLinkElement.element.id]
     ) {
       setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
 
       showHyperlinkTooltip(
-        this.hitLinkElement,
+        this.hitLinkElement.element,
         this.state,
         this.scene.getNonDeletedElementsMap(),
+        {
+          link: this.hitLinkElement.link,
+          bounds: this.hitLinkElement.bounds,
+        },
       );
     } else {
       hideHyperlinkToolip();
@@ -7972,7 +7976,7 @@ class App extends React.Component<AppProps, AppState> {
 
     if (
       this.hitLinkElement &&
-      !this.state.selectedElementIds[this.hitLinkElement.id]
+      !this.state.selectedElementIds[this.hitLinkElement.element.id]
     ) {
       this.handleElementLinkClick(event);
     } else if (this.state.viewModeEnabled) {

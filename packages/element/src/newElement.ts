@@ -5,6 +5,7 @@ import {
   DEFAULT_TEXT_ALIGN,
   DEFAULT_VERTICAL_ALIGN,
   VERTICAL_ALIGN,
+  getRenderableText,
   randomInteger,
   randomId,
   getFontString,
@@ -252,7 +253,8 @@ export const newTextElement = (
   const fontFamily = opts.fontFamily || DEFAULT_FONT_FAMILY;
   const fontSize = opts.fontSize || DEFAULT_FONT_SIZE;
   const lineHeight = opts.lineHeight || getLineHeight(fontFamily);
-  const text = normalizeText(opts.text);
+  const originalText = normalizeText(opts.originalText ?? opts.text);
+  const text = getRenderableText(originalText);
   const metrics = measureText(
     text,
     getFontString({ fontFamily, fontSize }),
@@ -277,7 +279,7 @@ export const newTextElement = (
     width: metrics.width,
     height: metrics.height,
     containerId: opts.containerId || null,
-    originalText: opts.originalText ?? text,
+    originalText,
     autoResize: opts.autoResize ?? true,
     lineHeight,
   };
@@ -421,11 +423,12 @@ export const refreshTextDimensions = (
   textElement: ExcalidrawTextElement,
   container: ExcalidrawTextContainer | null,
   elementsMap: ElementsMap,
-  text = textElement.text,
+  originalText = textElement.originalText,
 ) => {
   if (textElement.isDeleted) {
     return;
   }
+  let text = getRenderableText(normalizeText(originalText));
   if (container || !textElement.autoResize) {
     text = wrapText(
       text,
