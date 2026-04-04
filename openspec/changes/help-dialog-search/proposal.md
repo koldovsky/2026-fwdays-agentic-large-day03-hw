@@ -4,7 +4,7 @@ The Excalidraw help dialog lists 70+ keyboard shortcuts across three sections (T
 
 ## What Changes
 
-- Add a compact search input in the upper right corner of the dialog title bar (inline with the "Keyboard shortcuts" heading)
+- Add a text input field at the top of the help dialog for filtering shortcuts
 - Shortcuts not matching the search query are hidden in real-time as the user types
 - Section headers are hidden when all their shortcuts are filtered out
 - Matching text within shortcut labels is highlighted

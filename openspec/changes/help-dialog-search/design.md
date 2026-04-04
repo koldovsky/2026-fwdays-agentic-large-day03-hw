@@ -7,70 +7,75 @@ The codebase already has a `QuickSearch.tsx` component and command palette searc
 ## Goals / Non-Goals
 
 **Goals:**
-- Add a controlled text input in the **upper right corner of the dialog title bar**, inline with the dialog heading
-- Hide shortcut entries whose labels do not contain the search string (case-insensitive substring match)
+- Add a search toggle in the upper-right corner of the dialog title bar — initially rendered as a magnifying glass icon button
+- When the icon is clicked, or when the user starts typing while the dialog is open, the input expands and receives focus
+- Filter shortcuts in real-time (case-insensitive substring match) as the user types
 - Hide a `ShortcutIsland` section header when none of its shortcuts match
-- Highlight the matching substring within displayed labels
-- Auto-focus the input when the dialog opens
+- Highlight the matching substring within displayed labels using `<mark>`
+- The dialog outer dimensions MUST NOT change during filtering — the shortcut list area maintains a fixed height/min-height; filtered-out items are hidden but layout space is preserved
+- Frameless input style: no visible border box, only a bottom underline (`border-bottom`), matching Excalidraw's minimal aesthetic
 
 **Non-Goals:**
-- Fuzzy/partial-word matching (simple `includes` is sufficient)
-- Searching by key binding characters (e.g., typing "Ctrl" to find shortcuts)
+- Fuzzy/partial-word matching (`includes` is sufficient)
+- Searching by key binding characters (e.g., typing "Ctrl")
 - Persisting the search query across dialog open/close cycles
 - Any backend or network changes
 
 ## Decisions
 
-### 1. Placement: search input in the dialog title bar (upper right corner)
+### 1. State location: local component state in `HelpDialog`
 
-**Decision:** Place the search input inline in the `Dialog` title bar by passing a React fragment as the `title` prop — containing both the heading text and the `<input>`. Override `.HelpDialog .Dialog__title` in `HelpDialog.scss` to `display: flex; align-items: center; justify-content: space-between;` so the input floats to the right.
+**Decision:** Two pieces of local state: `searchActive: boolean` (controls icon-vs-input toggle) and `searchQuery: string` (the filter value).
 
-**Rationale:** The `Dialog` component accepts `title: React.ReactNode`, making this a zero-change extension point. The `Dialog__title` h2 already has a bottom border that visually separates the title bar from the content — putting the search there is the natural "upper right corner" position. No changes to `Dialog.tsx` needed.
+**Rationale:** Both are purely UI-local. Lifting to `appState` would pollute global state with transient UI concerns. A single `ref` on the input handles programmatic focus.
 
-**Alternative considered:** Position the input absolutely (`position: absolute; top: ...; right: 0`) relative to `Dialog__content`. Rejected — fragile to title bar height changes and requires negative `top` values.
-
-**Alternative considered:** Add a new `titleRight` prop to `Dialog.tsx`. Rejected — unnecessary API surface change for a single use case.
-
-**Styling:** The input SHALL use existing CSS variables (`--color-surface-mid`, `--border-radius-lg`, `--text-primary-color`, `--dialog-border-color`) to match the `HelpDialog__btn` aesthetic — same border-radius, same muted background, consistent font size.
+**Alternative considered:** Single nullable string (`null` = inactive, `""` = active empty) — rejected as less readable than two explicit booleans.
 
 ---
 
-### 2. State location: local `useState` in `HelpDialog`
+### 2. Search trigger: icon button in title bar, or keypress while dialog is open
 
-**Decision:** Add a single `useState<string>` (`searchQuery`) inside the `HelpDialog` component.
+**Decision:** Render a magnifying glass `<button>` (using an existing SVG icon from the Excalidraw icon set) in the upper-right of the dialog header (alongside or replacing the close button area). On click, set `searchActive = true` and focus the input. Also attach a `keydown` listener on the dialog root: any printable character keypress while `!searchActive` sets `searchActive = true`, appends the character to `searchQuery`, and focuses the input.
 
-**Rationale:** The search is purely UI-local with no cross-component effect. Lifting it to app state (`appState`) would add unnecessary noise to the global state shape. React context is overkill for a single string shared within one component tree.
+**Rationale:** Matches the "click icon or just start typing" UX described in requirements. The dialog is already a modal so capturing keypresses within it is safe and expected.
 
-**Alternative considered:** Store in `appState.openDialog` — rejected because it couples a transient UI concern to persistent app state and would require wiring through action handlers.
-
----
-
-### 2. Filtering strategy: prop-level filtering in `ShortcutIsland`
-
-**Decision:** Pass `searchQuery` down to `ShortcutIsland`, which filters its `children` (the `<Shortcut>` elements) and returns `null` when no children match.
-
-**Rationale:** `Shortcut` components are already rendered as JSX children of `ShortcutIsland`. The cleanest approach is to filter `React.Children` inside `ShortcutIsland` based on each child's `label` prop, keeping the change contained.
-
-**Alternative considered:** Lift all shortcut data into an array structure and derive JSX — this would require a larger refactor of the static JSX in `HelpDialog.tsx` (500+ lines) and is out of scope.
+**Alternative considered:** Auto-focus a hidden input on dialog mount — rejected because an invisible focused input is confusing for screen readers and users.
 
 ---
 
-### 3. Match highlighting: wrap matching substring in `<mark>`
+### 3. Input visual style: frameless with bottom underline
 
-**Decision:** In the `Shortcut` component, when a `searchQuery` is active, split the label on the matching substring and wrap the match in a `<mark>` element styled via `HelpDialog.scss`.
+**Decision:** The `<input>` has `border: none`, `outline: none`, `border-bottom: 1px solid var(--color-border)` (or equivalent design token). Background is transparent. Width expands to fill available space in the header row when active.
 
-**Rationale:** `<mark>` is semantically correct for highlighted search matches and requires minimal CSS. No third-party library needed.
+**Rationale:** Matches the product's minimal aesthetic (same pattern used in the command palette's inline search).
 
 ---
 
-### 4. Localization: add a single key to `en.json`
+### 4. Fixed dialog size during filtering
 
-**Decision:** Add `helpDialog.searchPlaceholder` to `en.json` for the input placeholder text; no new label string is needed because the input's purpose is self-evident from its position.
+**Decision:** The scrollable shortcuts container (`.help-dialog-content` or equivalent wrapper) is given a fixed `height` equal to its natural height when all shortcuts are visible, set via CSS `min-height` on the container. Filtered-out `<Shortcut>` rows use `display: none` (removed from flow) but the container's `min-height` prevents the dialog from shrinking.
 
-**Rationale:** Consistent with how other dialog input strings are handled in the codebase.
+**Rationale:** `display: none` on non-matches is cleaner than `visibility: hidden` (which leaves visual gaps). A `min-height` on the container achieves stable dialog size without JS measurement. The dialog already has a `max-width: 960px` and auto height — adding a fixed height on the inner scroll area is the least-invasive change.
+
+**Alternative considered:** `visibility: hidden` on non-matching rows — rejected because it leaves large blank gaps within sections, which looks broken.
+
+---
+
+### 5. Match highlighting: `<mark>` element
+
+**Decision:** In the `Shortcut` component, when `searchQuery` is active, split the label on the first case-insensitive match and wrap the match in `<mark>`. Style via `.help-dialog mark` in `HelpDialog.scss`.
+
+**Rationale:** `<mark>` is semantically correct and requires minimal CSS. No third-party library needed.
+
+---
+
+### 6. Localization
+
+**Decision:** Add `helpDialog.searchPlaceholder` to `en.json` for the input placeholder text and `helpDialog.searchShortcuts` for the icon button `aria-label`.
 
 ## Risks / Trade-offs
 
-- **React.Children filtering fragility** → If `ShortcutIsland` children are ever wrapped in fragments or non-`Shortcut` elements, the `label` prop lookup will silently fail to filter them. Mitigation: add a defensive `child.props?.label` check.
-- **Performance with 70+ shortcuts** → Filtering on every keystroke is O(n) over a tiny fixed list; no debouncing needed.
-- **Accessibility** → The `<input>` must have an accessible label (`aria-label` or associated `<label>`). Use `aria-label={t("helpDialog.searchPlaceholder")}`.
+- **React.Children filtering fragility** → Guard with `child.props?.label` check; log a warning in dev mode for children without labels.
+- **Keypress capture conflicts** → The dialog's keydown listener must not swallow Escape (which closes the dialog) or other dialog-level shortcuts. Check `e.key` carefully; only act on single printable characters (`e.key.length === 1 && !e.ctrlKey && !e.metaKey`).
+- **Fixed height brittleness** → If the shortcuts list grows substantially, the hardcoded `min-height` may need updating. Use a CSS custom property or derive from a known reference height so it's easy to adjust.
+- **Accessibility** → The icon button needs `aria-label`. When input is active, it should have `aria-label={t("helpDialog.searchPlaceholder")}`. Focus must return to the icon button when search is dismissed.
