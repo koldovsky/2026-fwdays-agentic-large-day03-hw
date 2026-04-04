@@ -427,6 +427,23 @@
     }
   }
 
+  .color-picker__input-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .color-picker__input-error {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    font-size: 0.75rem;
+    color: #e03131;
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 1;
+  }
+
   .color-picker-label-swatch-container {
     border: 1px solid var(--default-border-color);
     border-radius: var(--border-radius-lg);
