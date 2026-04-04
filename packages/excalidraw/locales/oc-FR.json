@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "",
     "unableToEmbed": "",
     "unrecognizedLinkFormat": "",
-    "elementLinkCopied": "Copiats al quichapapièrs"
+    "elementLinkCopied": "Copiats al quichapapièrs",
+    "selectShapeToolToDraw": "Select a shape tool in the toolbar to draw."
   },
   "colors": {
     "transparent": "Transparéncia",

@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "",
     "unableToEmbed": "",
     "unrecognizedLinkFormat": "",
-    "elementLinkCopied": ""
+    "elementLinkCopied": "",
+    "selectShapeToolToDraw": "Select a shape tool in the toolbar to draw."
   },
   "colors": {
     "transparent": "Permatoma",

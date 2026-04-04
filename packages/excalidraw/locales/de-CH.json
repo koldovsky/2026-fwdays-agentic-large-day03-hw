@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "Verwende {{shortcut}} , um als einzelnes Element\neinzufügen oder in einen existierenden Texteditor einzufügen",
     "unableToEmbed": "Einbetten dieser URL ist derzeit nicht zulässig. Erstelle einen Issue auf GitHub, um die URL freigeben zu lassen",
     "unrecognizedLinkFormat": "Der Link, den Du eingebettet hast, stimmt nicht mit dem erwarteten Format überein. Bitte versuche den 'embed' String einzufügen, der von der Quellseite zur Verfügung gestellt wird",
-    "elementLinkCopied": "Link in Zwischenablage kopiert"
+    "elementLinkCopied": "Link in Zwischenablage kopiert",
+    "selectShapeToolToDraw": "Select a shape tool in the toolbar to draw."
   },
   "colors": {
     "transparent": "Transparent",

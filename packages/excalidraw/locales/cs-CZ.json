@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "Pomocí {{shortcut}} vložte jako jeden prvek,\nnebo vložte do existujícího textového editoru",
     "unableToEmbed": "",
     "unrecognizedLinkFormat": "",
-    "elementLinkCopied": ""
+    "elementLinkCopied": "",
+    "selectShapeToolToDraw": "Select a shape tool in the toolbar to draw."
   },
   "colors": {
     "transparent": "Průhledná",

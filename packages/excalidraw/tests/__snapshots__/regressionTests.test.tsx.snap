@@ -3847,7 +3847,10 @@ exports[`regression tests > click-drag to select a group > [end of test] appStat
   },
   "suggestedBinding": null,
   "theme": "light",
-  "toast": null,
+  "toast": {
+    "closable": true,
+    "message": "Select a shape tool in the toolbar to draw.",
+  },
   "userToFollow": null,
   "viewBackgroundColor": "#ffffff",
   "viewModeEnabled": false,

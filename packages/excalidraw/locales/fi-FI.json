@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "Käytä {{shortcut}} liittääksesi yhtenä elementtinä,\ntai liittääksesi olemassa olevaan tekstieditoriin",
     "unableToEmbed": "",
     "unrecognizedLinkFormat": "",
-    "elementLinkCopied": ""
+    "elementLinkCopied": "",
+    "selectShapeToolToDraw": "Select a shape tool in the toolbar to draw."
   },
   "colors": {
     "transparent": "Läpinäkyvä",

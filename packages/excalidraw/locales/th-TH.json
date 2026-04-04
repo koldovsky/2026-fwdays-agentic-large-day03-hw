@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "",
     "unableToEmbed": "",
     "unrecognizedLinkFormat": "",
-    "elementLinkCopied": "คัดลอกไปยังคลิปบอร์ดแล้ว"
+    "elementLinkCopied": "คัดลอกไปยังคลิปบอร์ดแล้ว",
+    "selectShapeToolToDraw": "Select a shape tool in the toolbar to draw."
   },
   "colors": {
     "transparent": "โปร่งใส",

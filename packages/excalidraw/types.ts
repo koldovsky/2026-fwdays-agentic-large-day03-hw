@@ -895,6 +895,10 @@ export type PointerDownState = Readonly<{
   boxSelection: {
     hasOccurred: boolean;
   };
+  lasso: {
+    /** True after at least one lasso path point was added during this gesture */
+    hasOccurred: boolean;
+  };
 }>;
 
 export type UnsubscribeCallback = () => void;

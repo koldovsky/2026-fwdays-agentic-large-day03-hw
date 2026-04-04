@@ -360,6 +360,10 @@ import { restoreAppState, restoreElements } from "../data/restore";
 import { getCenter, getDistance } from "../gesture";
 import { History } from "../history";
 import { defaultLang, getLanguage, languages, setLanguage, t } from "../i18n";
+import {
+  SESSION_STORAGE_KEY,
+  shouldShowSelectShapeToolToast,
+} from "../utils/selectionShapeToolToast";
 
 import {
   calculateScrollCenter,
@@ -8223,6 +8227,9 @@ class App extends React.Component<AppProps, AppState> {
       boxSelection: {
         hasOccurred: false,
       },
+      lasso: {
+        hasOccurred: false,
+      },
     };
   }
 
@@ -10136,6 +10143,7 @@ class App extends React.Component<AppProps, AppState> {
           this.maybeDragNewGenericElement(pointerDownState, event);
           this.lassoTrail.endPath();
         } else {
+          pointerDownState.lasso.hasOccurred = true;
           this.lassoTrail.addPointToPath(
             pointerCoords.x,
             pointerCoords.y,
@@ -10381,6 +10389,7 @@ class App extends React.Component<AppProps, AppState> {
         isResizing,
         isRotating,
         isCropping,
+        selectedLinearElement,
       } = this.state;
 
       this.setState((prevState) => ({
@@ -10404,6 +10413,41 @@ class App extends React.Component<AppProps, AppState> {
       SnapCache.setVisibleGaps(null);
 
       this.savePointer(childEvent.clientX, childEvent.clientY, "up");
+
+      const scenePointerUp = viewportCoordsToSceneCoords(
+        { clientX: childEvent.clientX, clientY: childEvent.clientY },
+        this.state,
+      );
+      const dragDistanceScreenPx =
+        Math.hypot(
+          scenePointerUp.x - pointerDownState.origin.x,
+          scenePointerUp.y - pointerDownState.origin.y,
+        ) * this.state.zoom.value;
+
+      if (
+        shouldShowSelectShapeToolToast({
+          activeToolType: activeTool.type,
+          boxSelectionHasOccurred: pointerDownState.boxSelection.hasOccurred,
+          lassoGestureHasOccurred: pointerDownState.lasso.hasOccurred,
+          hitElementOnPointerDown: pointerDownState.hit.element,
+          resizeIsResizing: pointerDownState.resize.isResizing,
+          dragHasOccurred: pointerDownState.drag.hasOccurred,
+          newElement,
+          isRotating,
+          isResizing,
+          isCropping,
+          isLinearElementEditing: !!selectedLinearElement?.isEditing,
+          dragDistanceScreenPx,
+        }) &&
+        typeof sessionStorage !== "undefined" &&
+        !sessionStorage.getItem(SESSION_STORAGE_KEY)
+      ) {
+        sessionStorage.setItem(SESSION_STORAGE_KEY, "1");
+        this.setToast({
+          message: t("toast.selectShapeToolToDraw"),
+          closable: true,
+        });
+      }
 
       // if current elements are still selected
       // and the pointer is just over a locked element

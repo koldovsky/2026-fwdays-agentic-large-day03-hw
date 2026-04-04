@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "استخدم {{shortcut}} للصق كعنصر واحد،\nأو لصق في محرر نص موجود",
     "unableToEmbed": "تضمين هذا الرابط غير مسموح حاليًا. افتح بلاغًا على GitHub لطلب إدراج عنوان URL في القائمة البيضاء",
     "unrecognizedLinkFormat": "الرابط الذي أدرجته لا يتطابق مع التنسيق المتوقع. الرجاء محاولة لصق النص 'المضمن' المُزوَد من موقع المصدر",
-    "elementLinkCopied": "تم نسخ الرابط إلى الحافظة"
+    "elementLinkCopied": "تم نسخ الرابط إلى الحافظة",
+    "selectShapeToolToDraw": "Select a shape tool in the toolbar to draw."
   },
   "colors": {
     "transparent": "شفاف",

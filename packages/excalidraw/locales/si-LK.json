@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "තනි අංගයක් ලෙස ඇලවීම",
     "unableToEmbed": "බිහිදැමීමට නොහැක",
     "unrecognizedLinkFormat": "නොහඳුනන සබැඳි ආකෘතිය",
-    "elementLinkCopied": ""
+    "elementLinkCopied": "",
+    "selectShapeToolToDraw": "Select a shape tool in the toolbar to draw."
   },
   "colors": {
     "transparent": "පාරදෘශ්‍ය",
