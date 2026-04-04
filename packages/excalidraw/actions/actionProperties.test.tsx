@@ -3,8 +3,10 @@ import { queryByTestId } from "@testing-library/react";
 import {
   COLOR_PALETTE,
   DEFAULT_ELEMENT_BACKGROUND_PICKS,
+  DEFAULT_ELEMENT_PROPS,
   FONT_FAMILY,
   STROKE_WIDTH,
+  STROKE_WIDTH_SLIDER_MAX,
 } from "@excalidraw/common";
 
 import { Excalidraw } from "../index";
@@ -109,7 +111,7 @@ describe("element locking", () => {
       expect(crossHatchButton).toBe(null);
     });
 
-    it("should highlight common stroke width of selected elements", () => {
+    it("should show common stroke width on slider when selected elements match", () => {
       const rect1 = API.createElement({
         type: "rectangle",
         strokeWidth: STROKE_WIDTH.thin,
@@ -121,14 +123,25 @@ describe("element locking", () => {
       API.setElements([rect1, rect2]);
       API.setSelectedElements([rect1, rect2]);
 
-      const thinStrokeWidthButton = queryByTestId(
-        document.body,
-        `strokeWidth-thin`,
-      );
-      expect(thinStrokeWidthButton).toBeChecked();
+      const strokeWidthRange = queryByTestId(document.body, "stroke-width");
+      expect(strokeWidthRange).not.toBe(null);
+      expect(strokeWidthRange).toHaveValue(String(STROKE_WIDTH.thin));
     });
 
-    it("should not highlight any stroke width button if no common style", () => {
+    it("should clamp stroke width slider display when element exceeds slider max", () => {
+      const rect = API.createElement({
+        type: "rectangle",
+        strokeWidth: 24,
+      });
+      API.setElements([rect]);
+      API.setSelectedElements([rect]);
+
+      const strokeWidthRange = queryByTestId(document.body, "stroke-width");
+      expect(strokeWidthRange).not.toBe(null);
+      expect(strokeWidthRange).toHaveValue(String(STROKE_WIDTH_SLIDER_MAX));
+    });
+
+    it("should use tool default on stroke width slider when selection has mixed stroke widths", () => {
       const rect1 = API.createElement({
         type: "rectangle",
         strokeWidth: STROKE_WIDTH.thin,
@@ -140,16 +153,11 @@ describe("element locking", () => {
       API.setElements([rect1, rect2]);
       API.setSelectedElements([rect1, rect2]);
 
-      expect(queryByTestId(document.body, `strokeWidth-thin`)).not.toBe(null);
-      expect(
-        queryByTestId(document.body, `strokeWidth-thin`),
-      ).not.toBeChecked();
-      expect(
-        queryByTestId(document.body, `strokeWidth-bold`),
-      ).not.toBeChecked();
-      expect(
-        queryByTestId(document.body, `strokeWidth-extraBold`),
-      ).not.toBeChecked();
+      const strokeWidthRange = queryByTestId(document.body, "stroke-width");
+      expect(strokeWidthRange).not.toBe(null);
+      expect(strokeWidthRange).toHaveValue(
+        String(DEFAULT_ELEMENT_PROPS.strokeWidth),
+      );
     });
 
     it("should show properties of different element types when selected", () => {
@@ -164,7 +172,9 @@ describe("element locking", () => {
       API.setElements([rect, text]);
       API.setSelectedElements([rect, text]);
 
-      expect(queryByTestId(document.body, `strokeWidth-bold`)).toBeChecked();
+      expect(queryByTestId(document.body, "stroke-width")).toHaveValue(
+        String(STROKE_WIDTH.bold),
+      );
       expect(queryByTestId(document.body, `font-family-code`)).toHaveClass(
         "active",
       );
