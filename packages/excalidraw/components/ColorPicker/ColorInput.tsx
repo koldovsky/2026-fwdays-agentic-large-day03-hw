@@ -78,11 +78,14 @@ export const ColorInput = ({
       <div className="color-picker__input-wrapper">
         <input
           ref={activeSection === "hex" ? inputRef : undefined}
-          style={{ border: 0, padding: 0 }}
           spellCheck={false}
-          className={clsx("color-picker-input", {
-            "color-picker-input--error": isInvalid,
-          })}
+          className={clsx(
+            "color-picker-input",
+            "color-picker-input--reset",
+            {
+              "color-picker-input--error": isInvalid,
+            },
+          )}
           aria-label={label}
           aria-invalid={isInvalid}
           onChange={(event) => {
