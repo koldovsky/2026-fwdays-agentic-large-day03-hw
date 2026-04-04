@@ -197,7 +197,6 @@ import {
   FlowChartNavigator,
   getLinkDirectionFromKey,
   cropElement,
-  wrapText,
   isElementLink,
   parseElementLinkFromURL,
   isMeasureTextSupported,
@@ -258,6 +257,8 @@ import {
   maybeHandleArrowPointlikeDrag,
   getUncroppedWidthAndHeight,
   getActiveTextElement,
+  getRenderableText,
+  getTextHyperlinkAtPoint,
 } from "@excalidraw/element";
 
 import type { GlobalPoint, LocalPoint, Radians } from "@excalidraw/math";
@@ -683,6 +684,10 @@ class App extends React.Component<AppProps, AppState> {
   bindModeHandler: ReturnType<typeof setTimeout> | null = null;
 
   hitLinkElement?: NonDeletedExcalidrawElement;
+  hitTextHyperlink?: {
+    element: ExcalidrawTextElement;
+    url: string;
+  };
   lastPointerDownEvent: React.PointerEvent<HTMLElement> | null = null;
   lastPointerUpEvent: React.PointerEvent<HTMLElement> | PointerEvent | null =
     null;
@@ -4127,12 +4132,17 @@ class App extends React.Component<AppProps, AppState> {
             y: currentY,
           });
 
-          let metrics = measureText(originalText, fontString, lineHeight);
+          const renderableText = getRenderableText(
+            originalText,
+            fontString,
+            Infinity,
+          );
+          let metrics = measureText(renderableText, fontString, lineHeight);
           const isTextUnwrapped = metrics.width > maxTextWidth;
 
           const text = isTextUnwrapped
-            ? wrapText(originalText, fontString, maxTextWidth)
-            : originalText;
+            ? getRenderableText(originalText, fontString, maxTextWidth)
+            : renderableText;
 
           metrics = isTextUnwrapped
             ? measureText(text, fontString, lineHeight)
@@ -6600,6 +6610,47 @@ class App extends React.Component<AppProps, AppState> {
     }
   };
 
+  private getTextHyperlinkAtPosition = (
+    scenePointer: Readonly<{ x: number; y: number }>,
+    hitElementMightBeLocked: NonDeletedExcalidrawElement | null,
+  ) => {
+    if (hitElementMightBeLocked && hitElementMightBeLocked.locked) {
+      return undefined;
+    }
+
+    const elements = this.scene.getNonDeletedElements();
+    const elementsMap = this.scene.getNonDeletedElementsMap();
+    let hitElementIndex = -1;
+
+    for (let index = elements.length - 1; index >= 0; index--) {
+      const element = elements[index];
+
+      if (
+        hitElementMightBeLocked &&
+        element.id === hitElementMightBeLocked.id
+      ) {
+        hitElementIndex = index;
+      }
+
+      if (!isTextElement(element) || index < hitElementIndex) {
+        continue;
+      }
+
+      const textHyperlink = getTextHyperlinkAtPoint(
+        element,
+        elementsMap,
+        pointFrom(scenePointer.x, scenePointer.y),
+      );
+
+      if (textHyperlink) {
+        return {
+          element,
+          url: textHyperlink.url,
+        };
+      }
+    }
+  };
+
   private handleElementLinkClick = (
     event: React.PointerEvent<HTMLCanvasElement>,
   ) => {
@@ -6664,6 +6715,91 @@ class App extends React.Component<AppProps, AppState> {
             newWindow.location = url;
           }
         }
+      }
+    }
+  };
+
+  private handleTextHyperlinkClick = (
+    event: React.PointerEvent<HTMLCanvasElement>,
+  ) => {
+    const draggedDistance = pointDistance(
+      pointFrom(
+        this.lastPointerDownEvent!.clientX,
+        this.lastPointerDownEvent!.clientY,
+      ),
+      pointFrom(
+        this.lastPointerUpEvent!.clientX,
+        this.lastPointerUpEvent!.clientY,
+      ),
+    );
+
+    if (!this.hitTextHyperlink || draggedDistance > DRAGGING_THRESHOLD) {
+      return;
+    }
+
+    const lastPointerDownCoords = viewportCoordsToSceneCoords(
+      this.lastPointerDownEvent!,
+      this.state,
+    );
+    const lastPointerDownHitElement = this.getElementAtPosition(
+      lastPointerDownCoords.x,
+      lastPointerDownCoords.y,
+      {
+        preferSelected: true,
+        includeLockedElements: true,
+      },
+    );
+    const lastPointerDownHyperlink = this.getTextHyperlinkAtPosition(
+      lastPointerDownCoords,
+      lastPointerDownHitElement,
+    );
+
+    const lastPointerUpCoords = viewportCoordsToSceneCoords(
+      this.lastPointerUpEvent!,
+      this.state,
+    );
+    const lastPointerUpHitElement = this.getElementAtPosition(
+      lastPointerUpCoords.x,
+      lastPointerUpCoords.y,
+      {
+        preferSelected: true,
+        includeLockedElements: true,
+      },
+    );
+    const lastPointerUpHyperlink = this.getTextHyperlinkAtPosition(
+      lastPointerUpCoords,
+      lastPointerUpHitElement,
+    );
+
+    if (
+      !lastPointerDownHyperlink ||
+      !lastPointerUpHyperlink ||
+      lastPointerDownHyperlink.element.id !== lastPointerUpHyperlink.element.id ||
+      lastPointerDownHyperlink.url !== lastPointerUpHyperlink.url
+    ) {
+      return;
+    }
+
+    let customEvent;
+    if (this.props.onLinkOpen) {
+      customEvent = wrapEvent(EVENT.EXCALIDRAW_LINK, event.nativeEvent);
+      this.props.onLinkOpen(
+        {
+          ...lastPointerUpHyperlink.element,
+          link: lastPointerUpHyperlink.url,
+        },
+        customEvent,
+      );
+    }
+
+    if (!customEvent?.defaultPrevented) {
+      const newWindow = window.open(
+        lastPointerUpHyperlink.url,
+        "_blank",
+        "noopener,noreferrer",
+      );
+      if (newWindow) {
+        newWindow.opener = null;
       }
     }
   };
@@ -7208,6 +7344,12 @@ class App extends React.Component<AppProps, AppState> {
         scenePointer,
         hitElementMightBeLocked,
       );
+      this.hitTextHyperlink = this.getTextHyperlinkAtPosition(
+        scenePointer,
+        hitElementMightBeLocked,
+      );
+    } else {
+      this.hitTextHyperlink = undefined;
     }
 
     if (
@@ -7221,6 +7363,10 @@ class App extends React.Component<AppProps, AppState> {
         this.state,
         this.scene.getNonDeletedElementsMap(),
       );
+    } else if (this.hitTextHyperlink) {
+      hideHyperlinkToolip();
+      setCursor(this.interactiveCanvas, CURSOR_TYPE.POINTER);
+      return;
     } else {
       hideHyperlinkToolip();
       if (isLaserTool) {
@@ -7968,6 +8114,10 @@ class App extends React.Component<AppProps, AppState> {
         scenePointer,
         hitElement,
       );
+      this.hitTextHyperlink = this.getTextHyperlinkAtPosition(
+        scenePointer,
+        hitElement,
+      );
     }
 
     if (
@@ -7975,6 +8125,8 @@ class App extends React.Component<AppProps, AppState> {
       !this.state.selectedElementIds[this.hitLinkElement.id]
     ) {
       this.handleElementLinkClick(event);
+    } else if (this.hitTextHyperlink) {
+      this.handleTextHyperlinkClick(event);
     } else if (this.state.viewModeEnabled) {
       this.setState({
         activeEmbeddable: null,
@@ -8470,8 +8622,12 @@ class App extends React.Component<AppProps, AppState> {
           pointerDownState.origin,
           hitElementMightBeLocked,
         );
+        this.hitTextHyperlink = this.getTextHyperlinkAtPosition(
+          pointerDownState.origin,
+          hitElementMightBeLocked,
+        );
 
-        if (this.hitLinkElement) {
+        if (this.hitLinkElement || this.hitTextHyperlink) {
           return true;
         }
 

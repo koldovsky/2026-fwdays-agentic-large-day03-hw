@@ -1,0 +1,50 @@
+# Active Context
+
+See [progress.md](./progress.md) for broader status and [hidden invariants](../technical/hidden-invariants.md) for risky source-grounded behavior notes.
+
+## Current Focus
+- Memory Bank now exists and is the primary durable context for the repo.
+- Keep Memory Bank compact and non-duplicative, with deep detail living in `docs/technical/*` and `docs/product/*`.
+
+## Recently Completed: enhanced-font-size-selector
+- **Summary:** Expanded font size selector from 4 presets to 4 inline SVG icon presets + popover with 12 named sizes (3×4 grid), numeric dropdown, px/pt display toggle, and section labels. [GitHub #10506](https://github.com/excalidraw/excalidraw/issues/10506).
+- **Status:** Archived. Spec and implementation complete.
+- **Archive:** [openspec/archive/enhanced-font-size-selector/](../../openspec/archive/enhanced-font-size-selector/)
+- **Pattern:** Follows ColorPicker TopPicks + PropertiesPopover pattern. New `FontSizePicker/` component directory.
+
+## Recently Completed: markdown-hyperlinks-in-elements
+- **Summary:** Markdown `[label](url)` hyperlinks in text elements — parser, URL safety (http/https allowlist), canvas rendering (color + underline), SVG export (`<a>` tags), click-to-open outside edit mode. [GitHub #11024](https://github.com/excalidraw/excalidraw/issues/11024).
+- **Status:** Archived. Spec and implementation complete.
+- **Archive:** [openspec/archive/markdown-hyperlinks-in-elements/](../../openspec/archive/markdown-hyperlinks-in-elements/)
+
+## Recent Changes
+- Added properties panel architecture documentation in [properties-panel-architecture.md](../technical/properties-panel-architecture.md), covering the PanelComponent system, layout variants (full/compact/mobile), element-type visibility logic, collapsible popovers, and extension points for adding new property controls.
+- Added context menu architecture documentation in [context-menu-architecture.md](../technical/context-menu-architecture.md), covering the action-based menu system, item registration, predicate filtering, text-specific actions, and extension points. Notably, nested/sub-menus are not supported — the existing `DropdownMenu` subsystem would need to be integrated for that.
+- Added deep i18n/multilanguage architecture reference in [i18n-architecture.md](../technical/i18n-architecture.md), covering translation engine, language gating, Crowdin integration, RTL support, and data flow.
+- Added the core Memory Bank files under `docs/memory-bank/`.
+- Added the deep technical doc [hidden invariants](../technical/hidden-invariants.md) to capture behavior that is easy to miss during future edits.
+- Added full architecture reference in [architecture.md](../technical/architecture.md), grounded in source code and focused on data/state/rendering/package relationships.
+- Added deep package-focused architecture documentation in [packages-architecture.md](../technical/packages-architecture.md), with a source-grounded analysis of `packages/*`.
+- Expanded [hidden invariants](../technical/hidden-invariants.md) with package-level invariants for lifecycle events, store observation, fractional-index sync, and utils export normalization.
+- Added contributor onboarding documentation in [dev-setup.md](../technical/dev-setup.md), covering clone/bootstrap, local verification, and first-PR workflow.
+- Added a repo-level `AGENTS.md` instructing future sessions to read all Memory Bank markdown files first.
+- Audited `docs/memory-bank/` and removed obvious duplicate context so stable architecture stays in [systemPatterns.md](./systemPatterns.md) while deeper caveats live in [hidden invariants](../technical/hidden-invariants.md).
+- Validated the `## Commands` section in [techContext.md](./techContext.md) against current root/app package scripts and corrected the `yarn test:app` label.
+- Added foundational product documentation in `docs/product/`: baseline PRD, feature catalog, domain glossary, and UX patterns; linked it from [productContext.md](./productContext.md).
+- Audited duplication between Memory Bank and deep docs; reduced repeated product/technical detail in Memory Bank files and kept link-based navigation.
+
+## Next Steps
+- If this repo is actively customized beyond upstream Excalidraw, document those local deltas explicitly instead of relying on code discovery.
+- If contributors need non-default backend/service wiring, add an explicit required-vs-optional env matrix (or `.env.example`) and link it from [dev-setup.md](../technical/dev-setup.md).
+- Review new product docs with maintainers and mark advanced features as GA vs experimental where needed.
+
+## Open Questions
+- Should [dev-setup.md](../technical/dev-setup.md) be treated as the canonical contributor entrypoint, or should setup details be split into service-specific technical docs?
+- It is unclear whether this checkout is meant to track upstream Excalidraw closely or serve as a long-lived custom fork.
+
+## Active Decision Points
+- Whether to keep backend/service setup mostly implicit in code defaults, or formalize a strict required-vs-optional env contract for contributors.
+- Whether collaboration and persistence need dedicated ADR-style docs beyond the summary kept in [decisinLog.md](./decisinLog.md).
+
+## Validation Notes
+- No test suite was run in this documentation update; changes are docs-only.

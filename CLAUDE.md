@@ -32,3 +32,16 @@ yarn fix             # Auto-fix formatting and linting issues
 - Internal packages use path aliases (see `vitest.config.mts`)
 - Build system uses esbuild for packages, Vite for the app
 - TypeScript throughout with strict configuration
+
+## Memory Bank
+
+- Read every Markdown file in `docs/memory-bank/` at the start of every task:
+- `projectbrief.md`
+- `productContext.md`
+- `activeContext.md`
+- `systemPatterns.md`
+- `techContext.md`
+- `progress.md`
+- `decisinLog.md`
+- Treat Memory Bank as the canonical source for stable repo context, current focus, and durable decisions.
+- Use `docs/technical/*` and `docs/product/*` for deep detail instead of duplicating that material in `AGENTS.md`.

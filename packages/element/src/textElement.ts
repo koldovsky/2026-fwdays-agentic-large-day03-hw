@@ -23,7 +23,7 @@ import {
 import { LinearElementEditor } from "./linearElementEditor";
 
 import { measureText } from "./textMeasurements";
-import { wrapText } from "./textWrapping";
+import { getRenderableText } from "./textHyperlinks";
 import {
   isBoundToContainer,
   isArrowElement,
@@ -78,10 +78,16 @@ export const redrawTextBoundingBox = (
     maxWidth = container
       ? getBoundTextMaxWidth(container, textElement)
       : textElement.width;
-    boundTextUpdates.text = wrapText(
+    boundTextUpdates.text = getRenderableText(
       textElement.originalText,
       getFontString(textElement),
       maxWidth,
+    );
+  } else {
+    boundTextUpdates.text = getRenderableText(
+      textElement.originalText,
+      getFontString(textElement),
+      Infinity,
     );
   }
 
@@ -168,7 +174,7 @@ export const handleBindTextResize = (
       (transformHandleType !== "n" && transformHandleType !== "s")
     ) {
       if (text) {
-        text = wrapText(
+        text = getRenderableText(
           textElement.originalText,
           getFontString(textElement),
           maxWidth,

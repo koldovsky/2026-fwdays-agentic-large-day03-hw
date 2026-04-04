@@ -22,8 +22,8 @@ import {
 } from "./bounds";
 import { newElementWith } from "./mutateElement";
 import { getBoundTextMaxWidth } from "./textElement";
+import { getRenderableText } from "./textHyperlinks";
 import { normalizeText, measureText } from "./textMeasurements";
-import { wrapText } from "./textWrapping";
 
 import { isLineElement } from "./typeChecks";
 
@@ -252,7 +252,15 @@ export const newTextElement = (
   const fontFamily = opts.fontFamily || DEFAULT_FONT_FAMILY;
   const fontSize = opts.fontSize || DEFAULT_FONT_SIZE;
   const lineHeight = opts.lineHeight || getLineHeight(fontFamily);
-  const text = normalizeText(opts.text);
+  const originalText = normalizeText(opts.originalText ?? opts.text);
+  const text =
+    opts.originalText !== undefined && opts.originalText !== opts.text
+      ? normalizeText(opts.text)
+      : getRenderableText(
+          originalText,
+          getFontString({ fontFamily, fontSize }),
+          Infinity,
+        );
   const metrics = measureText(
     text,
     getFontString({ fontFamily, fontSize }),
@@ -277,7 +285,7 @@ export const newTextElement = (
     width: metrics.width,
     height: metrics.height,
     containerId: opts.containerId || null,
-    originalText: opts.originalText ?? text,
+    originalText,
     autoResize: opts.autoResize ?? true,
     lineHeight,
   };
@@ -421,19 +429,23 @@ export const refreshTextDimensions = (
   textElement: ExcalidrawTextElement,
   container: ExcalidrawTextContainer | null,
   elementsMap: ElementsMap,
-  text = textElement.text,
+  text = textElement.originalText,
 ) => {
   if (textElement.isDeleted) {
     return;
   }
+  const normalizedText = normalizeText(text);
+  const font = getFontString(textElement);
   if (container || !textElement.autoResize) {
-    text = wrapText(
-      text,
-      getFontString(textElement),
+    text = getRenderableText(
+      normalizedText,
+      font,
       container
         ? getBoundTextMaxWidth(container, textElement)
         : textElement.width,
     );
+  } else {
+    text = getRenderableText(normalizedText, font, Infinity);
   }
   const dimensions = getAdjustedDimensions(textElement, elementsMap, text);
   return { text, ...dimensions };

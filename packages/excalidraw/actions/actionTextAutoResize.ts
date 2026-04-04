@@ -1,6 +1,7 @@
 import { getFontString } from "@excalidraw/common";
 
 import { isExcalidrawElement, newElementWith } from "@excalidraw/element";
+import { getRenderableText } from "@excalidraw/element";
 import { measureText } from "@excalidraw/element";
 
 import { isTextElement } from "@excalidraw/element";
@@ -38,8 +39,13 @@ export const actionTextAutoResize = register({
       appState,
       elements: elements.map((element) => {
         if (element.id === targetTextElement?.id && isTextElement(element)) {
-          const metrics = measureText(
+          const renderableText = getRenderableText(
             element.originalText,
+            getFontString(element),
+            Infinity,
+          );
+          const metrics = measureText(
+            renderableText,
             getFontString(element),
             element.lineHeight,
           );
@@ -48,7 +54,7 @@ export const actionTextAutoResize = register({
             autoResize: true,
             width: metrics.width,
             height: metrics.height,
-            text: element.originalText,
+            text: renderableText,
           });
         }
         return element;

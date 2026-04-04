@@ -1105,6 +1105,26 @@ describe("textWysiwyg", () => {
       expect(text.x).toBe(30);
     });
 
+    it("should preserve markdown hyperlink source while rendering the visible label", async () => {
+      expect(h.elements.length).toBe(1);
+
+      Keyboard.keyDown(KEYS.ENTER);
+      let editor = await getTextEditor();
+
+      updateTextEditor(editor, "[Docs](https://example.com)");
+      Keyboard.exitTextEditor(editor);
+
+      const text = h.elements[1] as ExcalidrawTextElementWithContainer;
+      expect(text.text).toBe("Docs");
+      expect(text.originalText).toBe("[Docs](https://example.com)");
+
+      mouse.select(rectangle);
+      Keyboard.keyPress(KEYS.ENTER);
+
+      editor = await getTextEditor();
+      expect(editor.value).toBe("[Docs](https://example.com)");
+    });
+
     it("should unbind bound text when unbind action from context menu is triggered", async () => {
       expect(h.elements.length).toBe(1);
       expect(h.elements[0].id).toBe(rectangle.id);

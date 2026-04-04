@@ -47,7 +47,7 @@ import {
   getApproxMinLineWidth,
   getApproxMinLineHeight,
 } from "./textMeasurements";
-import { wrapText } from "./textWrapping";
+import { getRenderableText } from "./textHyperlinks";
 import {
   isArrowElement,
   isBindingElement,
@@ -361,7 +361,7 @@ export const resizeSingleTextElement = (
 
     const newWidth = Math.max(minWidth, nextWidth);
 
-    const text = wrapText(
+    const text = getRenderableText(
       element.originalText,
       getFontString(element),
       Math.abs(newWidth),

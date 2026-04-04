@@ -22,6 +22,7 @@ import {
 
 import {
   hasBoundTextElement,
+  getRenderableText,
   isArrowElement,
   isTextBindableContainer,
   isTextElement,
@@ -66,8 +67,13 @@ export const actionUnbindText = register({
     selectedElements.forEach((element) => {
       const boundTextElement = getBoundTextElement(element, elementsMap);
       if (boundTextElement) {
-        const { width, height } = measureText(
+        const renderableText = getRenderableText(
           boundTextElement.originalText,
+          getFontString(boundTextElement),
+          Infinity,
+        );
+        const { width, height } = measureText(
+          renderableText,
           getFontString(boundTextElement),
           boundTextElement.lineHeight,
         );
@@ -84,7 +90,7 @@ export const actionUnbindText = register({
           containerId: null,
           width,
           height,
-          text: boundTextElement.originalText,
+          text: renderableText,
           x,
           y,
         });
