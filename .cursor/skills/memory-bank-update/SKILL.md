@@ -1,10 +1,7 @@
 ---
 name: memory-bank-update
 description: >-
-  Reconciles docs/memory with the repo after substantive changes. Use when
-  finishing a feature or refactor, after merging or rebasing significant work,
-  when stack/tooling or architecture shifts, or when the user asks to refresh
-  or sync the Memory Bank. Skips trivial/format-only edits unless requested.
+  Reconciles docs/memory with the repo after substantive changes. Use when finishing a feature or refactor, after merging or rebasing significant work, when stack/tooling or architecture shifts, or when the user asks to refresh or sync the Memory Bank. Skips trivial/format-only edits unless requested.
 ---
 
 # Memory Bank update

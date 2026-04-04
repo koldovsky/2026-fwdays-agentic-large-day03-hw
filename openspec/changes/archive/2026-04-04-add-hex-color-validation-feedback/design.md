@@ -50,9 +50,9 @@ Add an `isInvalid` boolean state to `ColorInput`. This is a UI-only concern and 
 
 - Set to `true` on blur when `normalizeInputColor` returns `null` and the trimmed field text is non-empty
 - Set to `false` when `normalizeInputColor` returns a valid color (during typing) or when the `color` prop changes (external color selection)
-- Whitespace-only input (`"   "`) is treated as effectively empty — no error
+- Whitespace-only input (`" "`) is treated as effectively empty — no error
 
-**Blur handler ordering:** The existing `onBlur` resets the field text to the `color` prop (last applied color). To validate based on what the user actually typed, the blur handler must capture the current field text into a local variable *before* calling the state reset. Both `setIsInvalid(...)` and `setInnerValue(color)` are called in the same handler; React batches them into a single render cycle, so the component re-renders once with the error flag set and the display text reverted. The error border/message remain visible even though the text content has reverted.
+**Blur handler ordering:** The existing `onBlur` resets the field text to the `color` prop (last applied color). To validate based on what the user actually typed, the blur handler must capture the current field text into a local variable _before_ calling the state reset. Both `setIsInvalid(...)` and `setInnerValue(color)` are called in the same handler; React batches them into a single render cycle, so the component re-renders once with the error flag set and the display text reverted. The error border/message remain visible even though the text content has reverted.
 
 ### Decision 5: Accessibility
 

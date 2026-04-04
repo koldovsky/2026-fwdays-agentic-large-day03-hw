@@ -4,28 +4,24 @@ This file is a merged representation of the entire codebase, combined into a sin
 
 ## Purpose
 
-This is a reference codebase organized into multiple files for AI consumption.
-It is designed to be easily searchable using grep and other text-based tools.
+This is a reference codebase organized into multiple files for AI consumption. It is designed to be easily searchable using grep and other text-based tools.
 
 ## File Structure
 
 This skill contains the following reference files:
 
-| File | Contents |
-|------|----------|
-| `project-structure.md` | Directory tree with line counts per file |
-| `files.md` | All file contents (search with `## File: <path>`) |
-| `tech-stack.md` | Languages, frameworks, and dependencies |
-| `summary.md` | This file - purpose and format explanation |
+| File                   | Contents                                          |
+| ---------------------- | ------------------------------------------------- |
+| `project-structure.md` | Directory tree with line counts per file          |
+| `files.md`             | All file contents (search with `## File: <path>`) |
+| `tech-stack.md`        | Languages, frameworks, and dependencies           |
+| `summary.md`           | This file - purpose and format explanation        |
 
 ## Usage Guidelines
 
-- This file should be treated as read-only. Any changes should be made to the
-  original repository files, not this packed version.
-- When processing this file, use the file path to distinguish
-  between different files in the repository.
-- Be aware that this file may contain sensitive information. Handle it with
-  the same level of security as you would the original repository.
+- This file should be treated as read-only. Any changes should be made to the original repository files, not this packed version.
+- When processing this file, use the file path to distinguish between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with the same level of security as you would the original repository.
 
 ## Notes
 
@@ -39,21 +35,22 @@ This skill contains the following reference files:
 
 937 files | 360,278 lines
 
-| Language | Files | Lines |
-|----------|------:|------:|
-| TypeScript | 309 | 80,776 |
-| TypeScript (TSX) | 289 | 84,621 |
-| JSON | 90 | 41,873 |
-| SCSS | 82 | 9,549 |
-| Markdown | 35 | 5,570 |
-| MDX | 33 | 3,628 |
-| JavaScript | 25 | 3,115 |
-| No Extension | 23 | 416 |
-| YAML | 14 | 309 |
-| SVG | 13 | 85 |
-| Other | 24 | 130,336 |
+| Language         | Files |   Lines |
+| ---------------- | ----: | ------: |
+| TypeScript       |   309 |  80,776 |
+| TypeScript (TSX) |   289 |  84,621 |
+| JSON             |    90 |  41,873 |
+| SCSS             |    82 |   9,549 |
+| Markdown         |    35 |   5,570 |
+| MDX              |    33 |   3,628 |
+| JavaScript       |    25 |   3,115 |
+| No Extension     |    23 |     416 |
+| YAML             |    14 |     309 |
+| SVG              |    13 |      85 |
+| Other            |    24 | 130,336 |
 
 **Largest files:**
+
 - `repomix-compressed.txt` (116,775 lines)
 - `packages/excalidraw/components/App.tsx` (12,818 lines)
 - `packages/excalidraw/fonts/ComicShanns/ComicShanns-Regular.sfd` (12,221 lines)

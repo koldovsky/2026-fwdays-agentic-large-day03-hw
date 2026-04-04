@@ -10,6 +10,7 @@ description: Reference codebase for 2026 Fwdays Agentic Large Day02 Hw. Use this
 ## Overview
 
 Use this skill when you need to:
+
 - Understand project structure and file organization
 - Find where specific functionality is implemented
 - Read source code for any file
@@ -18,7 +19,7 @@ Use this skill when you need to:
 ## Files
 
 | File | Contents |
-|------|----------|
+| --- | --- |
 | `references/summary.md` | **Start here** - Purpose, format explanation, and statistics |
 | `references/project-structure.md` | Directory tree with line counts per file |
 | `references/files.md` | All file contents (search with `## File: <path>`) |
@@ -76,15 +77,18 @@ renderStaticSceneThrottled
 ## Common Use Cases
 
 **Understand a feature:**
+
 1. Search `project-structure.md` for related file names
 2. Read the main implementation file in `files.md`
 3. Search for imports/references to trace dependencies
 
 **Debug an error:**
+
 1. Grep the error message or class name in `files.md`
 2. Check line counts in `project-structure.md` to find large files
 
 **Find all usages:**
+
 1. Grep function or variable name in `files.md`
 
 ## Tips

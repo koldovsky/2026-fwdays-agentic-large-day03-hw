@@ -15,11 +15,11 @@
 
 History on this homework branch is a **short linear log**. Inspect with `git show <hash>`.
 
-| Commit      | Date       | What changed |
-| ----------- | ---------- | ------------ |
-| `0d5fed56`  | 2026-04-03 | day 3 initial — bundled all Day 2 work (Cursor rules/skills/commands, Memory Bank, AGENTS.md, docs, repomix reference) |
-| `f58538af`  | 2026-04-04 | add spec — SDD docs in `openspec/` |
-| `3a942d20`  | 2026-04-04 | fix: add validation feedback for invalid hex color input (#9527) |
+| Commit | Date | What changed |
+| --- | --- | --- |
+| `0d5fed56` | 2026-04-03 | day 3 initial — bundled all Day 2 work (Cursor rules/skills/commands, Memory Bank, AGENTS.md, docs, repomix reference) |
+| `f58538af` | 2026-04-04 | add spec — SDD docs in `openspec/` |
+| `3a942d20` | 2026-04-04 | fix: add validation feedback for invalid hex color input (#9527) |
 
 ## Repository state
 

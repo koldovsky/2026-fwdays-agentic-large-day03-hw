@@ -9,12 +9,12 @@
 ## Scorecard
 
 | # | Criterion (unique to `security.mdc`) | Rule OFF | Rule ON |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | Add type for `VITE_ANALYTICS_URL` in `vite-env.d.ts` | 0 | 1 |
 | 2 | Use `import.meta.env` instead of hardcoded URL | 1 | 1 |
 | 3 | Validate URL before fetch (`new URL()` + protocol check) | 0 | 1 |
 | 4 | Do not send room key in plaintext | 0 | 1 |
-| | **Total** | **1/4** | **4/4** |
+|  | **Total** | **1/4** | **4/4** |
 
 ## Result A — Rule OFF (score: 1/4)
 
@@ -33,10 +33,10 @@
 
 ## Conclusion
 
-| State | Score | Delta |
-|---|---|---|
-| Rule OFF | 1/4 | — |
-| Rule ON | 4/4 | +3 |
+| State    | Score | Delta |
+| -------- | ----- | ----- |
+| Rule OFF | 1/4   | —     |
+| Rule ON  | 4/4   | +3    |
 
 The rule is **effective and non-redundant** — 3 of 4 criteria are unique to `security.mdc` and not covered by any other rule file or `AGENTS.md`. The one item that passed without the rule (`import.meta.env`) is explained by pattern matching from existing code in the same file.
 

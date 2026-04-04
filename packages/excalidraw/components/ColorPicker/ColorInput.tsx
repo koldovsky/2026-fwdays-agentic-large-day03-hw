@@ -149,11 +149,7 @@ export const ColorInput = ({
         )}
       </div>
       {isInvalid && (
-        <div
-          id={errorId}
-          className="color-picker__input-error"
-          role="alert"
-        >
+        <div id={errorId} className="color-picker__input-error" role="alert">
           {t("colorPicker.invalidColor")}
         </div>
       )}

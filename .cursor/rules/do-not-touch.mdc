@@ -22,6 +22,6 @@ Canvas pipeline, scene format restore, action dispatch, root types — high blas
 
 ## How to verify
 1. `test -f packages/excalidraw/scene/Renderer.ts && test -f packages/excalidraw/data/restore.ts && test -f packages/excalidraw/actions/manager.tsx && test -f packages/excalidraw/types.ts`
-2. `git diff --name-only main...HEAD | rg 'packages/excalidraw/(scene/Renderer\.ts|data/restore\.ts|actions/manager\.tsx|types\.ts)$'` → empty unless approved.
+2. `BASE=master git diff --name-only $BASE...HEAD | rg 'packages/excalidraw/(scene/Renderer\.ts|data/restore\.ts|actions/manager\.tsx|types\.ts)$'` → empty unless approved. (Change `BASE` if your default branch is not `master`.)
 3. If approved: `yarn test` or `yarn test:typecheck && yarn test:code` (+ area tests).
 4. Agent: needs one of the four → stop; get explicit path + scope; no “small patch” assumption.

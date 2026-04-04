@@ -79,7 +79,7 @@ No changes to `packages/common` validation, canvas rendering, `excalidraw-app/`,
 ## Risks
 
 | Risk | Mitigation |
-|------|------------|
+| --- | --- |
 | `onBlur` currently resets field text to the last applied color; validation must read the user's text before that reset, and both state updates happen in one React render cycle | Capture the field text in a local variable at the top of the blur handler; derive `isInvalid` from that variable; then call the existing reset. React batches the two `setState` calls into a single render. |
 | New DOM element for the error message may shift layout or break existing snapshot tests | The message element is placed outside the grid container (see design.md for JSX structure); keep it compact with `position: absolute` or minimal height; run `yarn test:update` for legitimate snapshot changes |
 | `normalizeInputColor` accepts non-hex forms (named colors like `blue`, `rgb()`, `hsl()`, `transparent`); the field is labelled "Hex code" but validation is broader | Spec ties the invalid state to `normalizeInputColor(...) === null`, matching the existing apply-on-type semantics. This is intentional — the same parser decides whether a typed value takes effect. |

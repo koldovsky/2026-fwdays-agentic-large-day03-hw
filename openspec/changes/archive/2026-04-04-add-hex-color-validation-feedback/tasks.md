@@ -28,19 +28,19 @@
 
 Spec scenario → task mapping:
 
-| Spec scenario | Task |
-|---|---|
-| Valid hex on blur | 5.2 |
-| Concrete invalid values (#9527) | 5.3 |
-| Empty input — no error | 5.4 |
-| Whitespace-only — no error | 5.5 |
-| Error visible after blur text revert | 5.6 |
-| Error clears on valid input | 5.7 |
-| Error clears on external selection | 5.8 |
-| Replacing invalid with invalid | 5.9 |
-| Rapid blur without typing | 5.10 |
+| Spec scenario                         | Task |
+| ------------------------------------- | ---- |
+| Valid hex on blur                     | 5.2  |
+| Concrete invalid values (#9527)       | 5.3  |
+| Empty input — no error                | 5.4  |
+| Whitespace-only — no error            | 5.5  |
+| Error visible after blur text revert  | 5.6  |
+| Error clears on valid input           | 5.7  |
+| Error clears on external selection    | 5.8  |
+| Replacing invalid with invalid        | 5.9  |
+| Rapid blur without typing             | 5.10 |
 | `aria-invalid` and `aria-describedby` | 5.11 |
-| `role="alert"` on error message | 5.11 |
+| `role="alert"` on error message       | 5.11 |
 
 - [x] 5.1 Create `packages/excalidraw/tests/ColorInput.test.tsx`; wrap renders in the same provider setup used by sibling component tests (Jotai store, i18n, `EditorInterfaceContext`) so `useAtom`, `useEditorInterface`, and `t()` work
 - [x] 5.2 Test: no error indicators when a valid hex value is present on blur
@@ -59,6 +59,6 @@ Spec scenario → task mapping:
 
 - [x] 6.1 Run `yarn test:typecheck` — no type errors
 - [x] 6.2 Run `yarn test:update` — all tests pass; update snapshots if legitimately changed
-- [ ] 6.3 Run `yarn build` (or `yarn build:packages`) — production build succeeds
-- [ ] 6.4 Run `yarn fix` — formatting and linting pass
-- [ ] 6.5 Manual QA: open ColorPicker, blur after each value from the issue (`123456789`, `1`, `12`, `12345`, `1234567`, `zzzzzz`, `blue`); confirm `normalizeInputColor`-null values show error; confirm `blue` does not show error; confirm `ff0000` / `f00` are valid; confirm RTL layout looks correct
+- [x] 6.3 Run `yarn build` (or `yarn build:packages`) — production build succeeds
+- [x] 6.4 Run `yarn fix` — formatting and linting pass
+- [x] 6.5 Manual QA: open ColorPicker, blur after each value from the issue (`123456789`, `1`, `12`, `12345`, `1234567`, `zzzzzz`, `blue`); confirm `normalizeInputColor`-null values show error; confirm `blue` does not show error; confirm `ff0000` / `f00` are valid; confirm RTL layout looks correct

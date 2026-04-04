@@ -1,6 +1,7 @@
 import React from "react";
 
 import { Excalidraw } from "../index";
+
 import { Pointer, UI } from "./helpers/ui";
 import { act, fireEvent, render, waitFor } from "./test-utils";
 

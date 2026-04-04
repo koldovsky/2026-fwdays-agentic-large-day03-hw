@@ -17,7 +17,7 @@ Commit `0d5fed56` ("day 3 initial") is the starting point. It bundled all prior 
 ### SDD documents (`openspec/`) — archived
 
 | File | Description |
-| ---- | ----------- |
+| --- | --- |
 | `openspec/changes/archive/2026-04-04-add-hex-color-validation-feedback/proposal.md` | Change proposal: problem, scope, blast radius, risks |
 | `openspec/changes/archive/2026-04-04-add-hex-color-validation-feedback/design.md` | Design: JSX structure, state flow, CSS approach |
 | `openspec/changes/archive/2026-04-04-add-hex-color-validation-feedback/tasks.md` | Implementation task checklist (all items checked) |
@@ -26,7 +26,7 @@ Commit `0d5fed56` ("day 3 initial") is the starting point. It bundled all prior 
 ### Code changes (`packages/excalidraw`)
 
 | File | Description |
-| ---- | ----------- |
+| --- | --- |
 | `components/ColorPicker/ColorInput.tsx` | `isInvalid` state, blur validation, inline error message with `role="alert"`, `aria-invalid` + `aria-describedby` |
 | `components/ColorPicker/ColorPicker.scss` | `.is-invalid` border style, `.color-picker__input-error` text style (LTR + RTL) |
 | `locales/en.json` + 56 locale files | New `colorPicker.invalidColor` key |
@@ -40,8 +40,8 @@ Commit `0d5fed56` ("day 3 initial") is the starting point. It bundled all prior 
 
 ## Commit log (this clone, oldest first)
 
-| Commit      | Date       | Description |
-| ----------- | ---------- | ----------- |
-| `0d5fed56`  | 2026-04-03 | day 3 initial — bundled all Day 2 work |
-| `f58538af`  | 2026-04-04 | add spec — SDD docs in `openspec/` |
-| `3a942d20`  | 2026-04-04 | fix: add validation feedback for invalid hex color input (#9527) |
+| Commit | Date | Description |
+| --- | --- | --- |
+| `0d5fed56` | 2026-04-03 | day 3 initial — bundled all Day 2 work |
+| `f58538af` | 2026-04-04 | add spec — SDD docs in `openspec/` |
+| `3a942d20` | 2026-04-04 | fix: add validation feedback for invalid hex color input (#9527) |
