@@ -7,6 +7,7 @@ See [progress.md](./progress.md) for broader status and [hidden invariants](../t
 - Keep Memory Bank compact and non-duplicative, with deep detail living in `docs/technical/*` and `docs/product/*`.
 
 ## Recent Changes
+- Added context menu architecture documentation in [context-menu-architecture.md](../technical/context-menu-architecture.md), covering the action-based menu system, item registration, predicate filtering, text-specific actions, and extension points. Notably, nested/sub-menus are not supported — the existing `DropdownMenu` subsystem would need to be integrated for that.
 - Added deep i18n/multilanguage architecture reference in [i18n-architecture.md](../technical/i18n-architecture.md), covering translation engine, language gating, Crowdin integration, RTL support, and data flow.
 - Added the core Memory Bank files under `docs/memory-bank/`.
 - Added the deep technical doc [hidden invariants](../technical/hidden-invariants.md) to capture behavior that is easy to miss during future edits.

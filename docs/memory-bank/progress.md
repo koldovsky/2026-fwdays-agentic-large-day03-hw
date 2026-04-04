@@ -14,6 +14,7 @@ See [activeContext.md](./activeContext.md) for the current session state.
 - Reduced Memory Bank duplication versus deep technical/product docs by compacting context files and keeping link-first references.
 - Added deep i18n architecture documentation in [i18n-architecture.md](../technical/i18n-architecture.md), covering translation engine, Crowdin workflow, language gating, RTL support, and runtime data flow.
 - Added i18n-specific hidden invariants (16, 17) for static language filtering and silent locale fallback.
+- Added context menu architecture documentation in [context-menu-architecture.md](../technical/context-menu-architecture.md), covering rendering, item registration via Action system, predicate-based filtering, text-specific menu items, and extension points. Documented that nested menus are not supported natively.
 
 ## In Progress
 - Validate and refine service-specific setup details in the new onboarding guide as backend assumptions evolve.
