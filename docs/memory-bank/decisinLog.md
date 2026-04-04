@@ -42,6 +42,14 @@ See [systemPatterns.md](./systemPatterns.md) for architecture and [hidden invari
 - Alternatives Considered: writing both local and collab state simultaneously; rejected by current implementation because it risks conflicts and stale restores.
 - Consequences: start/stop collaboration flows must keep browser-state versions, file storage, and scene/image statuses in sync.
 
+## D-008 Markdown Hyperlinks in Text Elements
+- Status: accepted
+- Context: users need to attach references (docs, tickets, URLs) directly to text on the canvas. GitHub #11024.
+- Decision: parse `[label](url)` syntax from text element content. Render links with distinct color + underline on canvas. Open allowed URLs in new tab on click outside edit mode. SVG export wraps links in `<a>` tags. URL safety via strict scheme allowlist (http/https only; `javascript:`, `data:` blocked). Parser in `packages/element/src/textHyperlinks.ts`, validation in `packages/common/src/url.ts`. No schema changes — links remain serialized as plain text strings.
+- Why: additive behavior with no breaking changes; caret placement takes priority over link follow in edit mode; strict allowlist reduces attack surface.
+- Alternatives Considered: full CommonMark parser (rejected — too heavy for v1 scope); HTML overlay for hit-testing (rejected — sync cost with zoom/pan/RTL).
+- Consequences: future rich-text features should extend the segment-based parsing/rendering model rather than introducing a parallel system.
+
 ## D-007 Enhanced Font Size Selector Follows ColorPicker Pattern
 - Status: accepted
 - Context: the 4-preset font size control (S/M/L/XL) was insufficient for users needing large-format text. GitHub #10506.

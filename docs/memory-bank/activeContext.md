@@ -12,6 +12,11 @@ See [progress.md](./progress.md) for broader status and [hidden invariants](../t
 - **Archive:** [openspec/archive/enhanced-font-size-selector/](../../openspec/archive/enhanced-font-size-selector/)
 - **Pattern:** Follows ColorPicker TopPicks + PropertiesPopover pattern. New `FontSizePicker/` component directory.
 
+## Recently Completed: markdown-hyperlinks-in-elements
+- **Summary:** Markdown `[label](url)` hyperlinks in text elements — parser, URL safety (http/https allowlist), canvas rendering (color + underline), SVG export (`<a>` tags), click-to-open outside edit mode. [GitHub #11024](https://github.com/excalidraw/excalidraw/issues/11024).
+- **Status:** Archived. Spec and implementation complete.
+- **Archive:** [openspec/archive/markdown-hyperlinks-in-elements/](../../openspec/archive/markdown-hyperlinks-in-elements/)
+
 ## Recent Changes
 - Added properties panel architecture documentation in [properties-panel-architecture.md](../technical/properties-panel-architecture.md), covering the PanelComponent system, layout variants (full/compact/mobile), element-type visibility logic, collapsible popovers, and extension points for adding new property controls.
 - Added context menu architecture documentation in [context-menu-architecture.md](../technical/context-menu-architecture.md), covering the action-based menu system, item registration, predicate filtering, text-specific actions, and extension points. Notably, nested/sub-menus are not supported — the existing `DropdownMenu` subsystem would need to be integrated for that.
