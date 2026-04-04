@@ -422,6 +422,11 @@ import { textWysiwyg } from "../wysiwyg/textWysiwyg";
 import { isOverScrollBars } from "../scene/scrollbars";
 
 import { isMaybeMermaidDefinition } from "../mermaid";
+import {
+  isMarkdownTable,
+  parseMarkdownTable,
+  markdownTableToSkeletons,
+} from "../markdown-table";
 
 import { LassoTrail } from "../lasso";
 
@@ -3699,6 +3704,23 @@ class App extends React.Component<AppProps, AppState> {
         });
         return;
       }
+    }
+
+    // ------------------- Markdown table -------------------
+    if (!isPlainPaste && data.text && isMarkdownTable(data.text)) {
+      const parsed = parseMarkdownTable(data.text);
+      const skeletons = markdownTableToSkeletons(parsed);
+      const elements = convertToExcalidrawElements(skeletons, {
+        regenerateIds: true,
+      });
+
+      this.addElementsFromPasteOrLibrary({
+        elements,
+        files: null,
+        position:
+          this.editorInterface.formFactor === "desktop" ? "cursor" : "center",
+      });
+      return;
     }
 
     // ------------------- Images or SVG code -------------------
