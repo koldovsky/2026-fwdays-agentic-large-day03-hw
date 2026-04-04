@@ -18,4 +18,4 @@
 
 - [x] 4.1 Run `yarn test:typecheck` to verify TypeScript compiles
 - [x] 4.2 Run `yarn test:update` to ensure all tests pass
-- - [x] 4.2 Run `yarn build` to build the app
+- [x] 4.2 Run `yarn build` to build the app

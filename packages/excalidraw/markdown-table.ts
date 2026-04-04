@@ -41,8 +41,19 @@ export const parseMarkdownTable = (
     .filter((l) => l.trim().length > 0);
 
   const headers = parseCells(lines[0]);
+  const numCols = headers.length;
   // lines[1] is the separator — skip it
-  const rows = lines.slice(2).map(parseCells);
+  const rows = lines.slice(2).map((line) => {
+    const cells = parseCells(line);
+    // Normalize: pad short rows, truncate long rows to match header count
+    if (cells.length < numCols) {
+      return [...cells, ...Array(numCols - cells.length).fill("")];
+    }
+    if (cells.length > numCols) {
+      return cells.slice(0, numCols);
+    }
+    return cells;
+  });
 
   return { headers, rows };
 };
