@@ -15,6 +15,10 @@ import { normalizeLink, toValidURL } from "@excalidraw/common";
 import { hashString } from "@excalidraw/element";
 import { getUncroppedWidthAndHeight } from "@excalidraw/element";
 import {
+  getParsedTextSegments,
+  INLINE_LINK_COLOR,
+} from "@excalidraw/element";
+import {
   createPlaceholderEmbeddableLabel,
   getEmbedLink,
 } from "@excalidraw/element";
@@ -668,24 +672,78 @@ const renderElementToSvg = (
             : element.textAlign === "right" || direction === "rtl"
             ? "end"
             : "start";
-        for (let i = 0; i < lines.length; i++) {
-          const text = svgRoot.ownerDocument.createElementNS(SVG_NS, "text");
-          text.textContent = lines[i];
-          text.setAttribute("x", `${horizontalOffset}`);
-          text.setAttribute("y", `${i * lineHeightPx + verticalOffset}`);
-          text.setAttribute("font-family", getFontFamilyString(element));
-          text.setAttribute("font-size", `${element.fontSize}px`);
-          text.setAttribute(
-            "fill",
-            renderConfig.theme === THEME.DARK
-              ? applyDarkModeFilter(element.strokeColor)
-              : element.strokeColor,
-          );
-          text.setAttribute("text-anchor", textAnchor);
-          text.setAttribute("style", "white-space: pre;");
-          text.setAttribute("direction", direction);
-          text.setAttribute("dominant-baseline", "alphabetic");
-          node.appendChild(text);
+        const defaultFill =
+          renderConfig.theme === THEME.DARK
+            ? applyDarkModeFilter(element.strokeColor)
+            : element.strokeColor;
+        const linkFill =
+          renderConfig.theme === THEME.DARK
+            ? applyDarkModeFilter(INLINE_LINK_COLOR)
+            : INLINE_LINK_COLOR;
+
+        const parsedLines = getParsedTextSegments(element);
+
+        for (let i = 0; i < parsedLines.length; i++) {
+          const segments = parsedLines[i];
+          const hasLinks = segments.some((s) => s.type === "link");
+
+          if (!hasLinks) {
+            const text = svgRoot.ownerDocument.createElementNS(SVG_NS, "text");
+            text.textContent = segments
+              .map((s) => (s.type === "link" ? s.label : s.content))
+              .join("");
+            text.setAttribute("x", `${horizontalOffset}`);
+            text.setAttribute("y", `${i * lineHeightPx + verticalOffset}`);
+            text.setAttribute("font-family", getFontFamilyString(element));
+            text.setAttribute("font-size", `${element.fontSize}px`);
+            text.setAttribute("fill", defaultFill);
+            text.setAttribute("text-anchor", textAnchor);
+            text.setAttribute("style", "white-space: pre;");
+            text.setAttribute("direction", direction);
+            text.setAttribute("dominant-baseline", "alphabetic");
+            node.appendChild(text);
+          } else {
+            const text = svgRoot.ownerDocument.createElementNS(SVG_NS, "text");
+            text.setAttribute("x", `${horizontalOffset}`);
+            text.setAttribute("y", `${i * lineHeightPx + verticalOffset}`);
+            text.setAttribute("font-family", getFontFamilyString(element));
+            text.setAttribute("font-size", `${element.fontSize}px`);
+            text.setAttribute("fill", defaultFill);
+            text.setAttribute("text-anchor", textAnchor);
+            text.setAttribute("style", "white-space: pre;");
+            text.setAttribute("direction", direction);
+            text.setAttribute("dominant-baseline", "alphabetic");
+
+            for (const segment of segments) {
+              if (segment.type === "link") {
+                const anchor = svgRoot.ownerDocument.createElementNS(
+                  SVG_NS,
+                  "a",
+                );
+                anchor.setAttribute("href", segment.url);
+                anchor.setAttribute("target", "_blank");
+                anchor.setAttribute("rel", "noreferrer");
+                const tspan = svgRoot.ownerDocument.createElementNS(
+                  SVG_NS,
+                  "tspan",
+                );
+                tspan.textContent = segment.label;
+                tspan.setAttribute("fill", linkFill);
+                tspan.setAttribute("text-decoration", "underline");
+                anchor.appendChild(tspan);
+                text.appendChild(anchor);
+              } else {
+                const tspan = svgRoot.ownerDocument.createElementNS(
+                  SVG_NS,
+                  "tspan",
+                );
+                tspan.textContent = segment.content;
+                text.appendChild(tspan);
+              }
+            }
+
+            node.appendChild(text);
+          }
         }
 
         const g = maybeWrapNodesInFrameClipPath(

@@ -56,6 +56,9 @@ const RE_REDDIT =
 const RE_REDDIT_EMBED =
   /^<blockquote[\s\S]*?\shref=["'](https?:\/\/(?:www\.)?reddit\.com\/[^"']*)/i;
 
+const RE_NOTION =
+  /^https?:\/\/([a-zA-Z0-9-]+\.notion\.site)\/.*?([a-f0-9]{32})(?:[?#].*)?$/;
+
 const parseYouTubeLikeTimestamp = (url: string): number => {
   let timeParam: string | null | undefined;
 
@@ -130,6 +133,15 @@ const parseGoogleDriveVideoLink = (
   }
 };
 
+const toNotionEmbedURL = (url: string): string | null => {
+  const match = url.match(RE_NOTION);
+  if (!match) {
+    return null;
+  }
+  const [, hostname, pageId] = match;
+  return `https://${hostname}/ebd/${pageId}`;
+};
+
 const ALLOWED_DOMAINS = new Set([
   "youtube.com",
   "youtu.be",
@@ -147,6 +159,7 @@ const ALLOWED_DOMAINS = new Set([
   "giphy.com",
   "reddit.com",
   "forms.microsoft.com",
+  "*.notion.site",
 ]);
 
 const ALLOW_SAME_ORIGIN = new Set([
@@ -162,6 +175,7 @@ const ALLOW_SAME_ORIGIN = new Set([
   "stackblitz.com",
   "reddit.com",
   "forms.microsoft.com",
+  "*.notion.site",
 ]);
 
 export const createSrcDoc = (body: string) => {
@@ -383,6 +397,25 @@ export const getEmbedLink = (
     };
     embeddedLinkCache.set(link, ret);
     return ret;
+  }
+
+  const notionEmbedUrl = toNotionEmbedURL(link);
+  if (notionEmbedUrl) {
+    type = "generic";
+    link = notionEmbedUrl;
+    aspectRatio = { w: 550, h: 720 };
+    embeddedLinkCache.set(originalLink, {
+      link,
+      intrinsicSize: aspectRatio,
+      type,
+      sandbox: { allowSameOrigin },
+    });
+    return {
+      link,
+      intrinsicSize: aspectRatio,
+      type,
+      sandbox: { allowSameOrigin },
+    };
   }
 
   embeddedLinkCache.set(link, {

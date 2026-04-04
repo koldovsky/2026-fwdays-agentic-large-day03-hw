@@ -449,7 +449,10 @@ import { searchItemInFocusAtom } from "./SearchMenu";
 import { isSidebarDockedAtom } from "./Sidebar/Sidebar";
 import { StaticCanvas, InteractiveCanvas } from "./canvases";
 import NewElementCanvas from "./canvases/NewElementCanvas";
-import { isPointHittingLink } from "./hyperlink/helpers";
+import {
+  isPointHittingLink,
+  getInlineLinkUrlAtPoint,
+} from "./hyperlink/helpers";
 import { MagicIcon, copyIcon, fullscreenIcon } from "./icons";
 import { AppStateObserver, type OnStateChange } from "./AppStateObserver";
 
@@ -6585,8 +6588,8 @@ class App extends React.Component<AppProps, AppState> {
         hitElementIndex = index;
       }
       if (
-        element.link &&
         index >= hitElementIndex &&
+        (element.link || isTextElement(element)) &&
         isPointHittingLink(
           element,
           this.scene.getNonDeletedElementsMap(),
@@ -6641,9 +6644,17 @@ class App extends React.Component<AppProps, AppState> {
     );
     if (lastPointerDownHittingLinkIcon && lastPointerUpHittingLinkIcon) {
       hideHyperlinkToolip();
-      let url = this.hitLinkElement.link;
+
+      // Check for inline link first (text elements with [label](url))
+      const inlineUrl = getInlineLinkUrlAtPoint(
+        this.hitLinkElement,
+        lastPointerUpCoords.x,
+        lastPointerUpCoords.y,
+      );
+
+      let url = inlineUrl || this.hitLinkElement.link;
       if (url) {
-        url = normalizeLink(url);
+        url = inlineUrl ? url : normalizeLink(url);
         let customEvent;
         if (this.props.onLinkOpen) {
           customEvent = wrapEvent(EVENT.EXCALIDRAW_LINK, event.nativeEvent);
