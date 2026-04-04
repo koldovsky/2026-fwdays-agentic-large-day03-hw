@@ -70,6 +70,9 @@ export const withInternalFallback = <P,>(
       return null;
     }
 
+    // Cast needed due to TS generic inference limitations with `rest` spread:
+    // after stripping `tunnels`, `rest` is not inferred as `P & { __fallback? }`
+    // for `Component: React.FC<P>`, so we assert the shape we actually pass.
     return <Component {...(rest as P & { __fallback?: boolean })} />;
   };
 
