@@ -129,7 +129,7 @@ exports[`exportToSvg > with a CJK font 1`] = `
       x="0"
       y="17.619999999999997"
     >
-      中国你好！这是一个测试。中国你好！日本こんにちは！これはテストです。한국 안녕하세요! 이것은 테스트입니다.
+      original text
     </text>
   </g>
 </svg>

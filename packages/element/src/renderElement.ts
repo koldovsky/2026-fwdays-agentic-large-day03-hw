@@ -46,6 +46,12 @@ import { getElementAbsoluteCoords, getElementBounds } from "./bounds";
 import { getUncroppedImageElement } from "./cropElement";
 import { LinearElementEditor } from "./linearElementEditor";
 import {
+  getParsedTextSegments,
+  setLinkHitBoxes,
+  INLINE_LINK_COLOR,
+} from "./markdownLinks";
+import type { LinkHitBox } from "./markdownLinks";
+import {
   getBoundTextElement,
   getContainerCoords,
   getContainerElement,
@@ -555,21 +561,20 @@ const drawElementOnCanvas = (
         context.canvas.setAttribute("dir", rtl ? "rtl" : "ltr");
         context.save();
         context.font = getFontString(element);
-        context.fillStyle =
+
+        const defaultFillStyle =
           renderConfig.theme === THEME.DARK
             ? applyDarkModeFilter(element.strokeColor)
             : element.strokeColor;
+        const linkFillStyle =
+          renderConfig.theme === THEME.DARK
+            ? applyDarkModeFilter(INLINE_LINK_COLOR)
+            : INLINE_LINK_COLOR;
+
+        context.fillStyle = defaultFillStyle;
         context.textAlign = element.textAlign as CanvasTextAlign;
 
-        // Canvas does not support multiline text by default
-        const lines = element.text.replace(/\r\n?/g, "\n").split("\n");
-
-        const horizontalOffset =
-          element.textAlign === "center"
-            ? element.width / 2
-            : element.textAlign === "right"
-            ? element.width
-            : 0;
+        const parsedLines = getParsedTextSegments(element);
 
         const lineHeightPx = getLineHeightInPx(
           element.fontSize,
@@ -582,13 +587,69 @@ const drawElementOnCanvas = (
           lineHeightPx,
         );
 
-        for (let index = 0; index < lines.length; index++) {
-          context.fillText(
-            lines[index],
-            horizontalOffset,
-            index * lineHeightPx + verticalOffset,
+        const hitBoxes: LinkHitBox[] = [];
+
+        for (let index = 0; index < parsedLines.length; index++) {
+          const segments = parsedLines[index];
+          const lineY = index * lineHeightPx + verticalOffset;
+
+          const displayTexts = segments.map((s) =>
+            s.type === "link" ? s.label : s.content,
           );
+          const totalDisplayWidth = context.measureText(
+            displayTexts.join(""),
+          ).width;
+
+          let xOffset: number;
+          if (element.textAlign === "center") {
+            xOffset = (element.width - totalDisplayWidth) / 2;
+          } else if (element.textAlign === "right") {
+            xOffset = element.width - totalDisplayWidth;
+          } else {
+            xOffset = 0;
+          }
+
+          // Temporarily override textAlign for per-segment rendering
+          context.textAlign = "left";
+
+          for (const segment of segments) {
+            if (segment.type === "link") {
+              const segWidth = context.measureText(segment.label).width;
+
+              context.fillStyle = linkFillStyle;
+              context.fillText(segment.label, xOffset, lineY);
+
+              // Underline
+              const underlineY = lineY + element.fontSize * 0.15;
+              context.beginPath();
+              context.strokeStyle = linkFillStyle;
+              context.lineWidth = Math.max(1, element.fontSize / 16);
+              context.moveTo(xOffset, underlineY);
+              context.lineTo(xOffset + segWidth, underlineY);
+              context.stroke();
+
+              hitBoxes.push({
+                x: xOffset,
+                y: lineY - element.fontSize,
+                width: segWidth,
+                height: lineHeightPx,
+                url: segment.url,
+              });
+
+              context.fillStyle = defaultFillStyle;
+              xOffset += segWidth;
+            } else {
+              const segWidth = context.measureText(segment.content).width;
+              context.fillText(segment.content, xOffset, lineY);
+              xOffset += segWidth;
+            }
+          }
+
+          // Restore textAlign for next line measurement
+          context.textAlign = element.textAlign as CanvasTextAlign;
         }
+
+        setLinkHitBoxes(element.id, hitBoxes);
         context.restore();
         if (shouldTemporarilyAttach) {
           context.canvas.remove();

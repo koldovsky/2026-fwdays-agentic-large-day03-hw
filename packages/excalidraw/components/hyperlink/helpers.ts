@@ -3,6 +3,11 @@ import { pointFrom, pointRotateRads } from "@excalidraw/math";
 import { MIME_TYPES } from "@excalidraw/common";
 import { getElementAbsoluteCoords } from "@excalidraw/element";
 import { hitElementBoundingBox } from "@excalidraw/element";
+import {
+  getInlineLinkAtPoint,
+  hasInlineLinks,
+} from "@excalidraw/element";
+import { isTextElement } from "@excalidraw/element";
 
 import type { GlobalPoint, Radians } from "@excalidraw/math";
 
@@ -86,7 +91,19 @@ export const isPointHittingLink = (
   [x, y]: GlobalPoint,
   isMobile: boolean,
 ) => {
-  if (!element.link || appState.selectedElementIds[element.id]) {
+  if (appState.selectedElementIds[element.id]) {
+    return false;
+  }
+
+  // Check inline links for text elements
+  if (isTextElement(element) && hasInlineLinks(element.id)) {
+    const localCoords = sceneToElementLocal(element, x, y);
+    if (getInlineLinkAtPoint(element.id, localCoords[0], localCoords[1])) {
+      return true;
+    }
+  }
+
+  if (!element.link) {
     return false;
   }
   if (
@@ -102,4 +119,31 @@ export const isPointHittingLink = (
     appState,
     pointFrom(x, y),
   );
+};
+
+export const getInlineLinkUrlAtPoint = (
+  element: NonDeletedExcalidrawElement,
+  sceneX: number,
+  sceneY: number,
+): string | null => {
+  if (!isTextElement(element) || !hasInlineLinks(element.id)) {
+    return null;
+  }
+  const [localX, localY] = sceneToElementLocal(element, sceneX, sceneY);
+  return getInlineLinkAtPoint(element.id, localX, localY);
+};
+
+const sceneToElementLocal = (
+  element: NonDeletedExcalidrawElement,
+  sceneX: number,
+  sceneY: number,
+): [number, number] => {
+  const cx = element.x + element.width / 2;
+  const cy = element.y + element.height / 2;
+  const [unrotatedX, unrotatedY] = pointRotateRads(
+    pointFrom(sceneX, sceneY),
+    pointFrom(cx, cy),
+    -element.angle as Radians,
+  );
+  return [unrotatedX - element.x, unrotatedY - element.y];
 };
