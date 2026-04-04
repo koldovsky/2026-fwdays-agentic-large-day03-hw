@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "තනි අංගයක් ලෙස ඇලවීම",
     "unableToEmbed": "බිහිදැමීමට නොහැක",
     "unrecognizedLinkFormat": "නොහඳුනන සබැඳි ආකෘතිය",
-    "elementLinkCopied": ""
+    "elementLinkCopied": "",
+    "markdownLinkDetected": "Markdown link detected. Label is shown; open the link from the element."
   },
   "colors": {
     "transparent": "පාරදෘශ්‍ය",

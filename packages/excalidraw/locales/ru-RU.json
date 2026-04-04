@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "Используйте {{shortcut}}, чтобы вставить один объект,\nили вставьте в существующий текстовый редактор",
     "unableToEmbed": "Встраивание этого URL в данный момент не разрешено. Сделайте Issue на GitHub для добавления URL в белый список",
     "unrecognizedLinkFormat": "Ссылка, которую вы ввели не соответствует ожидаемому формату. Пожалуйста, попробуйте вставить строку «встраивание», предоставленную исходным сайтом",
-    "elementLinkCopied": "Ссылка скопирована в буфер обмена"
+    "elementLinkCopied": "Ссылка скопирована в буфер обмена",
+    "markdownLinkDetected": "Markdown link detected. Label is shown; open the link from the element."
   },
   "colors": {
     "transparent": "Прозрачный",

@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "Usa {{shortcut}} para pegar como un único elemento\nou pega nun editor de texto existente",
     "unableToEmbed": "",
     "unrecognizedLinkFormat": "",
-    "elementLinkCopied": ""
+    "elementLinkCopied": "",
+    "markdownLinkDetected": "Markdown link detected. Label is shown; open the link from the element."
   },
   "colors": {
     "transparent": "Transparente",

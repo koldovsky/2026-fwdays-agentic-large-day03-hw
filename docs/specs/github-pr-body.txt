@@ -1,0 +1,30 @@
+TITLE (suggested):
+Day 3: <Your name> — SDD Assignment (LM-3990 / markdown links in text)
+
+---
+
+DESCRIPTION (copy below the line into GitHub):
+
+## SDD approach
+
+**Simple Markdown** — specification in `docs/specs/markdown-text-hyperlinks.md`.
+
+This issue maps cleanly to a short Goal / Context / AC document; OpenSpec or BMAD would add ceremony without extra value for a single, localized feature touching one submit path and a small parser.
+
+**Issue reference:** https://github.com/excalidraw/excalidraw/issues/11024
+
+---
+
+## Self-review checklist
+
+- [ ] SDD approach chosen and justified (Simple Markdown in `docs/specs/`)
+- [ ] Implementation matches specification (WYSIWYG `onSubmit`, `parseMarkdownLink`, `mutateElement` link)
+- [ ] Project conventions followed (TypeScript, `normalizeLink`, existing hyperlink field)
+- [ ] Edge cases handled (full-string only, empty URL, malicious schemes, partial text)
+- [ ] Blast radius acceptable (focused files under `packages/excalidraw/`)
+- [ ] Existing tests pass (`yarn test:typecheck`, targeted vitest)
+- [ ] New tests added (`packages/excalidraw/tests/markdownLink.test.ts`)
+- [ ] No security concerns (URLs sanitized; `javascript:` / `data:` rejected)
+- [ ] i18n handled (`toast.markdownLinkDetected` in locales)
+- [ ] No hardcoded user-facing strings outside locale JSON
+- [ ] Code understandable by another developer (small helper + clear `onSubmit` branch)

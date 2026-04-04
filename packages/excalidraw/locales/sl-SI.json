@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "Uporabite {{shortcut}}, da prilepite kot en element,\n ali prilepite v obstoječ urejevalnik besedil",
     "unableToEmbed": "Vdelava tega URL-ja trenutno ni dovoljena. Ustvarite vprašanje na GitHub-u in prosite za vmestitev URL-ja na seznam dovoljenih",
     "unrecognizedLinkFormat": "Povezava, ki ste jo vdelali, se ne ujema s pričakovano obliko. Poskusite prilepiti niz za vdelavo, ki ste ga prejeli na izvorni strani",
-    "elementLinkCopied": "Povezava kopirana na odložišče"
+    "elementLinkCopied": "Povezava kopirana na odložišče",
+    "markdownLinkDetected": "Markdown link detected. Label is shown; open the link from the element."
   },
   "colors": {
     "transparent": "Prosojno",

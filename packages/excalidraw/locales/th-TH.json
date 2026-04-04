@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "",
     "unableToEmbed": "",
     "unrecognizedLinkFormat": "",
-    "elementLinkCopied": "คัดลอกไปยังคลิปบอร์ดแล้ว"
+    "elementLinkCopied": "คัดลอกไปยังคลิปบอร์ดแล้ว",
+    "markdownLinkDetected": "Markdown link detected. Label is shown; open the link from the element."
   },
   "colors": {
     "transparent": "โปร่งใส",

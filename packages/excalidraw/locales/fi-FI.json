@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "Käytä {{shortcut}} liittääksesi yhtenä elementtinä,\ntai liittääksesi olemassa olevaan tekstieditoriin",
     "unableToEmbed": "",
     "unrecognizedLinkFormat": "",
-    "elementLinkCopied": ""
+    "elementLinkCopied": "",
+    "markdownLinkDetected": "Markdown link detected. Label is shown; open the link from the element."
   },
   "colors": {
     "transparent": "Läpinäkyvä",

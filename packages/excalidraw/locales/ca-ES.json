@@ -536,7 +536,8 @@
     "pasteAsSingleElement": "Fer servir {{shortcut}} per enganxar com un sol element,\no enganxeu-lo en un editor de text existent",
     "unableToEmbed": "Actualment no es permet incrustar aquesta URL. Planteja un problema a GitHub per sol·licitar que l'URL estigui a la llista blanca",
     "unrecognizedLinkFormat": "L'enllaç que has incrustat no coincideix amb el format esperat. Si us plau, intenta enganxar l'enllaç 'embed' proporcionada pel lloc web d'origen",
-    "elementLinkCopied": "Enllaç copiat al porta-retalls"
+    "elementLinkCopied": "Enllaç copiat al porta-retalls",
+    "markdownLinkDetected": "Markdown link detected. Label is shown; open the link from the element."
   },
   "colors": {
     "transparent": "Transparent",
