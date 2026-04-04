@@ -5,6 +5,7 @@ import {
   THEME,
   DARK_THEME_FILTER,
   getFontFamilyString,
+  getFontString,
   isRTL,
   isTestEnv,
   getVerticalOffset,
@@ -20,7 +21,13 @@ import {
 } from "@excalidraw/element";
 import { LinearElementEditor } from "@excalidraw/element";
 import { getBoundTextElement, getContainerElement } from "@excalidraw/element";
-import { getLineHeightInPx } from "@excalidraw/element";
+import {
+  getLineHeightInPx,
+  getLinkFillColor,
+  lineHasLinkSegment,
+  parseMarkdownLineSegments,
+  textHasRenderableMarkdownLinks,
+} from "@excalidraw/element";
 import {
   isArrowElement,
   isIframeLikeElement,
@@ -46,6 +53,8 @@ import type { RenderableElementsMap, SVGRenderConfig } from "../scene/types";
 import type { AppState, BinaryFiles } from "../types";
 import type { Drawable } from "roughjs/bin/core";
 import type { RoughSVG } from "roughjs/bin/svg";
+
+const XLINK_NS = "http://www.w3.org/1999/xlink";
 
 const roughSVGDrawWithPrecision = (
   rsvg: RoughSVG,
@@ -668,24 +677,91 @@ const renderElementToSvg = (
             : element.textAlign === "right" || direction === "rtl"
             ? "end"
             : "start";
+        const useMarkdown =
+          !isRTL(element.text) && textHasRenderableMarkdownLinks(element.text);
+        const measureCanvas = svgRoot.ownerDocument.createElement("canvas");
+        const mctx = measureCanvas.getContext("2d");
+        if (mctx) {
+          mctx.font = getFontString(element);
+        }
         for (let i = 0; i < lines.length; i++) {
-          const text = svgRoot.ownerDocument.createElementNS(SVG_NS, "text");
-          text.textContent = lines[i];
-          text.setAttribute("x", `${horizontalOffset}`);
-          text.setAttribute("y", `${i * lineHeightPx + verticalOffset}`);
-          text.setAttribute("font-family", getFontFamilyString(element));
-          text.setAttribute("font-size", `${element.fontSize}px`);
-          text.setAttribute(
-            "fill",
+          const line = lines[i];
+          const y = i * lineHeightPx + verticalOffset;
+          const baseFill =
             renderConfig.theme === THEME.DARK
               ? applyDarkModeFilter(element.strokeColor)
-              : element.strokeColor,
+              : element.strokeColor;
+          const linkFill = getLinkFillColor(
+            element.strokeColor,
+            renderConfig.theme,
           );
-          text.setAttribute("text-anchor", textAnchor);
-          text.setAttribute("style", "white-space: pre;");
-          text.setAttribute("direction", direction);
-          text.setAttribute("dominant-baseline", "alphabetic");
-          node.appendChild(text);
+
+          if (useMarkdown && lineHasLinkSegment(line) && mctx) {
+            const segments = parseMarkdownLineSegments(line);
+            let lineWidth = 0;
+            for (const seg of segments) {
+              const t = seg.type === "link" ? seg.label : seg.content;
+              lineWidth += mctx.measureText(t).width;
+            }
+            const startX =
+              element.textAlign === "center"
+                ? (element.width - lineWidth) / 2
+                : element.textAlign === "right"
+                ? element.width - lineWidth
+                : 0;
+            const text = svgRoot.ownerDocument.createElementNS(SVG_NS, "text");
+            text.setAttribute("x", `${startX}`);
+            text.setAttribute("y", `${y}`);
+            text.setAttribute("font-family", getFontFamilyString(element));
+            text.setAttribute("font-size", `${element.fontSize}px`);
+            text.setAttribute("fill", baseFill);
+            text.setAttribute("text-anchor", "start");
+            text.setAttribute("style", "white-space: pre;");
+            text.setAttribute("direction", direction);
+            text.setAttribute("dominant-baseline", "alphabetic");
+            for (const seg of segments) {
+              if (seg.type === "text") {
+                const ts = svgRoot.ownerDocument.createElementNS(
+                  SVG_NS,
+                  "tspan",
+                );
+                ts.textContent = seg.content;
+                text.appendChild(ts);
+              } else {
+                const a = svgRoot.ownerDocument.createElementNS(SVG_NS, "a");
+                a.setAttributeNS(
+                  XLINK_NS,
+                  "xlink:href",
+                  normalizeLink(seg.url),
+                );
+                a.setAttribute("target", "_blank");
+                a.setAttribute("rel", "noopener noreferrer");
+                const ts = svgRoot.ownerDocument.createElementNS(
+                  SVG_NS,
+                  "tspan",
+                );
+                ts.textContent = seg.label;
+                ts.setAttribute("fill", linkFill);
+                ts.setAttribute("text-decoration", "underline");
+                a.appendChild(ts);
+                text.appendChild(a);
+              }
+            }
+            node.appendChild(text);
+          } else {
+            const text = svgRoot.ownerDocument.createElementNS(SVG_NS, "text");
+            text.textContent = line;
+            text.setAttribute("x", `${horizontalOffset}`);
+            text.setAttribute("y", `${y}`);
+            text.setAttribute("font-family", getFontFamilyString(element));
+            text.setAttribute("font-size", `${element.fontSize}px`);
+            text.setAttribute("fill", baseFill);
+            text.setAttribute("text-anchor", textAnchor);
+            text.setAttribute("style", "white-space: pre;");
+            text.setAttribute("direction", direction);
+            text.setAttribute("dominant-baseline", "alphabetic");
+            node.appendChild(text);
+          }
         }
 
         const g = maybeWrapNodesInFrameClipPath(

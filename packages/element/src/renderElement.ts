@@ -54,6 +54,12 @@ import {
 } from "./textElement";
 import { getLineHeightInPx } from "./textMeasurements";
 import {
+  drawMarkdownTextLine,
+  lineHasLinkSegment,
+  parseMarkdownLineSegments,
+  textHasRenderableMarkdownLinks,
+} from "./markdownLinkText";
+import {
   isTextElement,
   isLinearElement,
   isFreeDrawElement,
@@ -582,12 +588,42 @@ const drawElementOnCanvas = (
           lineHeightPx,
         );
 
+        const useMarkdownLinks =
+          !rtl && textHasRenderableMarkdownLinks(element.text);
+
         for (let index = 0; index < lines.length; index++) {
-          context.fillText(
-            lines[index],
-            horizontalOffset,
-            index * lineHeightPx + verticalOffset,
-          );
+          const line = lines[index];
+          const y = index * lineHeightPx + verticalOffset;
+          context.fillStyle =
+            renderConfig.theme === THEME.DARK
+              ? applyDarkModeFilter(element.strokeColor)
+              : element.strokeColor;
+          if (useMarkdownLinks && lineHasLinkSegment(line)) {
+            context.textAlign = "left";
+            const segments = parseMarkdownLineSegments(line);
+            let lineWidth = 0;
+            for (const seg of segments) {
+              const t = seg.type === "link" ? seg.label : seg.content;
+              lineWidth += context.measureText(t).width;
+            }
+            const startX =
+              element.textAlign === "center"
+                ? (element.width - lineWidth) / 2
+                : element.textAlign === "right"
+                ? element.width - lineWidth
+                : 0;
+            drawMarkdownTextLine(
+              context,
+              line,
+              startX,
+              y,
+              element,
+              renderConfig.theme,
+            );
+          } else {
+            context.textAlign = element.textAlign as CanvasTextAlign;
+            context.fillText(line, horizontalOffset, y);
+          }
         }
         context.restore();
         if (shouldTemporarilyAttach) {
