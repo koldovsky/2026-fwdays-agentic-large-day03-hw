@@ -130,6 +130,25 @@ const parseGoogleDriveVideoLink = (
   }
 };
 
+const parseTikTokVideoLink = (url: string): { videoId: string } | null => {
+  try {
+    const urlObj = new URL(url.startsWith("http") ? url : `https://${url}`);
+    const hostname = urlObj.hostname.replace(/^www\./, "");
+    if (hostname !== "tiktok.com") {
+      return null;
+    }
+
+    const pathMatch = urlObj.pathname.match(/^\/@[^/]+\/video\/(\d+)\/?$/);
+    if (!pathMatch?.[1]) {
+      return null;
+    }
+
+    return { videoId: pathMatch[1] };
+  } catch (error) {
+    return null;
+  }
+};
+
 const ALLOWED_DOMAINS = new Set([
   "youtube.com",
   "youtu.be",
@@ -529,6 +548,11 @@ export const embeddableURLValidator = (
       }
       return false;
     }
+  }
+
+  const tiktokVideo = parseTikTokVideoLink(url);
+  if (tiktokVideo) {
+    return true;
   }
 
   return !!matchHostname(url, ALLOWED_DOMAINS);

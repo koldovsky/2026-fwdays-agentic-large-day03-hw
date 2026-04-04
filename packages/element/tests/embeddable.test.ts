@@ -231,3 +231,22 @@ describe("Google Drive video embedding", () => {
     ).toBe(true);
   });
 });
+
+describe("TikTok embeddable validation", () => {
+  it.each([
+    "https://tiktok.com/@creator/video/7480000000000000001",
+    "https://www.tiktok.com/@creator/video/7480000000000000001",
+  ])("accepts canonical TikTok video URLs: %s", (url) => {
+    expect(embeddableURLValidator(url, undefined)).toBe(true);
+  });
+
+  it.each([
+    "https://www.tiktok.com/@creator",
+    "https://www.tiktok.com/@creator/live",
+    "https://www.tiktok.com/tag/excalidraw",
+    "https://www.tiktok.com/@creator/video/",
+    "https://www.tiktok.com/@creator/video/not-a-valid-id",
+  ])("rejects unsupported TikTok URLs: %s", (url) => {
+    expect(embeddableURLValidator(url, undefined)).toBe(false);
+  });
+});
