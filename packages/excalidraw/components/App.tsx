@@ -422,6 +422,7 @@ import { textWysiwyg } from "../wysiwyg/textWysiwyg";
 import { isOverScrollBars } from "../scene/scrollbars";
 
 import { isMaybeMermaidDefinition } from "../mermaid";
+import { parseMarkdownLink } from "../utils/markdownLink";
 
 import { LassoTrail } from "../lasso";
 
@@ -5722,8 +5723,22 @@ class App extends React.Component<AppProps, AppState> {
         }
       }),
       onSubmit: withBatchedUpdates(({ viaKeyboard, nextOriginalText }) => {
-        const isDeleted = !nextOriginalText.trim();
-        updateElement(nextOriginalText, isDeleted);
+        const parsedLink = parseMarkdownLink(nextOriginalText);
+        const resolvedText = parsedLink ? parsedLink.label : nextOriginalText;
+
+        const isDeleted = !resolvedText.trim();
+        updateElement(resolvedText, isDeleted);
+
+        if (parsedLink && !isDeleted) {
+          const el = this.scene.getElement(element.id);
+          if (el) {
+            this.scene.mutateElement(el, { link: parsedLink.url });
+          }
+          this.setToast({
+            message: t("toast.markdownLinkDetected"),
+            closable: true,
+          });
+        }
 
         // keyboard-submit keeps focus on the edited object. For bound text, keep
         // the container selected even if the text becomes empty and is deleted.
