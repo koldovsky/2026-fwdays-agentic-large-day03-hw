@@ -421,6 +421,10 @@
     &:focus-visible {
       box-shadow: none;
     }
+
+    &--error {
+      border-color: #e03131;
+    }
   }
 
   .color-picker-label-swatch-container {
