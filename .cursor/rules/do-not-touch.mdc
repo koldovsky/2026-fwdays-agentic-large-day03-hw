@@ -1,0 +1,27 @@
+---
+description: "packages/excalidraw core: Renderer, restore, ActionManager, types — human approval only"
+globs: "packages/excalidraw/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Do-not-touch (Excalidraw core)
+
+## Context
+Canvas pipeline, scene format restore, action dispatch, root types — high blast radius. Glob `packages/excalidraw/**/*.{ts,tsx}` matches where these files live; if the task targets a listed path anyway, apply **Rule** regardless. See also `AGENTS.md`.
+
+## Rule
+- Agents and humans: same bar.
+- **No** edit/rename/delete or duplicate-and-bypass without approval:
+  - `packages/excalidraw/scene/Renderer.ts` — canvas render pipeline
+  - `packages/excalidraw/data/restore.ts` — scene restore / format compat
+  - `packages/excalidraw/actions/manager.tsx` — `ActionManager`
+  - `packages/excalidraw/types.ts` — `AppState`, etc.
+- Elsewhere OK; new `actions/*` OK except `manager.tsx`; renderer changes OK only if they **omit** the four paths above.
+- **Approve first** (ticket / PR / chat). Stay in agreed scope; no scope creep without another OK.
+- **NEVER:** split diffs to hide changes, rename to evade, or untested “temporary” edits.
+
+## How to verify
+1. `test -f packages/excalidraw/scene/Renderer.ts && test -f packages/excalidraw/data/restore.ts && test -f packages/excalidraw/actions/manager.tsx && test -f packages/excalidraw/types.ts`
+2. `BASE=master git diff --name-only $BASE...HEAD | rg 'packages/excalidraw/(scene/Renderer\.ts|data/restore\.ts|actions/manager\.tsx|types\.ts)$'` → empty unless approved. (Change `BASE` if your default branch is not `master`.)
+3. If approved: `yarn test` or `yarn test:typecheck && yarn test:code` (+ area tests).
+4. Agent: needs one of the four → stop; get explicit path + scope; no “small patch” assumption.

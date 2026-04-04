@@ -576,7 +576,8 @@
     "colors": "Farben",
     "shades": "Schattierungen",
     "hexCode": "Hex-Code",
-    "noShades": "Keine Schattierungen für diese Farbe verfügbar"
+    "noShades": "Keine Schattierungen für diese Farbe verfügbar",
+    "invalidColor": "Ungültige Hex-Farbe"
   },
   "overwriteConfirm": {
     "action": {

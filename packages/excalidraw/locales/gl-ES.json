@@ -576,7 +576,8 @@
     "colors": "Cores",
     "shades": "",
     "hexCode": "",
-    "noShades": ""
+    "noShades": "",
+    "invalidColor": "Cor hex non válida"
   },
   "overwriteConfirm": {
     "action": {

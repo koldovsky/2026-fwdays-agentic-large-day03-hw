@@ -576,7 +576,8 @@
     "colors": "நிறங்கள்",
     "shades": "சாயல்கள்",
     "hexCode": "ஹெக்ஸ் குறியீடு",
-    "noShades": "இந்நிறத்திற்குச் சாயல்கள் இல்லை"
+    "noShades": "இந்நிறத்திற்குச் சாயல்கள் இல்லை",
+    "invalidColor": "தவறான hex நிறம்"
   },
   "overwriteConfirm": {
     "action": {

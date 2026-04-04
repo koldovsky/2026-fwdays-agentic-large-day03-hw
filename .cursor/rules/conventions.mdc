@@ -1,0 +1,23 @@
+---
+description: "TS/React style, tests, yarn — packages + excalidraw-app"
+globs: "packages/**/*.{ts,tsx},excalidraw-app/**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Code conventions
+
+## Context
+Expectations for `packages/*` and `excalidraw-app/` so changes pass `tsc`/eslint (Yarn workspaces, Vitest). Globs omit `examples/`, `scripts/`, `docs/` — apply the same ideas manually if you touch `examples/`.
+
+## Rule
+- **TS:** `import type` for type-only imports. No new `any` / `@ts-ignore` / `@ts-expect-error` without justification; prefer narrow types over broad casts.
+- **React:** New UI = function components + hooks. No new class components (except a dedicated refactor). Do not convert legacy `packages/excalidraw/components/App.tsx` in unrelated work. Use `{Name}Props` where the module already does (`packages/excalidraw/types.ts`).
+- **Files/exports:** In `packages/excalidraw/components/`, match siblings — both default and named exports exist. Naming: mostly camelCase modules, PascalCase components, some kebab-case; rename only if the task needs it.
+- **Tests:** Vitest; `*.test.ts(x)`. Prefer `packages/<pkg>/tests/` or `excalidraw-app/tests/` when that tree exists; otherwise colocate next to source (e.g. `wysiwyg/textWysiwyg.test.tsx`).
+- **Tooling:** Root commands via **`yarn`**. New deps only with approval (`AGENTS.md`, architecture rule).
+
+## How to verify
+1. `yarn test:typecheck && yarn test:code` (repo root) → exit 0.
+2. If behavior/tests touched: `yarn test:app --watch=false` → green.
+3. `test -f packages/excalidraw/components/App.tsx && test -f packages/excalidraw/types.ts && test -f packages/excalidraw/wysiwyg/textWysiwyg.test.tsx` → exit 0.
+4. Agent: `git diff -U0 | rg '^\+\s*.*(: any\b|as any|@ts-ignore|@ts-expect-error)'` → empty for clean diffs (comments may false-positive). Spot-check diff for `any`/directives split across lines (`rg` is line-based).

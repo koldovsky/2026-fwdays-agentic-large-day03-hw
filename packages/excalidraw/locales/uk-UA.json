@@ -576,7 +576,8 @@
     "colors": "Кольори",
     "shades": "Тіні",
     "hexCode": "Hex-код",
-    "noShades": "Немає доступних відтінків цього кольору"
+    "noShades": "Немає доступних відтінків цього кольору",
+    "invalidColor": "Недійсний hex-колір"
   },
   "overwriteConfirm": {
     "action": {

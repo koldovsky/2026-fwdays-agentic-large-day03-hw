@@ -576,7 +576,8 @@
     "colors": "",
     "shades": "",
     "hexCode": "",
-    "noShades": ""
+    "noShades": "",
+    "invalidColor": "မမှန်ကန်သော hex အရောင်"
   },
   "overwriteConfirm": {
     "action": {

@@ -576,7 +576,8 @@
     "colors": "顏色",
     "shades": "漸變色",
     "hexCode": "Hex 碼",
-    "noShades": "沒有此顏色的漸變色"
+    "noShades": "沒有此顏色的漸變色",
+    "invalidColor": "無效的十六進制顏色"
   },
   "overwriteConfirm": {
     "action": {

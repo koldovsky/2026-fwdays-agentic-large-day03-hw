@@ -1,0 +1,21 @@
+---
+description: "Vitest + yarn: paths, commands, helpers"
+globs: "**/*.test.{ts,tsx},packages/excalidraw/tests/helpers/**/*.{ts,tsx},packages/excalidraw/tests/queries/**/*.{ts,tsx},packages/excalidraw/tests/fixtures/**/*.{ts,tsx},packages/excalidraw/tests/test-utils.ts"
+alwaysApply: false
+---
+
+# Testing (Vitest)
+
+## Context
+Root: `vitest.config.mts`, `setupTests.ts` (jsdom, shared mocks). **Scope:** all `*.test.{ts,tsx}` + excalidraw test infra (`helpers/`, `queries/`, `fixtures/`, `test-utils.ts`); TS/React → `conventions.mdc`.
+
+## Rule
+- **yarn** only (`AGENTS.md`): `yarn test` / `yarn test:app`; CI-like `yarn test:app --watch=false`; full gate `yarn test:all`; snapshots `yarn test:update`; coverage `yarn test:coverage` (thresholds in `vitest.config.mts`).
+- Name **`*.test.{ts,tsx}`** — no `*.spec.*`. Put tests in `packages/<pkg>/tests/` or `excalidraw-app/tests/` if present; else colocate; `packages/element` may use `src/__tests__/`.
+- Reuse **`packages/excalidraw/tests/helpers/`** for editor-style tests; no new test deps without approval.
+- **NEVER** skip/disable tests to green CI without explicit decision; **DO NOT** use npm/pnpm as primary workflow.
+
+## How to verify
+1. `test -f vitest.config.mts && test -f setupTests.ts`
+2. `yarn test:app --watch=false` (after edits)
+3. Optional: `yarn test:all`

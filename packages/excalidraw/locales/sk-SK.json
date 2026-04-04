@@ -576,7 +576,8 @@
     "colors": "Farby",
     "shades": "Odtiene",
     "hexCode": "Hex kód",
-    "noShades": "Pre túto farbu nie sú dostupné žiadne odtiene"
+    "noShades": "Pre túto farbu nie sú dostupné žiadne odtiene",
+    "invalidColor": "Neplatná hex farba"
   },
   "overwriteConfirm": {
     "action": {

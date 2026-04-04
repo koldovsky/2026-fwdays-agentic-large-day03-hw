@@ -383,10 +383,37 @@
       box-shadow: 0 0 0 1px var(--color-primary-darkest);
       border-radius: var(--border-radius-lg);
     }
+
+    &.is-invalid {
+      border-color: var(--color-danger);
+
+      .color-picker__input-hash {
+        color: var(--color-danger);
+      }
+
+      &:focus-within {
+        box-shadow: 0 0 0 1px var(--color-danger);
+      }
+    }
   }
 
   .color-picker__input-hash {
     padding: 0 0.25rem;
+  }
+
+  .color-picker__input-error {
+    font-size: 0.75rem;
+    color: var(--color-danger);
+    margin-top: 2px;
+    padding: 0 0.75rem;
+
+    :root[dir="ltr"] & {
+      text-align: left;
+    }
+
+    :root[dir="rtl"] & {
+      text-align: right;
+    }
   }
 
   .color-picker-input {

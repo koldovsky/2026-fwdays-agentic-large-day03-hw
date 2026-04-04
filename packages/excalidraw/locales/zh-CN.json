@@ -576,7 +576,8 @@
     "colors": "颜色",
     "shades": "色调明暗",
     "hexCode": "十六进制值",
-    "noShades": "此颜色没有可用的明暗变化"
+    "noShades": "此颜色没有可用的明暗变化",
+    "invalidColor": "无效的十六进制颜色"
   },
   "overwriteConfirm": {
     "action": {

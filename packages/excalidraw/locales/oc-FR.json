@@ -576,7 +576,8 @@
     "colors": "Colors",
     "shades": "Nuanças",
     "hexCode": "Còdi exadecimal",
-    "noShades": "Cap de nuança pas disponibla per aquesta color"
+    "noShades": "Cap de nuança pas disponibla per aquesta color",
+    "invalidColor": "Color hex invalida"
   },
   "overwriteConfirm": {
     "action": {

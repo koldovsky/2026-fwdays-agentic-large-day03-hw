@@ -576,7 +576,8 @@
     "colors": "Barve",
     "shades": "Odtenki",
     "hexCode": "Hex koda",
-    "noShades": "Odtenki za to barvo niso na voljo"
+    "noShades": "Odtenki za to barvo niso na voljo",
+    "invalidColor": "Neveljavna hex barva"
   },
   "overwriteConfirm": {
     "action": {

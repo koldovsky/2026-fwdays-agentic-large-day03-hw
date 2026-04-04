@@ -576,7 +576,8 @@
     "colors": "පාට",
     "shades": "සෙවනැලි",
     "hexCode": "හෙක්ස් කේත",
-    "noShades": "සෙවනැලි නැත"
+    "noShades": "සෙවනැලි නැත",
+    "invalidColor": "වලංගු නොවන hex වර්ණය"
   },
   "overwriteConfirm": {
     "action": {
