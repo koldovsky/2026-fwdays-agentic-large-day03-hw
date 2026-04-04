@@ -41,5 +41,5 @@
 
 - [x] 7.1 Run `yarn test:typecheck` and fix any TypeScript errors
 - [x] 7.2 Run `yarn test:update` and update snapshots if HelpDialog snapshots exist
-- [ ] 7.3 Manual smoke-test: open help dialog → magnifying glass icon visible; click icon → input appears with underline only; type "zoom" → only zoom shortcuts visible, dialog size unchanged; clear → all restored
-- [ ] 7.4 Manual smoke-test: open help dialog → start typing "sel" without clicking icon → search activates immediately with "sel" in the input and shortcuts filtered
+- [x] 7.3 Manual smoke-test: open help dialog → magnifying glass icon visible; click icon → input appears with underline only; type "zoom" → only zoom shortcuts visible, dialog size unchanged; clear → all restored
+- [x] 7.4 Manual smoke-test: open help dialog → start typing "sel" without clicking icon → search activates immediately with "sel" in the input and shortcuts filtered

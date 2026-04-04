@@ -194,21 +194,23 @@ export const HelpDialog = ({ onClose }: { onClose?: () => void }) => {
     if (initialChar !== undefined) {
       setSearchQuery(initialChar);
     }
-    setTimeout(() => searchInputRef.current?.focus(), 0);
   }, []);
+
+  // Focus the input after it mounts (searchActive flips true → input renders → effect runs)
+  React.useEffect(() => {
+    if (searchActive) {
+      searchInputRef.current?.focus();
+    }
+  }, [searchActive]);
 
   const handleKeyDown = React.useCallback(
     (e: React.KeyboardEvent<HTMLDivElement>) => {
-      const tag = (e.target as HTMLElement).tagName;
       if (
         !searchActive &&
         e.key.length === 1 &&
         !e.ctrlKey &&
         !e.metaKey &&
-        !e.altKey &&
-        tag !== "BUTTON" &&
-        tag !== "A" &&
-        tag !== "INPUT"
+        !e.altKey
       ) {
         activateSearch(e.key);
         e.preventDefault();
