@@ -10,7 +10,11 @@ import {
   isShallowEqual,
 } from "@excalidraw/common";
 
-import { mutateElement } from "@excalidraw/element";
+import {
+  isTextElement,
+  mergeTextPaintNormalization,
+  mutateElement,
+} from "@excalidraw/element";
 
 import { showSelectedShapeActions } from "@excalidraw/element";
 
@@ -496,6 +500,43 @@ const LayerUI = ({
             setEyeDropperState(null);
           }}
           onChange={(colorPickerType, color, selectedElements, { altKey }) => {
+            if (
+              colorPickerType === "standaloneTextFill" ||
+              colorPickerType === "standaloneTextOutlineStroke"
+            ) {
+              if (selectedElements.length) {
+                const elementsMap = arrayToMap(elements);
+                for (const element of selectedElements) {
+                  if (!isTextElement(element) || element.containerId != null) {
+                    continue;
+                  }
+                  if (colorPickerType === "standaloneTextFill") {
+                    mutateElement(
+                      element,
+                      elementsMap,
+                      mergeTextPaintNormalization(element, {
+                        textFillColor: color,
+                      }),
+                    );
+                  } else {
+                    mutateElement(
+                      element,
+                      elementsMap,
+                      mergeTextPaintNormalization(element, {
+                        textStrokeColor: color,
+                      }),
+                    );
+                  }
+                  ShapeCache.delete(element);
+                }
+                app.scene.triggerUpdate();
+              }
+              if (colorPickerType === "standaloneTextFill") {
+                setAppState({ currentItemStrokeColor: color });
+              }
+              return;
+            }
+
             if (
               colorPickerType !== "elementBackground" &&
               colorPickerType !== "elementStroke"

@@ -378,6 +378,8 @@ export interface AppState {
     | "canvasBackground"
     | "elementBackground"
     | "elementStroke"
+    | "standaloneTextFill"
+    | "standaloneTextOutlineStroke"
     | "fontFamily"
     | "compactTextProperties"
     | "compactStrokeStyles"

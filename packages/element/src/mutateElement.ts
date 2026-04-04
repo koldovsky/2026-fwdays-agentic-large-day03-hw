@@ -12,7 +12,8 @@ import { ShapeCache } from "./shape";
 
 import { updateElbowArrowPoints } from "./elbowArrow";
 
-import { isElbowArrow } from "./typeChecks";
+import { mergeTextPaintNormalization } from "./textPaint";
+import { isElbowArrow, isTextElement } from "./typeChecks";
 
 import type {
   ElementsMap,
@@ -45,6 +46,13 @@ export const mutateElement = <TElement extends Mutable<ExcalidrawElement>>(
   },
 ) => {
   let didChange = false;
+
+  if (isTextElement(element)) {
+    updates = mergeTextPaintNormalization(
+      element,
+      updates as ElementUpdate<typeof element>,
+    ) as ElementUpdate<TElement>;
+  }
 
   // casting to any because can't use `in` operator
   // (see https://github.com/microsoft/TypeScript/issues/21732)

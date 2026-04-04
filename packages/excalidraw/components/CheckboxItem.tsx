@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import React from "react";
+import React, { useId } from "react";
 
 import { checkIcon } from "./icons";
 
@@ -11,6 +11,7 @@ export const CheckboxItem: React.FC<{
   className?: string;
   children?: React.ReactNode;
 }> = ({ children, checked, onChange, className }) => {
+  const labelId = useId();
   return (
     <div
       className={clsx("Checkbox", className, { "is-checked": checked })}
@@ -28,10 +29,13 @@ export const CheckboxItem: React.FC<{
         className="Checkbox-box"
         role="checkbox"
         aria-checked={checked}
+        aria-labelledby={labelId}
       >
         {checkIcon}
       </button>
-      <div className="Checkbox-label">{children}</div>
+      <div id={labelId} className="Checkbox-label">
+        {children}
+      </div>
     </div>
   );
 };

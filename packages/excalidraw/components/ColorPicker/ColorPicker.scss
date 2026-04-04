@@ -481,7 +481,9 @@
     color: #aaa;
   }
 
-  .color-picker-type-elementStroke .color-picker-keybinding {
+  .color-picker-type-elementStroke .color-picker-keybinding,
+  .color-picker-type-standaloneTextFill .color-picker-keybinding,
+  .color-picker-type-standaloneTextOutlineStroke .color-picker-keybinding {
     color: #d4d4d4;
   }
 

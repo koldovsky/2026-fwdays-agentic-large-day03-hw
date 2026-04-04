@@ -125,6 +125,18 @@ For self-hosting, copy the contents of `node_modules/@excalidraw/excalidraw/dist
 </script>
 ```
 
+## Text element paint (serialization)
+
+Standalone `text` elements may include optional paint fields in scene JSON:
+
+| Field | Purpose |
+| --- | --- |
+| `textFillColor` | Glyph fill (optional; legacy files use `strokeColor` as fill when absent). |
+| `textStrokeColor` | Outline color when outline is enabled. |
+| `textStrokeWidth` | Outline width in scene units; omit or `0` for no outline. |
+
+If you persist `elements` yourself (database, API, collaboration), **preserve these keys** through round-trip so fill/outline are not dropped. Full rules, legacy behavior, and restore normalization are documented in the monorepo at [`packages/element/text-paint-serialization.md`](https://github.com/excalidraw/excalidraw/blob/master/packages/element/text-paint-serialization.md).
+
 ## Demo
 
 Try the [CodeSandbox example](https://codesandbox.io/p/sandbox/github/excalidraw/excalidraw/tree/master/examples/with-script-in-browser).

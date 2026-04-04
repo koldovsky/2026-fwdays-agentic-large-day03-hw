@@ -8,7 +8,10 @@ import {
   isColorDark,
 } from "@excalidraw/common";
 
-import type { ColorPickerType } from "./colorPickerUtils";
+import {
+  isStrokeLikeColorPickerType,
+  type ColorPickerType,
+} from "./colorPickerUtils";
 
 interface TopPicksProps {
   onChange: (color: string) => void;
@@ -24,7 +27,7 @@ export const TopPicks = ({
   topPicks,
 }: TopPicksProps) => {
   let colors;
-  if (type === "elementStroke") {
+  if (isStrokeLikeColorPickerType(type)) {
     colors = DEFAULT_ELEMENT_STROKE_PICKS;
   }
 

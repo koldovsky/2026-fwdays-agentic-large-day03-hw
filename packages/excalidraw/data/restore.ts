@@ -347,6 +347,39 @@ const restoreElementWithProperties = <
   return ret;
 };
 
+/**
+ * Sanitize optional text paint fields after JSON restore without eager migration:
+ * legacy files omit `textFillColor` / `textStrokeWidth`; `getResolvedTextPaint` still
+ * reads fill from `strokeColor` and treats missing width as 0. We only fix corrupt
+ * values and strip empty strings so render/export stay predictable (FR9, FR11).
+ */
+const normalizeRestoredTextElementPaint = (
+  element: ExcalidrawTextElement,
+): ExcalidrawTextElement => {
+  let next: ExcalidrawTextElement = element;
+
+  const stripEmptyPaintString = (key: "textFillColor" | "textStrokeColor") => {
+    if (next[key] === "") {
+      next = { ...next };
+      delete (next as Mutable<ExcalidrawTextElement>)[key];
+    }
+  };
+  stripEmptyPaintString("textFillColor");
+  stripEmptyPaintString("textStrokeColor");
+
+  const w = next.textStrokeWidth;
+  if (w === null) {
+    next = { ...next };
+    delete (next as Mutable<ExcalidrawTextElement>).textStrokeWidth;
+    return next;
+  }
+  if (typeof w === "number" && (!Number.isFinite(w) || w < 0)) {
+    return { ...next, textStrokeWidth: 0 };
+  }
+
+  return next;
+};
+
 export const restoreElement = (
   /** element to be restored */
   element: Exclude<ExcalidrawElement, ExcalidrawSelectionElement>,
@@ -401,6 +434,10 @@ export const restoreElement = (
         autoResize: element.autoResize ?? true,
         lineHeight,
       });
+
+      element = normalizeRestoredTextElementPaint(
+        element as ExcalidrawTextElement,
+      );
 
       // if empty text, mark as deleted. We keep in array
       // for data integrity purposes (collab etc.)

@@ -45,7 +45,10 @@ import {
   hasStrokeWidth,
 } from "../scene";
 
-import { getFormValue } from "../actions/actionProperties";
+import {
+  getFormValue,
+  shouldShowStandaloneTextPaintControls,
+} from "../actions/actionProperties";
 
 import { useTextEditorFocus } from "../hooks/useTextEditorFocus";
 
@@ -190,8 +193,15 @@ export const SelectedShapeActions = ({
     <div className="selected-shape-actions">
       <div>
         {canChangeStrokeColor(appState, targetElements) &&
+          !shouldShowStandaloneTextPaintControls(targetElements) &&
           renderAction("changeStrokeColor")}
       </div>
+      {shouldShowStandaloneTextPaintControls(targetElements) && (
+        <>
+          <div>{renderAction("changeStandaloneTextFill")}</div>
+          <div>{renderAction("changeStandaloneTextOutline")}</div>
+        </>
+      )}
       {canChangeBackgroundColor(appState, targetElements) && (
         <div>{renderAction("changeBackgroundColor")}</div>
       )}
@@ -813,10 +823,21 @@ export const CompactShapeActions = ({
   return (
     <div className="compact-shape-actions">
       {/* Stroke Color */}
-      {canChangeStrokeColor(appState, targetElements) && (
-        <div className={clsx("compact-action-item")}>
-          {renderAction("changeStrokeColor")}
-        </div>
+      {canChangeStrokeColor(appState, targetElements) &&
+        !shouldShowStandaloneTextPaintControls(targetElements) && (
+          <div className={clsx("compact-action-item")}>
+            {renderAction("changeStrokeColor")}
+          </div>
+        )}
+      {shouldShowStandaloneTextPaintControls(targetElements) && (
+        <>
+          <div className={clsx("compact-action-item")}>
+            {renderAction("changeStandaloneTextFill")}
+          </div>
+          <div className={clsx("compact-action-item")}>
+            {renderAction("changeStandaloneTextOutline")}
+          </div>
+        </>
       )}
 
       {/* Background Color */}
@@ -952,10 +973,21 @@ export const MobileShapeActions = ({
           flex: 1,
         }}
       >
-        {canChangeStrokeColor(appState, targetElements) && (
-          <div className={clsx("compact-action-item")}>
-            {renderAction("changeStrokeColor")}
-          </div>
+        {canChangeStrokeColor(appState, targetElements) &&
+          !shouldShowStandaloneTextPaintControls(targetElements) && (
+            <div className={clsx("compact-action-item")}>
+              {renderAction("changeStrokeColor")}
+            </div>
+          )}
+        {shouldShowStandaloneTextPaintControls(targetElements) && (
+          <>
+            <div className={clsx("compact-action-item")}>
+              {renderAction("changeStandaloneTextFill")}
+            </div>
+            <div className={clsx("compact-action-item")}>
+              {renderAction("changeStandaloneTextOutline")}
+            </div>
+          </>
         )}
         {canChangeBackgroundColor(appState, targetElements) && (
           <div className="compact-action-item">

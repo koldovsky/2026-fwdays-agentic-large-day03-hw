@@ -19,7 +19,11 @@ import {
   getEmbedLink,
 } from "@excalidraw/element";
 import { LinearElementEditor } from "@excalidraw/element";
-import { getBoundTextElement, getContainerElement } from "@excalidraw/element";
+import {
+  getBoundTextElement,
+  getContainerElement,
+  getResolvedTextPaint,
+} from "@excalidraw/element";
 import { getLineHeightInPx } from "@excalidraw/element";
 import {
   isArrowElement,
@@ -668,6 +672,8 @@ const renderElementToSvg = (
             : element.textAlign === "right" || direction === "rtl"
             ? "end"
             : "start";
+        // Same resolver + paint order as interactive canvas (renderElement.ts).
+        const paint = getResolvedTextPaint(element, renderConfig.theme);
         for (let i = 0; i < lines.length; i++) {
           const text = svgRoot.ownerDocument.createElementNS(SVG_NS, "text");
           text.textContent = lines[i];
@@ -675,12 +681,13 @@ const renderElementToSvg = (
           text.setAttribute("y", `${i * lineHeightPx + verticalOffset}`);
           text.setAttribute("font-family", getFontFamilyString(element));
           text.setAttribute("font-size", `${element.fontSize}px`);
-          text.setAttribute(
-            "fill",
-            renderConfig.theme === THEME.DARK
-              ? applyDarkModeFilter(element.strokeColor)
-              : element.strokeColor,
-          );
+          text.setAttribute("fill", paint.fillColor);
+          if (paint.outlineWidth > 0 && paint.outlineColor) {
+            text.setAttribute("stroke", paint.outlineColor);
+            text.setAttribute("stroke-width", `${paint.outlineWidth}`);
+            text.setAttribute("stroke-linejoin", "round");
+            text.setAttribute("paint-order", "stroke fill");
+          }
           text.setAttribute("text-anchor", textAnchor);
           text.setAttribute("style", "white-space: pre;");
           text.setAttribute("direction", direction);
