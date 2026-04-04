@@ -12,7 +12,7 @@ Sections B and C complement [`architecture.md`](../technical/architecture.md) (h
 
 ## A. Documentation decisions (this branch)
 
-**Homework branch note:** `git log` on `day-2/brainboost721` is a short linear history (four commits as of 2026-04-02). **Recorded** hashes in items 1–9 below come from an earlier, longer history; they may not resolve with `git show` on this clone—treat the decision text and dates as authoritative unless you have the pre-squash objects.
+**Homework branch note:** Branch `day-3/brainboost721` incorporated all Day 2 work in commit `0d5fed56` ("day 3 initial"). **Recorded** hashes in items 1–9 below come from an earlier branch history; they will not resolve with `git show` on this clone — treat the decision text and dates as authoritative.
 
 ### 1. Memory Bank structure and conventions
 
@@ -112,7 +112,7 @@ Sections B and C complement [`architecture.md`](../technical/architecture.md) (h
 
 **Context:** Prior Memory Bank read/update and anti-churn behavior lived in `memory-bank.mdc` (§§5 and 8). That enforcement path is gone; the **intent** — keep `docs/memory/` accurate and avoid meta-edit loops — is carried by [`.cursor/skills/memory-bank-update/SKILL.md`](../../.cursor/skills/memory-bank-update/SKILL.md) and cross-links from `AGENTS.md`.
 
-**Recorded:** 2026-04-01 (`1381548` on this branch; superseded hash `33dc3f4` on fuller histories).
+**Recorded:** 2026-04-01 (bundled into `0d5fed56` "day 3 initial" on `day-3/brainboost721`).
 
 ---
 
@@ -123,6 +123,26 @@ Sections B and C complement [`architecture.md`](../technical/architecture.md) (h
 **Context:** Makes agent-facing security guidance actionable; methodology and scored outcomes are recorded in [`docs/ab-validation.md`](../ab-validation.md).
 
 **Recorded:** 2026-04-02.
+
+---
+
+### 12. Spec-Driven Development workflow with `openspec/`
+
+**Decision:** Introduce an `openspec/` directory at repo root for Spec-Driven Development (SDD) artifacts. Each change gets a subdirectory under `openspec/changes/<change-slug>/` containing `proposal.md`, `design.md`, `tasks.md`, and per-capability specs under `specs/<capability>/spec.md`.
+
+**Context:** Day 3 homework requires writing specs before implementation. The first SDD change is `add-hex-color-validation-feedback` (excalidraw#9527). Specs capture problem statement, scope, blast radius, risks, design decisions, and detailed component-level behavior before code is written.
+
+**Recorded:** 2026-04-04 (`f58538af` on `day-3/brainboost721`).
+
+---
+
+### 13. Hex color validation feedback in ColorInput
+
+**Decision:** Add visual and accessible validation feedback to the `ColorInput` hex code field. On blur, if the typed value does not resolve via `normalizeInputColor`, show a red border (`.is-invalid`) and an inline error message (`colorPicker.invalidColor` i18n key) with `role="alert"`, `aria-invalid`, and `aria-describedby`. Error clears when a valid color is entered or when the color prop changes externally.
+
+**Context:** Addresses [excalidraw#9527](https://github.com/excalidraw/excalidraw/issues/9527) — previously invalid input was silently ignored. Change is leaf-level (one component, styles, locales, tests); no global state, API, or do-not-touch files affected. Design documented in `openspec/changes/add-hex-color-validation-feedback/`.
+
+**Recorded:** 2026-04-04 (`3a942d20` on `day-3/brainboost721`).
 
 ---
 
@@ -164,4 +184,4 @@ Sections B and C complement [`architecture.md`](../technical/architecture.md) (h
 - [`implicit-invariants.md`](../technical/implicit-invariants.md) — full Section C entries.
 - [`systemPatterns.md`](./systemPatterns.md) — monorepo and composition patterns at a glance.
 
-_Last updated: 2026-04-02 — Section A §10 aligned to HEAD `1381548` (Cursor agent layout); older § Recorded hashes may not exist after history squash (see branch note under §A)._
+_Last updated: 2026-04-04 — Section A §§12–13 added for Day 3 SDD workflow and hex color validation; HEAD `3a942d20` on `day-3/brainboost721`._

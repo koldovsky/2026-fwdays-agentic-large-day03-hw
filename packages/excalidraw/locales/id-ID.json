@@ -576,7 +576,8 @@
     "colors": "Warna",
     "shades": "Nuansa",
     "hexCode": "Kode hexa",
-    "noShades": "Tidak ada nuansa untuk warna ini"
+    "noShades": "Tidak ada nuansa untuk warna ini",
+    "invalidColor": "Warna hex tidak valid"
   },
   "overwriteConfirm": {
     "action": {

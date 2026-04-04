@@ -576,7 +576,8 @@
     "colors": "Färger",
     "shades": "Nyanser",
     "hexCode": "Hex-kod",
-    "noShades": "Inga nyanser tillgängliga för denna färg"
+    "noShades": "Inga nyanser tillgängliga för denna färg",
+    "invalidColor": "Ogiltig hex-färg"
   },
   "overwriteConfirm": {
     "action": {

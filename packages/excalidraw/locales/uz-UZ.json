@@ -576,7 +576,8 @@
     "colors": "",
     "shades": "",
     "hexCode": "",
-    "noShades": ""
+    "noShades": "",
+    "invalidColor": "Noto'g'ri hex rang"
   },
   "overwriteConfirm": {
     "action": {

@@ -57,7 +57,7 @@ Add an `isInvalid` boolean state to `ColorInput`. This is a UI-only concern and 
 ### Decision 5: Accessibility
 
 - `aria-invalid="true"` on the `<input>` while invalid; attribute removed entirely when valid (not set to `"false"`, since the absence is semantically cleaner and avoids screen readers announcing "not invalid")
-- Stable `id` on the error message and `aria-describedby` on the `<input>` pointing to that `id` when invalid; `aria-describedby` removed when valid so assistive tech is not pointed at a hidden node
+- Stable `id` on the error message (generated via React's `useId()` hook — SSR-safe and unique per component instance) and `aria-describedby` on the `<input>` pointing to that `id` when invalid; `aria-describedby` removed when valid so assistive tech is not pointed at a hidden node
 - `role="alert"` on the error message container — this implicitly sets `aria-live="assertive"`, which causes screen readers to announce the message immediately when it appears. We use `role="alert"` rather than `aria-live="polite"` because the error appears as a direct result of the user's action (blur) and should be communicated promptly.
 
 ### Decision 6: Component tests in a dedicated file

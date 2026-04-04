@@ -74,8 +74,8 @@ Capabilities are **outcome-oriented**; implementation detail stays at package/di
 
 ## Quality bar & constraints (product/UX)
 
-- **Internationalization:** Broad locale coverage under `packages/excalidraw/locales/`; changing copy should respect existing translation keys and patterns.
-- **Accessibility signals:** Many controls use `aria-label` and test helpers query by label (`packages/excalidraw/components/main-menu/DefaultItems.tsx`, tests under `packages/excalidraw/tests/`); regressions in labeling or focus order affect real users and automation.
+- **Internationalization:** Broad locale coverage under `packages/excalidraw/locales/`; changing copy should respect existing translation keys and patterns. The `colorPicker.invalidColor` key (added for hex color validation) follows this convention across all 57 locale files.
+- **Accessibility signals:** Many controls use `aria-label` and test helpers query by label (`packages/excalidraw/components/main-menu/DefaultItems.tsx`, tests under `packages/excalidraw/tests/`); regressions in labeling or focus order affect real users and automation. The ColorPicker hex input now uses `aria-invalid` and `aria-describedby` for validation error feedback (`ColorInput.tsx`).
 - **Performance:** Large diagrams and locale chunks are ongoing concerns reflected in build chunking patterns (see [`systemPatterns.md`](./systemPatterns.md), [`architecture.md`](../technical/architecture.md)); avoid UX regressions that block the main thread during typical edit flows.
 - **Reliability:** Collaboration and restore paths carry versioning and reconciliation constraints; see [`decisionLog.md`](./decisionLog.md) before altering sync-related behavior.
 - **PWA / offline:** Service worker and runtime caching target installed-app and flaky-network use; collab explicitly warns when offline—do not assume seamless offline multiplayer without checking `excalidraw-app/collab` behavior.

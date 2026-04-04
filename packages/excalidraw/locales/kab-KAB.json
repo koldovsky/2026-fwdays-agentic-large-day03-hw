@@ -576,7 +576,8 @@
     "colors": "Initen",
     "shades": "",
     "hexCode": "",
-    "noShades": ""
+    "noShades": "",
+    "invalidColor": "Ini hex arameɣtu"
   },
   "overwriteConfirm": {
     "action": {

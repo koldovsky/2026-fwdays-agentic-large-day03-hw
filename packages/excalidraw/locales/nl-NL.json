@@ -576,7 +576,8 @@
     "colors": "Kleuren",
     "shades": "Tinten",
     "hexCode": "HEX-code",
-    "noShades": "Geen tinten beschikbaar voor deze kleur"
+    "noShades": "Geen tinten beschikbaar voor deze kleur",
+    "invalidColor": "Ongeldige hex-kleur"
   },
   "overwriteConfirm": {
     "action": {

@@ -576,7 +576,8 @@
     "colors": "",
     "shades": "",
     "hexCode": "",
-    "noShades": ""
+    "noShades": "",
+    "invalidColor": "Neteisinga hex spalva"
   },
   "overwriteConfirm": {
     "action": {

@@ -576,7 +576,8 @@
     "colors": "色",
     "shades": "影",
     "hexCode": "16進コード",
-    "noShades": "この色で利用できる影はありません"
+    "noShades": "この色で利用できる影はありません",
+    "invalidColor": "無効な16進カラー"
   },
   "overwriteConfirm": {
     "action": {

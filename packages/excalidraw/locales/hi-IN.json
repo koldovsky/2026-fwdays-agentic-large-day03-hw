@@ -576,7 +576,8 @@
     "colors": "रंग",
     "shades": "छाया",
     "hexCode": "हेक्स कोड",
-    "noShades": "इस रंग की कोई छाया उपलब्ध नहीं हैं"
+    "noShades": "इस रंग की कोई छाया उपलब्ध नहीं हैं",
+    "invalidColor": "अमान्य हेक्स रंग"
   },
   "overwriteConfirm": {
     "action": {

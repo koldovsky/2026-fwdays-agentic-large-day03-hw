@@ -576,7 +576,8 @@
     "colors": "",
     "shades": "",
     "hexCode": "",
-    "noShades": ""
+    "noShades": "",
+    "invalidColor": "Yanlış hex rəng"
   },
   "overwriteConfirm": {
     "action": {

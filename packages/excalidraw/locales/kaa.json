@@ -576,7 +576,8 @@
     "colors": "Reńler",
     "shades": "",
     "hexCode": "",
-    "noShades": ""
+    "noShades": "",
+    "invalidColor": "Jaramsız hex reń"
   },
   "overwriteConfirm": {
     "action": {

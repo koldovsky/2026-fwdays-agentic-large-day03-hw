@@ -81,7 +81,7 @@ Note: the field strips a leading `#` from display (existing behavior); the user 
 - WHEN the input loses focus
 - THEN the error border and error message SHALL be visible
 - AND the field text MAY revert to the last applied color (existing blur-reset behavior)
-- AND the error indicators SHALL remain visible despite the text revert, until the user focuses the field again or selects a new color
+- AND the error indicators SHALL remain visible despite the text revert, until the user enters a valid value or selects a new color externally (the error also clears if the user focuses and blurs again without typing, because the reverted text is re-evaluated as valid)
 
 #### Scenario: Transparent color as current value
 

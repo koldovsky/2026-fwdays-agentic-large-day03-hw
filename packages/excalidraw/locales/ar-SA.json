@@ -576,7 +576,8 @@
     "colors": "الألوان",
     "shades": "الدرجات",
     "hexCode": "رمز Hex",
-    "noShades": "لا تتوفر درجات لهذا اللون"
+    "noShades": "لا تتوفر درجات لهذا اللون",
+    "invalidColor": "لون سداسي عشري غير صالح"
   },
   "overwriteConfirm": {
     "action": {

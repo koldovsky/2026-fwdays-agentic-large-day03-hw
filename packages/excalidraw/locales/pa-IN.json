@@ -576,7 +576,8 @@
     "colors": "ਰੰਗ",
     "shades": "ਸ਼ੇਡਾਂ",
     "hexCode": "ਹੈਕਸ ਕੋਡ",
-    "noShades": "ਇਸ ਰੰਗ ਦੀ ਕੋਈ ਸ਼ੇਡ ਉਪਲਬਧ ਨਹੀਂ ਹੈ"
+    "noShades": "ਇਸ ਰੰਗ ਦੀ ਕੋਈ ਸ਼ੇਡ ਉਪਲਬਧ ਨਹੀਂ ਹੈ",
+    "invalidColor": "ਅਵੈਧ ਹੈਕਸ ਰੰਗ"
   },
   "overwriteConfirm": {
     "action": {

@@ -576,7 +576,8 @@
     "colors": "ڕەنگەکان",
     "shades": "سێبەرەکان",
     "hexCode": "کۆدی هێکس",
-    "noShades": "هیچ سێبەرێک بۆ ئەم ڕەنگە بەردەست نییە"
+    "noShades": "هیچ سێبەرێک بۆ ئەم ڕەنگە بەردەست نییە",
+    "invalidColor": "Rengê hex nederbasdar"
   },
   "overwriteConfirm": {
     "action": {

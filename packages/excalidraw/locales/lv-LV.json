@@ -576,7 +576,8 @@
     "colors": "",
     "shades": "",
     "hexCode": "",
-    "noShades": ""
+    "noShades": "",
+    "invalidColor": "Nederīga hex krāsa"
   },
   "overwriteConfirm": {
     "action": {

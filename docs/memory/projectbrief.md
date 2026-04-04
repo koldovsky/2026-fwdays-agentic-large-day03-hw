@@ -23,6 +23,7 @@
 - `examples/`: integration demos (`with-nextjs`, `with-script-in-browser`).
 - `firebase-project/`: Firebase rules/config for collaboration storage infrastructure.
 - `public/`: static assets and resources related to the service worker.
+- `openspec/`: Spec-Driven Development (SDD) documents — proposals, designs, specs, and task lists per change (see [`decisionLog.md`](./decisionLog.md) §12).
 
 ## Functional capabilities visible in source
 

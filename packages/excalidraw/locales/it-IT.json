@@ -576,7 +576,8 @@
     "colors": "Colori",
     "shades": "Sfumature",
     "hexCode": "Codice esadecimale",
-    "noShades": "Nessuna sfumatura disponibile per questo colore"
+    "noShades": "Nessuna sfumatura disponibile per questo colore",
+    "invalidColor": "Colore hex non valido"
   },
   "overwriteConfirm": {
     "action": {

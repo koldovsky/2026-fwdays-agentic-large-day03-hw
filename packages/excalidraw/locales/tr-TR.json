@@ -576,7 +576,8 @@
     "colors": "Renkler",
     "shades": "Tonlar",
     "hexCode": "Hex kodu",
-    "noShades": "Bu renk için ton mevcut değil"
+    "noShades": "Bu renk için ton mevcut değil",
+    "invalidColor": "Geçersiz hex renk"
   },
   "overwriteConfirm": {
     "action": {

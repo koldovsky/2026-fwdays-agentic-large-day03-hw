@@ -576,7 +576,8 @@
     "colors": "रंग",
     "shades": "रंगछटा",
     "hexCode": "हेक्स कोड",
-    "noShades": "ह्या रंगाच्या छटा उपलब्ध नाहित"
+    "noShades": "ह्या रंगाच्या छटा उपलब्ध नाहित",
+    "invalidColor": "अवैध हेक्स रंग"
   },
   "overwriteConfirm": {
     "action": {

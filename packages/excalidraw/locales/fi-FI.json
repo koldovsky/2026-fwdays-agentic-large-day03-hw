@@ -576,7 +576,8 @@
     "colors": "Värit",
     "shades": "Varjot",
     "hexCode": "Hex koodi",
-    "noShades": ""
+    "noShades": "",
+    "invalidColor": "Virheellinen hex-väri"
   },
   "overwriteConfirm": {
     "action": {

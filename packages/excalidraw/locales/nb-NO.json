@@ -576,7 +576,8 @@
     "colors": "Farger",
     "shades": "Toner",
     "hexCode": "Heksadesimal kode",
-    "noShades": "Ingen toner tilgjengelig for denne fargen"
+    "noShades": "Ingen toner tilgjengelig for denne fargen",
+    "invalidColor": "Ugyldig hex-farge"
   },
   "overwriteConfirm": {
     "action": {

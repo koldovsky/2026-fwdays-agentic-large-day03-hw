@@ -576,7 +576,8 @@
     "colors": "ពណ៌",
     "shades": "ស្រមោល",
     "hexCode": "លេខកូដ hex",
-    "noShades": "មិនមានស្រមោលសម្រាប់ពណ៌នេះទេ"
+    "noShades": "មិនមានស្រមោលសម្រាប់ពណ៌នេះទេ",
+    "invalidColor": "ពណ៌ hex មិនត្រឹមត្រូវ"
   },
   "overwriteConfirm": {
     "action": {

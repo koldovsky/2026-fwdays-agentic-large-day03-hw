@@ -576,7 +576,8 @@
     "colors": "Colors",
     "shades": "Ombres",
     "hexCode": "Codi hexadecimal",
-    "noShades": "No hi ha ombres disponibles per a aquest color"
+    "noShades": "No hi ha ombres disponibles per a aquest color",
+    "invalidColor": "Color hex no vàlid"
   },
   "overwriteConfirm": {
     "action": {

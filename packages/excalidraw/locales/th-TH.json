@@ -576,7 +576,8 @@
     "colors": "สี",
     "shades": "รูปร่าง",
     "hexCode": "Hex code",
-    "noShades": ""
+    "noShades": "",
+    "invalidColor": "สี hex ไม่ถูกต้อง"
   },
   "overwriteConfirm": {
     "action": {

@@ -2,39 +2,34 @@
 
 ## Last updated
 
-2026-04-02 — branch `day-2/brainboost721`. Day 2: `docs/ab-validation.md` records A/B validation of `.cursor/rules/security.mdc` (see `decisionLog.md` §11). `git status` for dirty paths.
+2026-04-04 — branch `day-3/brainboost721`. Day 3 complete: SDD workflow finished, feature implemented, code-reviewed, spec archived.
 
 ## Current focus
 
-- **Day 2** homework on `day-2/brainboost721`. Excalidraw app/library source unchanged; work focuses on **documentation, Cursor rules, agent guidance, and repomix tooling**. Deliverable: [`docs/ab-validation.md`](../ab-validation.md) (A/B test write-up for `security.mdc`).
-- **`AGENTS.md`** at repo root — canonical agent onboarding: overview, stack, structure, commands, architecture (dual state, canvas, ActionManager), conventions, do-not-touch table, and links to Memory Bank ([`techContext.md`](./techContext.md), [`systemPatterns.md`](./systemPatterns.md)). Detailed conventions and guardrails also live in **`.cursor/rules/*.mdc`** (architecture, conventions, do-not-touch, lower-layers, security, testing). **`.cursor/skills/`** holds repeatable workflows (`build-verify`, `codebase-explore`, `memory-bank-update`, `repomix-reference`); **`.cursor/commands/`** holds slash-style command templates (`create-component`, `review-code`). Root **`CLAUDE.md`** and **`.cursor/rules/memory-bank.mdc`** were removed when agent assets were consolidated (commit `1381548` on this branch).
-- The Memory Bank (`docs/memory/`) is the working context for agents; product and technical docs live in [`docs/product/`](../product/) and [`docs/technical/`](../technical/).
-- Use [`decisionLog.md`](./decisionLog.md) for documentation decisions, doc-vs-code gaps (Section B), and refactor hazards (Section C). Full B/C detail: [`code-behavior-gaps.md`](../technical/code-behavior-gaps.md), [`implicit-invariants.md`](../technical/implicit-invariants.md).
-- **Stable deep link:** `docs/memory/systemPatterns.md` defines `<a id="cicd-pipeline"></a>` before the CI/CD table so `techContext.md` can link `./systemPatterns.md#cicd-pipeline` reliably.
+- **Day 3** homework on `day-3/brainboost721` is **complete**. Feature implemented, code-reviewed (11/11 criteria passed), spec archived.
+- **SDD documents** archived to `openspec/changes/archive/2026-04-04-add-hex-color-validation-feedback/`. All tasks in `tasks.md` checked off.
+- **Code changes** (`packages/excalidraw`): `ColorInput.tsx` has `isInvalid` state with error message, `ColorPicker.scss` has `.is-invalid` and `.color-picker__input-error` styles (including RTL), all 57 locale files have `colorPicker.invalidColor` key, `tests/ColorInput.test.tsx` covers 21 test cases.
+- **Post-completion**: transparent-color test improved (now opens background picker which has transparent top pick, with proper assertions instead of silent skip).
 
 ## Recent commits (this repo — `git log`)
 
-History on this homework branch is a **short linear log** (squashed vs. older granular homework commits). Inspect with `git show <hash>`.
+History on this homework branch is a **short linear log**. Inspect with `git show <hash>`.
 
-| Commit    | Date (author) | What changed                                                                 |
-| --------- | ------------- | ---------------------------------------------------------------------------- |
-| `21bf0a6` | 2026-03-26    | Initial                                                                      |
-| `70259e8` | 2026-03-26    | checker                                                                      |
-| `d69f395` | 2026-03-31    | day 2 init — Memory Bank, product/technical docs, ignore/repomix tooling, `repomix-compressed.txt` baseline |
-| `1381548` | 2026-04-01    | add `AGENTS.md`, expand `.cursor/rules`, skills (incl. `repomix-reference`), commands; remove `CLAUDE.md` and `memory-bank.mdc` |
+| Commit      | Date       | What changed |
+| ----------- | ---------- | ------------ |
+| `0d5fed56`  | 2026-04-03 | day 3 initial — bundled all Day 2 work (Cursor rules/skills/commands, Memory Bank, AGENTS.md, docs, repomix reference) |
+| `f58538af`  | 2026-04-04 | add spec — SDD docs in `openspec/` |
+| `3a942d20`  | 2026-04-04 | fix: add validation feedback for invalid hex color input (#9527) |
 
 ## Repository state
 
-- Branch: **`day-2/brainboost721`**. HEAD: **`1381548`**.
-- Compare with `origin/day-2/brainboost721` after fetch; local branch may be ahead or behind.
-- Working tree **dirty** when this file lists pending Memory Bank commits — `git status` for exact paths.
+- Branch: **`day-3/brainboost721`**. HEAD: **`3a942d20`**.
+- Working tree has uncommitted changes: archived spec, updated tasks/Memory Bank, improved test. `git status` for exact paths.
 
-## Decisions captured in the doc set
+## Day 3 decisions
 
-- **Source-verified assertions** in Memory Bank and technical docs cite repo paths; inferences are labeled where used.
-- **Layouts:** `docs/memory/` (session/context), `docs/product/` (PRD, glossary), `docs/technical/` (architecture, dev setup, B/C technical splits).
-- **Canonical decision log:** `docs/memory/decisionLog.md` (not a root-level redirect).
-- **Cursor:** topic rules under `.cursor/rules/*.mdc` (see [`decisionLog.md`](./decisionLog.md) §10). Memory Bank sync workflow: [`.cursor/skills/memory-bank-update/SKILL.md`](../../.cursor/skills/memory-bank-update/SKILL.md).
+- **§12** SDD workflow with `openspec/` — specs before code (see [`decisionLog.md`](./decisionLog.md)).
+- **§13** Hex color validation feedback in ColorInput — on-blur error state, i18n, a11y (see [`decisionLog.md`](./decisionLog.md)).
 
 ## Blockers & risks
 
@@ -43,8 +38,9 @@ History on this homework branch is a **short linear log** (squashed vs. older gr
 
 ## Next steps
 
-1. Finish **day 2** assignment tasks; update this file and `progress.md` when focus or scope changes.
-2. Regenerate and commit `repomix-compressed.txt` when the export should match HEAD.
+1. Commit post-completion changes (spec archive, tasks checked, Memory Bank update, test improvement).
+2. Optionally regenerate `repomix-compressed.txt` to match HEAD.
+3. Create PR if required by workshop workflow.
 
 ## Open questions
 

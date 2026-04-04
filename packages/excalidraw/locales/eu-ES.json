@@ -576,7 +576,8 @@
     "colors": "Koloreak",
     "shades": "Ñabardurak",
     "hexCode": "Hez kodea",
-    "noShades": "Kolore honetarako ez dago ñabardurarik eskuragarri"
+    "noShades": "Kolore honetarako ez dago ñabardurarik eskuragarri",
+    "invalidColor": "Hex kolore baliogabea"
   },
   "overwriteConfirm": {
     "action": {

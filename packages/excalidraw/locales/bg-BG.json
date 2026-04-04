@@ -576,7 +576,8 @@
     "colors": "Цветове",
     "shades": "Нюанси",
     "hexCode": "Шестнадесетичен код",
-    "noShades": ""
+    "noShades": "",
+    "invalidColor": "Невалиден hex цвят"
   },
   "overwriteConfirm": {
     "action": {

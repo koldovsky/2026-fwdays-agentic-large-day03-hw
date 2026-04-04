@@ -576,7 +576,8 @@
     "colors": "Barvy",
     "shades": "Stíny",
     "hexCode": "Hex kód",
-    "noShades": "Pro tuto barvu nejsou k dispozici žádné odstíny"
+    "noShades": "Pro tuto barvu nejsou k dispozici žádné odstíny",
+    "invalidColor": "Neplatná hex barva"
   },
   "overwriteConfirm": {
     "action": {
