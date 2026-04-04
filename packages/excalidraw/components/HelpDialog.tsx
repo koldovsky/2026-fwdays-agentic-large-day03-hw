@@ -100,7 +100,7 @@ const ShortcutIsland = ({
         if (React.isValidElement(child)) {
           return React.cloneElement(
             child as React.ReactElement<{ searchQuery?: string }>,
-            { searchQuery: query },
+            { searchQuery },
           );
         }
         return child;
@@ -246,14 +246,13 @@ export const HelpDialog = ({ onClose }: { onClose?: () => void }) => {
   );
 
   return (
-    <>
-      <Dialog
-        onCloseRequest={handleClose}
-        title={titleNode}
-        className={"HelpDialog"}
-      >
-        <div onKeyDown={handleKeyDown}>
-          <Header />
+    <Dialog
+      onCloseRequest={handleClose}
+      title={titleNode}
+      className={"HelpDialog"}
+    >
+      <div onKeyDown={handleKeyDown}>
+        <Header />
           <Section title={t("helpDialog.shortcuts")}>
             <ShortcutIsland
               className="HelpDialog__island--tools"
@@ -627,8 +626,7 @@ export const HelpDialog = ({ onClose }: { onClose?: () => void }) => {
               />
             </ShortcutIsland>
           </Section>
-        </div>
-      </Dialog>
-    </>
+      </div>
+    </Dialog>
   );
 };
