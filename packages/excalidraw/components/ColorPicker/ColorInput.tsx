@@ -29,12 +29,14 @@ export const ColorInput = ({
 }) => {
   const editorInterface = useEditorInterface();
   const [innerValue, setInnerValue] = useState(color);
+  const [isInvalid, setIsInvalid] = useState(false);
   const [activeSection, setActiveColorPickerSection] = useAtom(
     activeColorPickerSectionAtom,
   );
 
   useEffect(() => {
     setInnerValue(color);
+    setIsInvalid(false);
   }, [color]);
 
   const changeColor = useCallback(
@@ -44,6 +46,9 @@ export const ColorInput = ({
 
       if (color) {
         onChange(color);
+        setIsInvalid(false);
+      } else {
+        setIsInvalid(value.length > 0);
       }
       setInnerValue(value);
     },
@@ -70,31 +75,48 @@ export const ColorInput = ({
   return (
     <div className="color-picker__input-label">
       <div className="color-picker__input-hash">#</div>
-      <input
-        ref={activeSection === "hex" ? inputRef : undefined}
-        style={{ border: 0, padding: 0 }}
-        spellCheck={false}
-        className="color-picker-input"
-        aria-label={label}
-        onChange={(event) => {
-          changeColor(event.target.value);
-        }}
-        value={(innerValue || "").replace(/^#/, "")}
-        onBlur={() => {
-          setInnerValue(color);
-        }}
-        tabIndex={-1}
-        onFocus={() => setActiveColorPickerSection("hex")}
-        onKeyDown={(event) => {
-          if (event.key === KEYS.TAB) {
-            return;
-          } else if (event.key === KEYS.ESCAPE) {
-            eyeDropperTriggerRef.current?.focus();
-          }
-          event.stopPropagation();
-        }}
-        placeholder={placeholder}
-      />
+      <div className="color-picker__input-wrapper">
+        <input
+          ref={activeSection === "hex" ? inputRef : undefined}
+          spellCheck={false}
+          className={clsx(
+            "color-picker-input",
+            "color-picker-input--reset",
+            {
+              "color-picker-input--error": isInvalid,
+            },
+          )}
+          aria-label={label}
+          aria-invalid={isInvalid}
+          onChange={(event) => {
+            changeColor(event.target.value);
+          }}
+          value={(innerValue || "").replace(/^#/, "")}
+          onBlur={() => {
+            setInnerValue(color);
+            setIsInvalid(false);
+          }}
+          tabIndex={-1}
+          onFocus={() => setActiveColorPickerSection("hex")}
+          onKeyDown={(event) => {
+            if (event.key === KEYS.TAB) {
+              return;
+            } else if (event.key === KEYS.ESCAPE) {
+              eyeDropperTriggerRef.current?.focus();
+            }
+            event.stopPropagation();
+          }}
+          placeholder={placeholder}
+        />
+        {isInvalid && (
+          <div
+            className="color-picker__input-error"
+            role="alert"
+          >
+            {t("colorPicker.invalidColor")}
+          </div>
+        )}
+      </div>
       {/* TODO reenable on mobile with a better UX */}
       {editorInterface.formFactor !== "phone" && (
         <>

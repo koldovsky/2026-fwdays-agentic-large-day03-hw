@@ -421,6 +421,38 @@
     &:focus-visible {
       box-shadow: none;
     }
+
+    &--error {
+      border-color: var(--color-danger);
+    }
+
+    &--reset {
+      border: 0;
+      padding: 0;
+    }
+  }
+
+  .color-picker__input-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .color-picker__input-error {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    font-size: 0.75rem;
+    color: var(--color-danger);
+    pointer-events: none;
+    z-index: 1;
+
+    @include isMobile {
+      max-width: calc(100vw - 20px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
   }
 
   .color-picker-label-swatch-container {
