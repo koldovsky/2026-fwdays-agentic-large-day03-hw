@@ -20,7 +20,13 @@ import {
 } from "@excalidraw/element";
 import { LinearElementEditor } from "@excalidraw/element";
 import { getBoundTextElement, getContainerElement } from "@excalidraw/element";
-import { getLineHeightInPx } from "@excalidraw/element";
+import {
+  containsTextHyperlinkSyntax,
+  getLineHeightInPx,
+  getTextHyperlinkFillColor,
+  parseTextHyperlinkSegments,
+  segmentsToDisplayString,
+} from "@excalidraw/element";
 import {
   isArrowElement,
   isIframeLikeElement,
@@ -668,23 +674,64 @@ const renderElementToSvg = (
             : element.textAlign === "right" || direction === "rtl"
             ? "end"
             : "start";
+        const plainFill =
+          renderConfig.theme === THEME.DARK
+            ? applyDarkModeFilter(element.strokeColor)
+            : element.strokeColor;
+        const linkFill = getTextHyperlinkFillColor(
+          renderConfig.theme === THEME.DARK,
+        );
+
         for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
           const text = svgRoot.ownerDocument.createElementNS(SVG_NS, "text");
-          text.textContent = lines[i];
           text.setAttribute("x", `${horizontalOffset}`);
           text.setAttribute("y", `${i * lineHeightPx + verticalOffset}`);
           text.setAttribute("font-family", getFontFamilyString(element));
           text.setAttribute("font-size", `${element.fontSize}px`);
-          text.setAttribute(
-            "fill",
-            renderConfig.theme === THEME.DARK
-              ? applyDarkModeFilter(element.strokeColor)
-              : element.strokeColor,
-          );
+          text.setAttribute("fill", plainFill);
           text.setAttribute("text-anchor", textAnchor);
           text.setAttribute("style", "white-space: pre;");
           text.setAttribute("direction", direction);
           text.setAttribute("dominant-baseline", "alphabetic");
+
+          if (!containsTextHyperlinkSyntax(line)) {
+            text.textContent = line;
+          } else {
+            const segs = parseTextHyperlinkSegments(line);
+            const display = segmentsToDisplayString(segs);
+            const lineIsRtl = isRTL(display);
+            const ordered = lineIsRtl ? [...segs].reverse() : segs;
+            for (const seg of ordered) {
+              if (seg.type === "plain") {
+                const tspan = svgRoot.ownerDocument.createElementNS(
+                  SVG_NS,
+                  "tspan",
+                );
+                tspan.textContent = seg.text;
+                tspan.setAttribute("fill", plainFill);
+                text.appendChild(tspan);
+              } else {
+                const anchor = svgRoot.ownerDocument.createElementNS(
+                  SVG_NS,
+                  "a",
+                );
+                anchor.setAttribute("href", normalizeLink(seg.url));
+                anchor.setAttribute("target", "_blank");
+                anchor.setAttribute("rel", "noopener noreferrer");
+                const tspan = svgRoot.ownerDocument.createElementNS(
+                  SVG_NS,
+                  "tspan",
+                );
+                tspan.textContent = seg.label;
+                tspan.setAttribute("fill", linkFill);
+                tspan.setAttribute("text-decoration", "underline");
+                anchor.appendChild(tspan);
+                text.appendChild(anchor);
+              }
+            }
+          }
+
           node.appendChild(text);
         }
 

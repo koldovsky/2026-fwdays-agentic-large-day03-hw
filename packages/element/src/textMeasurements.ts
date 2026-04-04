@@ -7,6 +7,11 @@ import {
   normalizeEOL,
 } from "@excalidraw/common";
 
+import {
+  containsTextHyperlinkSyntax,
+  getHyperlinkAwareLineWidth,
+} from "./textHyperlinks";
+
 import type { FontString, ExcalidrawTextElement } from "./types";
 
 export const measureText = (
@@ -160,8 +165,12 @@ export const getLineWidth = (text: string, font: FontString) => {
 export const getTextWidth = (text: string, font: FontString) => {
   const lines = splitIntoLines(text);
   let width = 0;
+  const useHyperlinkWidth = containsTextHyperlinkSyntax(text);
   lines.forEach((line) => {
-    width = Math.max(width, getLineWidth(line, font));
+    width = Math.max(
+      width,
+      useHyperlinkWidth ? getHyperlinkAwareLineWidth(line, font) : getLineWidth(line, font),
+    );
   });
 
   return width;

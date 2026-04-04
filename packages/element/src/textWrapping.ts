@@ -1,5 +1,10 @@
 import { isDevEnv, isTestEnv } from "@excalidraw/common";
 
+import {
+  containsTextHyperlinkSyntax,
+  getHyperlinkAwareLineWidth,
+  parseTextHyperlinkSegments,
+} from "./textHyperlinks";
 import { charWidth, getLineWidth } from "./textMeasurements";
 
 import type { FontString } from "./types";
@@ -455,6 +460,10 @@ export const getWrappedTextLines = (
     return getHardLineBreaks(text);
   }
 
+  if (containsTextHyperlinkSyntax(text)) {
+    return getWrappedTextLinesWithHyperlinks(text, font, maxWidth);
+  }
+
   const lines: WrappedTextLine[] = [];
   let offset = 0;
 
@@ -714,6 +723,179 @@ const trimLineEndAtSoftBreak = (
     start,
     end: end - (line.length - trimmedLine.length),
   };
+};
+
+// ---------------------------------------------------------------------------
+// Markdown-style `[label](url)` hyperlinks: wrap using displayed label width.
+// ---------------------------------------------------------------------------
+
+type HyperlinkWrapUnit =
+  | { kind: "plain"; text: string }
+  | { kind: "link"; source: string; label: string };
+
+type PositionedHyperlinkUnit = {
+  unit: HyperlinkWrapUnit;
+  start: number;
+  end: number;
+};
+
+const flattenHyperlinkLineWithOffsets = (line: string): PositionedHyperlinkUnit[] => {
+  const result: PositionedHyperlinkUnit[] = [];
+  let pos = 0;
+
+  for (const seg of parseTextHyperlinkSegments(line)) {
+    if (seg.type === "plain") {
+      const sub = seg.text;
+      let searchFrom = 0;
+      for (const t of parseTokens(sub)) {
+        const at = sub.indexOf(t, searchFrom);
+        if (at < 0) {
+          break;
+        }
+        const start = pos + at;
+        result.push({
+          unit: { kind: "plain", text: t },
+          start,
+          end: start + t.length,
+        });
+        searchFrom = at + t.length;
+      }
+      pos += sub.length;
+    } else {
+      const len = seg.source.length;
+      result.push({
+        unit: { kind: "link", source: seg.source, label: seg.label },
+        start: pos,
+        end: pos + len,
+      });
+      pos += len;
+    }
+  }
+
+  return result;
+};
+
+const unitsDisplay = (units: HyperlinkWrapUnit[]) =>
+  units.map((u) => (u.kind === "plain" ? u.text : u.label)).join("");
+
+const unitsSource = (units: HyperlinkWrapUnit[]) =>
+  units.map((u) => (u.kind === "plain" ? u.text : u.source)).join("");
+
+const wrapHyperlinkHardLine = (
+  line: string,
+  font: FontString,
+  maxWidth: number,
+  lineStart: number,
+): WrappedTextLine[] => {
+  const positioned = flattenHyperlinkLineWithOffsets(line);
+  const lines: WrappedTextLine[] = [];
+  let currentUnits: HyperlinkWrapUnit[] = [];
+  let currentLineStart = lineStart;
+  let currentLineEnd = lineStart;
+  let tokenIndex = 0;
+
+  while (tokenIndex < positioned.length) {
+    const { unit: u, start: tokenStart, end: tokenEnd } = positioned[tokenIndex];
+    const testUnits = [...currentUnits, u];
+    const testLineWidth = getLineWidth(unitsDisplay(testUnits), font);
+
+    const whitespaceToken = u.kind === "plain" && /\s/.test(u.text);
+
+    if (whitespaceToken || testLineWidth <= maxWidth) {
+      if (!currentUnits.length) {
+        currentLineStart = tokenStart;
+      }
+      currentUnits = testUnits;
+      currentLineEnd = tokenEnd;
+      tokenIndex++;
+      continue;
+    }
+
+    if (!currentUnits.length) {
+      if (u.kind === "link") {
+        lines.push({
+          text: u.source,
+          start: tokenStart,
+          end: tokenEnd,
+        });
+        tokenIndex++;
+      } else {
+        const wrappedWord = wrapWord(u.text, font, maxWidth, tokenStart);
+        const trailingLine = wrappedWord[wrappedWord.length - 1] ?? {
+          text: "",
+          start: tokenStart,
+          end: tokenStart,
+        };
+        const precedingLines = wrappedWord.slice(0, -1);
+        lines.push(...precedingLines);
+        currentUnits = [];
+        if (trailingLine.text) {
+          const trailingTokens = flattenHyperlinkLineWithOffsets(trailingLine.text).map(
+            (p) => p.unit,
+          );
+          if (trailingTokens.length === 1 && trailingTokens[0].kind === "plain") {
+            currentUnits = trailingTokens;
+            currentLineStart = trailingLine.start;
+            currentLineEnd = trailingLine.end;
+          }
+        }
+        tokenIndex++;
+      }
+      continue;
+    }
+
+    lines.push(
+      trimLineEndAtSoftBreak(
+        unitsSource(currentUnits),
+        currentLineStart,
+        currentLineEnd,
+      ),
+    );
+    currentUnits = [];
+    currentLineStart = tokenStart;
+    currentLineEnd = tokenStart;
+  }
+
+  if (currentUnits.length) {
+    lines.push(
+      trimLine(
+        unitsSource(currentUnits),
+        currentLineStart,
+        currentLineEnd,
+        font,
+        maxWidth,
+      ),
+    );
+  }
+
+  return lines;
+};
+
+const getWrappedTextLinesWithHyperlinks = (
+  text: string,
+  font: FontString,
+  maxWidth: number,
+): WrappedTextLine[] => {
+  const out: WrappedTextLine[] = [];
+  let offset = 0;
+
+  for (const originalLine of text.split("\n")) {
+    const originalLineWidth = getHyperlinkAwareLineWidth(originalLine, font);
+
+    if (originalLineWidth <= maxWidth) {
+      out.push({
+        text: originalLine,
+        start: offset,
+        end: offset + originalLine.length,
+      });
+    } else {
+      out.push(...wrapHyperlinkHardLine(originalLine, font, maxWidth, offset));
+    }
+
+    offset += originalLine.length + 1;
+  }
+
+  return out;
 };
 
 /**

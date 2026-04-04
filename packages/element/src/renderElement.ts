@@ -52,7 +52,13 @@ import {
   getBoundTextMaxHeight,
   getBoundTextMaxWidth,
 } from "./textElement";
-import { getLineHeightInPx } from "./textMeasurements";
+import {
+  containsTextHyperlinkSyntax,
+  getTextHyperlinkFillColor,
+  parseTextHyperlinkSegments,
+  segmentsToDisplayString,
+} from "./textHyperlinks";
+import { getLineHeightInPx, getLineWidth } from "./textMeasurements";
 import {
   isTextElement,
   isLinearElement,
@@ -555,10 +561,6 @@ const drawElementOnCanvas = (
         context.canvas.setAttribute("dir", rtl ? "rtl" : "ltr");
         context.save();
         context.font = getFontString(element);
-        context.fillStyle =
-          renderConfig.theme === THEME.DARK
-            ? applyDarkModeFilter(element.strokeColor)
-            : element.strokeColor;
         context.textAlign = element.textAlign as CanvasTextAlign;
 
         // Canvas does not support multiline text by default
@@ -582,12 +584,73 @@ const drawElementOnCanvas = (
           lineHeightPx,
         );
 
+        const plainColor =
+          renderConfig.theme === THEME.DARK
+            ? applyDarkModeFilter(element.strokeColor)
+            : element.strokeColor;
+        const linkColor = getTextHyperlinkFillColor(
+          renderConfig.theme === THEME.DARK,
+        );
+        const fontStr = getFontString(element);
+
         for (let index = 0; index < lines.length; index++) {
-          context.fillText(
-            lines[index],
-            horizontalOffset,
-            index * lineHeightPx + verticalOffset,
-          );
+          const line = lines[index];
+          const y = index * lineHeightPx + verticalOffset;
+
+          if (!containsTextHyperlinkSyntax(line)) {
+            context.fillStyle = plainColor;
+            context.fillText(line, horizontalOffset, y);
+            continue;
+          }
+
+          const segs = parseTextHyperlinkSegments(line);
+          const display = segmentsToDisplayString(segs);
+          const lineIsRtl = isRTL(display);
+          const lineDisplayWidth = getLineWidth(display, fontStr);
+
+          const drawUnderline = (x0: number, x1: number) => {
+            const metrics = context.measureText("M");
+            const descent =
+              metrics.actualBoundingBoxDescent ??
+              element.fontSize * 0.2;
+            const underY = y + Math.min(descent + 1, element.fontSize * 0.35);
+            context.save();
+            context.strokeStyle = linkColor;
+            context.lineWidth = Math.max(0.5, 1 / window.devicePixelRatio);
+            context.beginPath();
+            context.moveTo(x0, underY);
+            context.lineTo(x1, underY);
+            context.stroke();
+            context.restore();
+          };
+
+          if (!lineIsRtl) {
+            let x = horizontalOffset;
+            for (const seg of segs) {
+              const textPart = seg.type === "plain" ? seg.text : seg.label;
+              const w = getLineWidth(textPart, fontStr);
+              context.fillStyle =
+                seg.type === "link" ? linkColor : plainColor;
+              context.fillText(textPart, x, y);
+              if (seg.type === "link") {
+                drawUnderline(x, x + w);
+              }
+              x += w;
+            }
+          } else {
+            let x = horizontalOffset + lineDisplayWidth;
+            for (const seg of [...segs].reverse()) {
+              const textPart = seg.type === "plain" ? seg.text : seg.label;
+              const w = getLineWidth(textPart, fontStr);
+              x -= w;
+              context.fillStyle =
+                seg.type === "link" ? linkColor : plainColor;
+              context.fillText(textPart, x, y);
+              if (seg.type === "link") {
+                drawUnderline(x, x + w);
+              }
+            }
+          }
         }
         context.restore();
         if (shouldTemporarilyAttach) {
