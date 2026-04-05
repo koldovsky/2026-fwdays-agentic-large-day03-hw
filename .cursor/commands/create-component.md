@@ -12,7 +12,7 @@ Create or extend a **React UI component** in this monorepo following Excalidraw 
 
 - Functional component + hooks; props type named `{Name}Props`
 - **Named export** for new components (match rule: no default exports for new code)
-- **i18n**: add `src/locales/en.json` (and follow existing locale patterns) for user-visible strings where sibling components use i18n
+- **i18n**: add strings to `packages/excalidraw/locales/en.json` (and follow existing locale patterns) for user-visible strings where sibling components use i18n
 - **Tests**: colocate `ComponentName.test.tsx`; use `packages/excalidraw/tests/test-utils.ts` helpers; Vitest + Testing Library only (`vi` not `jest`)
 - **Types**: strict TypeScript — no `any`, no `@ts-ignore` unless unavoidable and called out
 - Do **not** draw the scene with React DOM — canvas stays in the render pipeline

@@ -216,6 +216,31 @@ describe("stroke style cycling via Alt+D shortcut", () => {
     expect(window.h.elements[0].strokeStyle).toBe("solid");
   });
 
+  it("should cycle from the selected element strokeStyle when it differs from currentItemStrokeStyle", () => {
+    const rect = API.createElement({
+      type: "rectangle",
+      strokeStyle: "solid",
+    });
+    API.setElements([rect]);
+    API.setSelectedElements([rect]);
+    API.setAppState({ currentItemStrokeStyle: "dashed" });
+
+    expect(window.h.elements[0].strokeStyle).toBe("solid");
+    expect(window.h.state.currentItemStrokeStyle).toBe("dashed");
+
+    pressAltD();
+    expect(window.h.elements[0].strokeStyle).toBe("dashed");
+    expect(window.h.state.currentItemStrokeStyle).toBe("dashed");
+
+    pressAltD();
+    expect(window.h.elements[0].strokeStyle).toBe("dotted");
+    expect(window.h.state.currentItemStrokeStyle).toBe("dotted");
+
+    pressAltD();
+    expect(window.h.elements[0].strokeStyle).toBe("solid");
+    expect(window.h.state.currentItemStrokeStyle).toBe("solid");
+  });
+
   it("should not trigger when Ctrl is also held", () => {
     UI.clickTool("rectangle");
 

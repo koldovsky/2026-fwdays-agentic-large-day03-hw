@@ -1,6 +1,6 @@
 # Directory Structure
 
-```
+```text
 docs/_data/acknowledgements.data.ts (319 lines)
 docs/_data/blog.data.ts (41 lines)
 docs/_data/team.js (221 lines)

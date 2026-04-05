@@ -29,7 +29,7 @@ Use this skill when you need to:
 
 Check `project-structure.md` for the directory tree:
 
-```
+```text
 src/
   index.ts (42 lines)
   utils/
@@ -40,7 +40,7 @@ src/
 
 Grep in `files.md` for the file path:
 
-```
+```markdown
 ## File: src/utils/helpers.ts
 ```
 
@@ -48,7 +48,7 @@ Grep in `files.md` for the file path:
 
 Grep in `files.md` for keywords:
 
-```
+```typescript
 function calculateTotal
 ```
 

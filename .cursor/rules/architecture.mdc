@@ -1,9 +1,7 @@
 ---
-description: "Excalidraw editor architecture — actionManager, AppState, canvas pipeline, dependency boundaries"
-globs: "packages/excalidraw/**/*.ts,packages/excalidraw/**/*.tsx"
 alwaysApply: false
 ---
-When you are creating any code with this rule you must output to chat message "Architecture constraints for Excalidraw" in current folder" so I know you are using the correct rules.
+When you are creating any code with this rule you must output to chat message "Architecture constraints for Excalidraw" so I know you are using the correct rules.
 
 # Excalidraw Architecture
 

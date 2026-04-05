@@ -1,40 +1,43 @@
 ---
-description: "MemoryBank — persistent project knowledge in docs/memory/"
+description: "MemoryBank — Excalidraw monorepo knowledge in docs/memory/"
 alwaysApply: true
 ---
 
-# MemoryBank
+# MemoryBank (Excalidraw)
 
-Structured markdown in `docs/memory/` is the **only** cross-session project memory. Treat it as source of truth, not guesses.
+Structured markdown in `docs/memory/` is the **only** cross-session project memory for this fork. Tie updates to **real Excalidraw concepts**: the **canvas** and **render pipeline**, **elements** (rectangles, arrows, text, frames, etc.), **actions** / **actionManager** (`packages/excalidraw/actions/`), **AppState**, **components** in `packages/excalidraw/components/`, and the app shell **`excalidraw-app/`** (hosting, collab, routes). Prefer paths like `packages/excalidraw/`, `packages/element/`, `packages/common/` when recording where behavior lives.
 
 ## Files (what to update when)
 
 | File | When |
 |------|------|
-| `activeContext.md` | **Every session** — focus, git-ish state, next steps |
-| `progress.md` | Task done or status changes |
-| `decisionLog.md` | Non-trivial decisions (ADR: Context → Decision → Consequences) |
-| `systemPatterns.md` | Architecture / module / pipeline changes |
-| `techContext.md` | Deps, tooling, CI, commands |
-| `productContext.md` | UX / product behavior changes |
-| `projectbrief.md` | Rare — major repo/structure changes |
+| `activeContext.md` | **Every session** — current task, branch, next steps, open PR/issue context (e.g. keyboard shortcut specs such as [#11095](https://github.com/excalidraw/excalidraw/issues/11095)) |
+| `progress.md` | Milestones: feature shipped, tests run, docs/specs updated |
+| `decisionLog.md` | ADR-style: shortcut choice, schema/format decisions, trade-offs |
+| `systemPatterns.md` | Editor architecture: actions ↔ state, scene, history |
+| `techContext.md` | Yarn workspaces, Vitest, Vite, CI commands |
+| `productContext.md` | UX/product behavior users see (toolbars, dialogs, shortcuts) |
+| `projectbrief.md` | Rare — monorepo layout or major scope changes |
+
+## Optional focused notes (add only if useful; still ≤200 lines per file)
+
+If a topic outgrows a section, split into a **new** file under `docs/memory/` (e.g. `canvasArchitecture.md` for render/scene flow, `elementTypes.md` for element package boundaries, `keyboardShortcuts.md` for `keyTest` / HelpDialog inventory). Link it once from `activeContext.md` or `systemPatterns.md`.
 
 ## Workflow
 
 1. Start substantive work by reading **`activeContext.md`** if it exists.
-2. After a meaningful change (feature, fix, refactor, config, decision), update the **relevant** files above.
-3. **`activeContext.md`** should stay aligned with real repo state and what you are doing next.
+2. After a meaningful change (canvas behavior, new action, shortcut, i18n key in `packages/excalidraw/locales/`, `excalidraw-app/` hook), update the **matching** file above.
+3. **`activeContext.md`** must reflect real git state and what you do next.
 
 ## Constraints
 
-- Keep each file **≤ 200 lines**; trim stale content as needed.
-- Facts must match **source code / repo** — no invented details.
-- Prefer headings, short tables, bullets.
+- Keep each file **≤ 200 lines**; trim stale bullets.
+- Facts must match **source / repo** — no invented APIs or paths.
 - **Do not delete** MemoryBank files; edit in place only.
 
 ## How to verify
 
-1. After a substantive change, open `docs/memory/activeContext.md` — it should reflect current focus and rough git/state-of-work accuracy.
-2. If architecture, tooling, product behavior, or a notable decision changed, the matching file (`systemPatterns.md`, `techContext.md`, `productContext.md`, or `decisionLog.md`) should have a short, factual update (not invented details).
-3. For task closure, `docs/memory/progress.md` should list completed steps when the team uses it for tracking.
-4. No MemoryBank file exceeds **200 lines** after edits; trim stale content instead of growing unbounded.
+1. After a change, `docs/memory/activeContext.md` names the right packages (e.g. `packages/excalidraw/actions/actionProperties.tsx` for stroke-style cycling).
+2. Architecture/tooling/UX/decisions reflected in the matching file when those layers changed.
+3. `progress.md` updated when the task is done for teams that track it.
+4. No MemoryBank file exceeds **200 lines**.
