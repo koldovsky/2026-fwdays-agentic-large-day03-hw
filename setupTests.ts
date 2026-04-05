@@ -28,6 +28,39 @@ require("fake-indexeddb/auto");
 
 polyfill();
 
+// Provide a working localStorage mock when jsdom/Node doesn't supply a fully functional one
+{
+  const store: Record<string, string> = {};
+  const localStorageMock: Storage = {
+    getItem: (key: string) => (key in store ? store[key] : null),
+    setItem: (key: string, value: string) => {
+      store[key] = String(value);
+    },
+    removeItem: (key: string) => {
+      delete store[key];
+    },
+    clear: () => {
+      for (const key of Object.keys(store)) {
+        delete store[key];
+      }
+    },
+    key: (index: number) => Object.keys(store)[index] ?? null,
+    get length() {
+      return Object.keys(store).length;
+    },
+  };
+  try {
+    // Test if localStorage.clear works; if not, replace it
+    globalThis.localStorage.clear();
+  } catch {
+    Object.defineProperty(globalThis, "localStorage", {
+      value: localStorageMock,
+      writable: true,
+      configurable: true,
+    });
+  }
+}
+
 Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: vi.fn().mockImplementation((query) => ({

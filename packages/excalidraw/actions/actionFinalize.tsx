@@ -218,17 +218,32 @@ export const actionFinalize = register<FormData>({
       ) {
         const { points } = element;
         const { lastCommittedPoint } = appState.selectedLinearElement;
-        if (
-          !lastCommittedPoint ||
-          points[points.length - 1] !== lastCommittedPoint
-        ) {
+        const lastPoint = points[points.length - 1];
+
+        // Use coordinate comparison instead of reference equality when
+        // lastCommittedPoint is set, because movePoints() creates new
+        // point objects during pointer-move, making the stored reference
+        // stale while the coordinates remain correct.
+        const isLastPointCommitted = lastCommittedPoint
+          ? lastPoint[0] === lastCommittedPoint[0] &&
+            lastPoint[1] === lastCommittedPoint[1]
+          : false;
+
+        if (!isLastPointCommitted) {
           scene.mutateElement(element, {
             points: element.points.slice(0, -1),
           });
         }
       }
 
-      if (element && isInvisiblySmallElement(element)) {
+      const shouldDeleteElement = appState.multiElement
+        ? isFreeDrawElement(element)
+          ? element.points.length <= 2 || isInvisiblySmallElement(element)
+          : isLinearElement(element)
+            ? element.points.length < 2 || isInvisiblySmallElement(element)
+            : isInvisiblySmallElement(element)
+        : isInvisiblySmallElement(element);
+      if (element && shouldDeleteElement) {
         // TODO: #7348 in theory this gets recorded by the store, so the invisible elements could be restored by the undo/redo, which might be not what we would want
         newElements = newElements.map((el) => {
           if (el.id === element?.id) {
