@@ -14,6 +14,7 @@ import {
   ROUNDNESS,
   STROKE_WIDTH,
   VERTICAL_ALIGN,
+  CODES,
   KEYS,
   randomInteger,
   arrayToMap,
@@ -656,6 +657,31 @@ export const actionChangeSloppiness = register<ExcalidrawElement["roughness"]>({
   ),
 });
 
+const STROKE_STYLES = ["solid", "dashed", "dotted"] as const;
+
+const getNextStrokeStyle = (
+  current: ExcalidrawElement["strokeStyle"],
+): ExcalidrawElement["strokeStyle"] => {
+  const idx = STROKE_STYLES.indexOf(current);
+  return STROKE_STYLES[(idx + 1) % STROKE_STYLES.length];
+};
+
+/** Common strokeStyle among selected elements that support it; else undefined. */
+const getCommonStrokeStyle = (
+  elements: readonly ExcalidrawElement[],
+  appState: AppState,
+): ExcalidrawElement["strokeStyle"] | undefined => {
+  const selected = getSelectedElements(elements, appState);
+  const candidates = selected.filter((el) =>
+    Object.prototype.hasOwnProperty.call(el, "strokeStyle"),
+  );
+  if (candidates.length === 0) {
+    return undefined;
+  }
+  const common = reduceToCommonValue(candidates, (el) => el.strokeStyle);
+  return common ?? undefined;
+};
+
 export const actionChangeStrokeStyle = register<
   ExcalidrawElement["strokeStyle"]
 >({
@@ -663,16 +689,24 @@ export const actionChangeStrokeStyle = register<
   label: "labels.strokeStyle",
   trackEvent: false,
   perform: (elements, appState, value) => {
+    const baseStroke =
+      getCommonStrokeStyle(elements, appState) ?? appState.currentItemStrokeStyle;
+    const nextValue = value ?? getNextStrokeStyle(baseStroke);
     return {
       elements: changeProperty(elements, appState, (el) =>
         newElementWith(el, {
-          strokeStyle: value,
+          strokeStyle: nextValue,
         }),
       ),
-      appState: { ...appState, currentItemStrokeStyle: value },
+      appState: { ...appState, currentItemStrokeStyle: nextValue },
       captureUpdate: CaptureUpdateAction.IMMEDIATELY,
     };
   },
+  keyTest: (event) =>
+    !event[KEYS.CTRL_OR_CMD] &&
+    event.altKey &&
+    !event.shiftKey &&
+    event.code === CODES.D,
   PanelComponent: ({ elements, appState, updateData, app, data }) => (
     <fieldset>
       <legend>{t("labels.strokeStyle")}</legend>

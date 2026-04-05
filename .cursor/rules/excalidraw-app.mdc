@@ -1,0 +1,34 @@
+---
+description: "excalidraw-app/ — Vite app shell, wiring, and app-only features vs the library"
+globs: "excalidraw-app/**/*.ts,excalidraw-app/**/*.tsx"
+alwaysApply: false
+---
+
+# Excalidraw App (`excalidraw-app/`)
+
+## Boundary
+
+- **`excalidraw-app/`** hosts the full product (routing, hosting, collaboration UI, Sentry, PWA bits). Reusable editor behavior belongs in **`packages/excalidraw`** (and related `packages/*`), not duplicated here.
+
+## Imports
+
+- Prefer importing the public surface from **`@excalidraw/excalidraw`** (and shared `packages/*`) over reaching into deep internal paths of the library unless the repo already does so for a documented reason.
+
+## Build and env
+
+- **Vite** is the app bundler — use Vite conventions for env (`import.meta.env`), assets, and code splitting. Do not assume Node-only APIs in client bundles.
+
+## State and features
+
+- App-level state (tabs, account, hosting-specific flags) stays in the app. Document editor state continues to follow **`AppState`** and **actionManager** patterns from the library; do not introduce a parallel global store for scene/canvas state.
+
+## Styling
+
+- Match existing app styling (CSS modules / global classes as already used in this folder). Keep the library package free of app-only theme assumptions when moving code between layers.
+
+## How to verify
+
+1. From repo root, run the app build or dev script the project uses for **excalidraw-app** (e.g. Vite build/start) — no compile errors after the change.
+2. Prefer imports from `@excalidraw/excalidraw` / shared packages over deep imports into `packages/excalidraw/...` internals; grep new `excalidraw-app` code for long relative paths into library internals and justify any new occurrences.
+3. Confirm client bundles do not rely on Node-only APIs (`fs`, `path` in browser paths) unless through existing Vite patterns.
+4. Editor state still flows through library patterns (`AppState`, actions) — no new global store for scene/canvas state in `excalidraw-app/` without explicit architecture approval.

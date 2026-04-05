@@ -1,0 +1,36 @@
+---
+description: "Security — secrets, unsafe APIs, supply chain, and privacy-sensitive data"
+alwaysApply: true
+---
+
+# Security
+
+## Secrets and credentials
+
+- Never commit API keys, tokens, passwords, or private URLs. Use environment variables and document only non-secret variable **names** in code or README.
+- Do not log auth tokens, session cookies, or full user payloads to the console or analytics.
+
+## Web and DOM safety
+
+- Avoid `dangerouslySetInnerHTML`, `eval`, and string-constructed `Function` unless there is an explicit, reviewed need. Prefer structured data and safe rendering paths already used in the codebase.
+- Treat file and URL imports from user-provided content as untrusted until validated by existing restore/parsing flows.
+
+## Dependencies and supply chain
+
+- Do not add or upgrade packages that introduce known critical issues without a tracked remediation plan. Prefer `yarn audit` / maintainer advisories before merging risky dependency changes.
+- Pin or review version jumps for packages that handle crypto, networking, or serialization.
+
+## Data and collaboration
+
+- When touching sync, export, or cloud hooks, assume payloads may be observed on the network. Do not add new plaintext channels for sensitive fields without product/security sign-off.
+
+## Incident-minded defaults
+
+- If you find a suspected vulnerability, fix with minimal blast radius (scoped change + tests) and avoid speculative refactors in the same patch.
+
+## How to verify
+
+1. Inspect the diff for secrets: long random tokens, private keys, `password=`, pasted cookies — must not appear. Optional: search for high-signal patterns (`PRIVATE KEY`, `AKIA`, `api_key` in new literals) and confirm false positives only.
+2. For dependency changes, run `yarn audit` (or the repo’s documented security check) and ensure critical issues are addressed or explicitly accepted with rationale.
+3. New uses of `dangerouslySetInnerHTML`, `eval`, or `new Function` should be absent or justified in review with a safer alternative considered.
+4. Confirm new logging/metrics do not include raw auth tokens or full session payloads.
